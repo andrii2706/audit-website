@@ -1,0 +1,62 @@
+{
+  "kind": "collectionType",
+  "collectionName": "leads",
+  "info": {
+    "singularName": "lead",
+    "pluralName": "leads",
+    "displayName": "Заявка",
+    "description": "Заявки з форм сайту"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "phone": {
+      "type": "string",
+      "required": false
+    },
+    "email": {
+      "type": "email"
+    },
+    "service": {
+      "type": "string"
+    },
+    "revenue": {
+      "type": "string"
+    },
+    "channel": {
+      "type": "enumeration",
+      "enum": [
+        "telegram",
+        "viber",
+        "whatsapp",
+        "call",
+        "email"
+      ],
+      "default": "telegram"
+    },
+    "comment": {
+      "type": "text"
+    },
+    "sourcePage": {
+      "type": "string"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "new",
+        "in_progress",
+        "done",
+        "spam"
+      ],
+      "default": "new"
+    },
+    "locale_code": {
+      "type": "string"
+    }
+  }
+}

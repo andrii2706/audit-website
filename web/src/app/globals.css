@@ -1,0 +1,159 @@
+@import 'tailwindcss';
+
+/* ——— Design tokens (Variant D). Use them as Tailwind utilities: bg-accent, text-muted, border-line, rounded-card… */
+@theme {
+  --color-ink: #0b1220;
+  --color-ink-2: #1b2436;
+  --color-muted: #4a5363;
+  --color-muted-2: #5a6372;
+  --color-line: #e3e6eb;
+  --color-line-strong: #d5d9e0;
+  --color-bg: #f4f5f7;
+  --color-card: #ffffff;
+  --color-placeholder: #eceef2;
+  --color-accent: #2346ff;
+  --color-accent-hover: #1a36d6;
+  --color-accent-ink: #1a36d6;
+  --color-accent-soft: #e9edff;
+  --color-accent-on: #e4e9ff;
+  --color-lime: #d7f75b;
+  --color-dark-muted: #aeb6c4;
+  --color-dark-line: #2a3345;
+  --color-star: #f5a524;
+  --color-danger: #b42318;
+  --color-danger-soft: #fef3f2;
+
+  --font-sans: 'Onest Variable', 'Onest', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --radius-tile: 1.375rem;   /* 22px */
+  --radius-card: 1.75rem;    /* 28px */
+  --radius-panel: 2rem;      /* 32px */
+  --radius-block: 2.5rem;    /* 40px */
+
+  --animate-fade-up: fade-up 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-fade-in: fade-in 0.35s ease-out both;
+  --animate-pop: pop 0.5s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+  --animate-shake: shake 0.4s ease-in-out;
+  --animate-shimmer: shimmer 1.4s linear infinite;
+  --animate-slide-in: slide-in 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+
+  --breakpoint-xs: 25rem;    /* 400px — small phones and up */
+  --breakpoint-3xl: 112.5rem; /* 1800px — large desktops */
+}
+
+@keyframes fade-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop { 0% { opacity: 0; transform: scale(0.6); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes shake { 0%, 100% { transform: none; } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@keyframes slide-in { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+@keyframes menu-in { from { opacity: 0; transform: translateY(-6px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 6rem;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-bg font-sans text-ink antialiased;
+  }
+
+  /* Every interactive element shows the hand cursor (Tailwind v4 preflight resets buttons to default). */
+  a[href],
+  button:not(:disabled),
+  summary,
+  select,
+  label[for],
+  [role='button'],
+  [role='tab'],
+  [role='option'],
+  input[type='checkbox'],
+  input[type='radio'],
+  input[type='submit'] {
+    cursor: pointer;
+  }
+  button:disabled,
+  [aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { transition-duration: 0ms !important; animation-duration: 0ms !important; }
+  }
+}
+
+/* ——— Scroll reveal — pure CSS (scroll-driven animations), no JavaScript.
+   `data-reveal` animates the element, `data-stagger` animates each direct child with a small offset.
+   The animation is tied to the element's position while it enters the viewport, so content is never
+   "waiting" to appear, fast scrolling shows no gaps, and there is nothing to hydrate.
+   Browsers without `animation-timeline` (e.g. Firefox today) simply show the content. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    [data-reveal],
+    [data-stagger] > * {
+      /* Animates `transform` (not `translate`) so it never fights Tailwind's hover:-translate-y-* lift. */
+      animation: reveal-up linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 60%;
+    }
+    [data-stagger] > :nth-child(3n + 2) { animation-range: entry 8% entry 68%; }
+    [data-stagger] > :nth-child(3n + 3) { animation-range: entry 16% entry 76%; }
+  }
+}
+@keyframes reveal-up { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+
+/* Images fade in over their skeleton once loaded (only with JS; see FadeImage.tsx). */
+html.js img[data-fade] { transition: opacity 0.45s ease-out; }
+html.js img[data-fade]:not([data-loaded]) { opacity: 0; }
+
+/* Loading skeleton block. */
+@utility skeleton {
+  border-radius: 0.75rem;
+  background: linear-gradient(90deg, var(--color-placeholder) 25%, #f6f7f9 50%, var(--color-placeholder) 75%);
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+}
+
+/* Animated check mark (form success). */
+@utility check-draw {
+  stroke-dasharray: 30;
+  stroke-dashoffset: 30;
+  animation: draw 0.45s 0.25s ease-out forwards;
+}
+
+/* Hide the scrollbar of horizontally swipeable rows (tabs, chips) while keeping them scrollable. */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+/* Native <details> marker off for the FAQ accordion. */
+@utility no-marker {
+  list-style: none;
+  &::-webkit-details-marker { display: none; }
+}
+
+/* Rich text from Strapi Blocks. */
+@utility prose-content {
+  @apply max-w-3xl text-[17px] leading-[1.7] text-[#26303f] sm:text-lg;
+  & > * + * { margin-top: 1em; }
+  & h2 { @apply mt-[1.6em] text-2xl font-semibold tracking-tight text-ink sm:text-3xl; }
+  & h3, & h4 { @apply mt-[1.4em] text-xl font-semibold text-ink; }
+  & ul { @apply list-disc pl-5; }
+  & ol { @apply list-decimal pl-5; }
+  & a { @apply text-accent-ink underline; }
+  & blockquote { @apply border-l-[3px] border-accent pl-5 text-muted; }
+  & code { @apply rounded-md bg-bg px-1.5 py-0.5 font-mono text-[0.9em]; }
+  & pre { @apply overflow-x-auto rounded-2xl bg-ink p-4 text-sm text-white; }
+  & img { @apply rounded-2xl; }
+}

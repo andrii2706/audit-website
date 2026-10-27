@@ -1,0 +1,10 @@
+{
+  "collectionName": "components_shared_steps",
+  "info": { "displayName": "Крок процесу", "icon": "arrowRight" },
+  "options": {},
+  "attributes": {
+    "title": { "type": "string", "required": true },
+    "text": { "type": "text" },
+    "duration": { "type": "string" }
+  }
+}

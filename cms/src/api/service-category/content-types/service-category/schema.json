@@ -1,0 +1,56 @@
+{
+  "kind": "collectionType",
+  "collectionName": "service_categories",
+  "info": {
+    "singularName": "service-category",
+    "pluralName": "service-categories",
+    "displayName": "Категорія послуг"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name",
+      "required": true
+    },
+    "intro": {
+      "type": "text",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "order": {
+      "type": "integer",
+      "default": 0,
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    },
+    "services": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::service.service",
+      "mappedBy": "category"
+    }
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  }
+}

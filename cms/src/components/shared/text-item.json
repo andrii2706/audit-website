@@ -1,0 +1,9 @@
+{
+  "collectionName": "components_shared_text_items",
+  "info": { "displayName": "Пункт із заголовком", "icon": "bulletList" },
+  "options": {},
+  "attributes": {
+    "title": { "type": "string", "required": true },
+    "text": { "type": "text" }
+  }
+}

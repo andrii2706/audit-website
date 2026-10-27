@@ -1,0 +1,9 @@
+{
+  "collectionName": "components_shared_stats",
+  "info": { "displayName": "Показник", "icon": "chartBubble", "description": "Цифра + підпис" },
+  "options": {},
+  "attributes": {
+    "value": { "type": "string", "required": true },
+    "label": { "type": "string", "required": true }
+  }
+}

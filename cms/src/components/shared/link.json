@@ -1,0 +1,9 @@
+{
+  "collectionName": "components_shared_links",
+  "info": { "displayName": "Посилання", "icon": "link" },
+  "options": {},
+  "attributes": {
+    "label": { "type": "string", "required": true },
+    "url": { "type": "string", "required": true }
+  }
+}
