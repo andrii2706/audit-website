@@ -1,9 +1,10 @@
 # CI + deployment for the Audit Consultant site (Strapi CMS + Next.js).
 #
-#   pull request → check only
+#   pull request      → check only
 #   push to `staging` → check → deploy to the "staging" environment
-#   push to `main`    → check → deploy to the "production" environment
-#   Actions tab → "Run workflow" → same as a push to the chosen branch
+#   push to `main`    → check → deploy to the "production" environment,
+#                       or to "staging" while the repository variable MAIN_DEPLOYS_TO=staging (MVP: one server)
+#   Actions tab → "Run workflow" → pick the environment by hand (or "auto" = rules above)
 #
 # The deploy job copies the code to the server over SSH (rsync) and runs scripts/server-deploy.sh there.
 # That script builds in a new release folder while the old version keeps running, switches over,
@@ -19,6 +20,12 @@ on:
   pull_request:
     branches: [main, staging]
   workflow_dispatch:
+    inputs:
+      environment:
+        description: Where to deploy ("auto" = by branch, see the comment at the top of this file)
+        type: choice
+        options: [auto, staging, production]
+        default: auto
 
 permissions:
   contents: read
@@ -69,20 +76,53 @@ jobs:
         working-directory: web
         run: npm run typecheck
 
+  # Decides which GitHub environment (and therefore which server, secrets and variables) to deploy to.
+  target:
+    name: Pick environment
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.pick.outputs.environment }}
+    steps:
+      - id: pick
+        env:
+          EVENT: ${{ github.event_name }}
+          BRANCH: ${{ github.ref_name }}
+          CHOSEN: ${{ inputs.environment }}
+          MAIN_DEPLOYS_TO: ${{ vars.MAIN_DEPLOYS_TO }}
+        run: |
+          if [ "$EVENT" = workflow_dispatch ] && [ -n "$CHOSEN" ] && [ "$CHOSEN" != auto ]; then
+            target="$CHOSEN"
+          elif [ "$BRANCH" = staging ]; then
+            target=staging
+          elif [ "$BRANCH" = main ]; then
+            target="${MAIN_DEPLOYS_TO:-production}"
+          else
+            target=""
+          fi
+          case "$target" in staging|production|"") ;; *) echo "::error::MAIN_DEPLOYS_TO must be 'staging' or 'production' (got '$target')"; exit 1 ;; esac
+          if [ -z "$target" ]; then
+            echo "::notice::Branch '$BRANCH' is not deployed automatically. Use 'Run workflow' and choose an environment."
+          else
+            echo "::notice::Deploying '$BRANCH' to the '$target' environment"
+          fi
+          echo "environment=$target" >> "$GITHUB_OUTPUT"
+
   deploy:
-    name: Deploy (${{ github.ref_name == 'main' && 'production' || 'staging' }})
-    needs: check
-    if: github.event_name != 'pull_request' && (github.ref_name == 'main' || github.ref_name == 'staging')
+    name: Deploy (${{ needs.target.outputs.environment }})
+    needs: [check, target]
+    if: needs.target.outputs.environment != ''
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment:
-      name: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+      name: ${{ needs.target.outputs.environment }}
       url: ${{ vars.SITE_URL }}
     # Never run two deploys to the same environment at once; queue instead of cancelling.
     concurrency:
-      group: deploy-${{ github.ref_name }}
+      group: deploy-${{ needs.target.outputs.environment }}
       cancel-in-progress: false
     env:
+      DEPLOY_ENV: ${{ needs.target.outputs.environment }}
       SSH_HOST: ${{ secrets.SSH_HOST }}
       SSH_USER: ${{ secrets.SSH_USER }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -99,9 +139,14 @@ jobs:
         run: |
           missing=0
           for v in SSH_HOST SSH_USER SSH_PRIVATE_KEY APP_DIR; do
-            if [ -z "${!v}" ]; then echo "::error::$v is not set for the '${{ github.ref_name == 'main' && 'production' || 'staging' }}' environment (see docs/CI-CD.md)"; missing=1; fi
+            if [ -z "${!v}" ]; then echo "::error::$v is not set for the '$DEPLOY_ENV' environment"; missing=1; fi
           done
-          case "$APP_DIR" in /*) ;; *) echo "::error::APP_DIR must be an absolute path, e.g. /srv/audit"; missing=1 ;; esac
+          if [ -n "$APP_DIR" ]; then
+            case "$APP_DIR" in /*) ;; *) echo "::error::APP_DIR must be an absolute path, e.g. /srv/audit-staging"; missing=1 ;; esac
+          fi
+          if [ "$missing" = 1 ]; then
+            echo "::error::Add them in Settings → Environments → '$DEPLOY_ENV' (secrets: SSH_HOST, SSH_USER, SSH_PRIVATE_KEY, SSH_KNOWN_HOSTS; variable: APP_DIR). Values saved in another environment are not visible here. To send pushes to main to staging, set the repository variable MAIN_DEPLOYS_TO=staging. Details: docs/CI-CD.md"
+          fi
           exit $missing
 
       - name: Set up SSH
