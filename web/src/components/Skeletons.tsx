@@ -3,20 +3,25 @@
  * from skeleton to content doesn't shift the layout. Used by the `loading.tsx` files of each route.
  * Server components — no JS needed; the shimmer is the `skeleton` utility in globals.css.
  */
-import type { ReactNode } from 'react';
+import { ViewTransition, type ReactNode } from 'react';
 import { cx } from '@/lib/format';
 import SkeletonStatus from './SkeletonStatus';
 import { container } from './ui';
 
 const Bar = ({ className }: { className?: string }) => <div className={cx('skeleton', className)} />;
 
-/** Page wrapper: announces loading to screen readers, fades in so very fast loads don't flash. */
+/**
+ * Page wrapper: announces loading to screen readers and fades in after a short delay, so very fast loads
+ * never flash a skeleton. When the content arrives, the skeleton hands over with a quick fade (view transition).
+ */
 export function SkPage({ children }: { children: ReactNode }) {
   return (
-    <div aria-busy="true" className="animate-[fade-in_0.3s_ease-out_0.12s_both]">
-      <SkeletonStatus />
-      <div aria-hidden="true">{children}</div>
-    </div>
+    <ViewTransition exit="skeleton-out" default="none">
+      <div aria-busy="true" className="animate-[fade-in_0.4s_var(--ease-out-quart)_0.15s_both]">
+        <SkeletonStatus />
+        <div aria-hidden="true">{children}</div>
+      </div>
+    </ViewTransition>
   );
 }
 

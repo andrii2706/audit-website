@@ -59,8 +59,10 @@ export default async function LocaleLayout({ children, params }: Props) {
     <html lang={locale} data-scroll-behavior="smooth" suppressHydrationWarning>
       {/* suppressHydrationWarning: browser extensions (Grammarly, password managers) inject attributes into <body> before React hydrates. Affects only this element’s own attributes. */}
       <body className="min-h-dvh" suppressHydrationWarning>
-        {/* Marks that JS runs (used to fade images in over their skeleton without hiding them for no-JS visitors). */}
-        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+        {/* Images fade in over their skeleton (FadeImage). Without JavaScript nothing would reveal them, so show them right away. */}
+        <noscript>
+          <style>{'img[data-fade]{opacity:1!important}'}</style>
+        </noscript>
         <NavProgress label={dict.common.loading} />
         <a href="#main" className="sr-only z-50 rounded-full bg-ink px-4 py-2 text-white focus:not-sr-only focus:fixed focus:top-3 focus:left-3">
           {dict.nav.skip}

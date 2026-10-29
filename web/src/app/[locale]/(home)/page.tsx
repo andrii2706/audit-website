@@ -49,7 +49,7 @@ export default async function HomePage({ params }: Props) {
       {/* ——— HERO */}
       <section className="pt-8 pb-12 sm:pt-14 sm:pb-14 lg:pt-[72px]">
         <div className={`${container} grid gap-10 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:gap-12`}>
-          <div className="flex min-w-0 animate-fade-up flex-col gap-6 sm:gap-7">
+          <div className="flex min-w-0 animate-stagger flex-col gap-6 [--stagger-step:90ms] sm:gap-7">
             {(home?.heroBadge || home?.heroBadgeNote) && (
               <div className="inline-flex max-w-full flex-wrap items-center gap-x-2.5 gap-y-1.5 self-start rounded-2xl border border-line bg-card py-1.5 pr-3 pl-1.5 text-[12px] font-medium xs:text-[13px] sm:rounded-full sm:pr-3.5 sm:text-sm">
                 {home?.heroBadge && <span className={badge.accent}>{home.heroBadge}</span>}
@@ -57,7 +57,7 @@ export default async function HomePage({ params }: Props) {
               </div>
             )}
             <h1 className="text-[38px] leading-[1.03] font-semibold tracking-[-0.04em] xs:text-[44px] sm:text-[56px] lg:text-[64px] xl:text-[72px]">
-              {home?.heroTitleStart} {home?.heroTitleAccent && <span className="text-accent">{home.heroTitleAccent}</span>} {home?.heroTitleEnd}
+              {home?.heroTitleStart} {home?.heroTitleAccent && <span className="marker text-accent">{home.heroTitleAccent}</span>} {home?.heroTitleEnd}
             </h1>
             {home?.heroSubtitle && <p className="max-w-[600px] text-[17px] leading-relaxed text-muted sm:text-xl">{home.heroSubtitle}</p>}
 
@@ -65,7 +65,7 @@ export default async function HomePage({ params }: Props) {
               <div className="flex flex-col gap-3">
                 <span className="text-sm font-semibold text-muted">{h.whatNeed}</span>
                 {/* Phones: 2-column grid (labels wrap); tablets and up: wrapping chips */}
-                <div className={chipGrid}>
+                <div className={`${chipGrid} animate-stagger [--stagger-base:420ms] [--stagger-step:45ms]`}>
                   {home.quickServices.map((s) => (
                     <Link key={s.documentId} href={`/${locale}/services/${s.slug}`} className={chipCell}>{s.title}</Link>
                   ))}
@@ -81,7 +81,7 @@ export default async function HomePage({ params }: Props) {
             </div>
           </div>
 
-          <div className="grid min-w-0 animate-fade-up grid-cols-1 gap-3 [animation-delay:150ms] xs:grid-cols-2">
+          <div className="grid min-w-0 animate-stagger grid-cols-1 gap-3 [--stagger-base:220ms] [--stagger-step:110ms] xs:grid-cols-2">
             {home?.deadlineTitle && (
               <div className="flex min-h-[220px] flex-col gap-4 rounded-card bg-ink p-6 text-white xs:col-span-2 sm:p-7">
                 <div className="flex flex-wrap items-center justify-between gap-3">

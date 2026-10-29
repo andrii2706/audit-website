@@ -6,6 +6,7 @@ import { formatPhone, telHref } from '@/lib/format';
 import { ArrowUpRight, Phone } from './Icons';
 import LanguageSwitcher from './LanguageSwitcher';
 import NavLinks from './NavLinks';
+import ScrollHeader from './ScrollHeader';
 import MobileMenu from './MobileMenu';
 import { btn, iconBtn } from './ui';
 
@@ -41,8 +42,8 @@ export default function Header({ locale, dict, global }: Props) {
   const name = global?.siteName ?? dict.meta.siteName;
   const nav = navItems(locale, dict);
   return (
-    <header className="sticky top-0 z-30 px-3 pt-2.5 sm:px-6 sm:pt-4">
-      <div className="mx-auto flex max-w-[1240px] items-center gap-3 rounded-full border border-line bg-white/85 py-2 pr-2 pl-4 backdrop-blur-md sm:gap-6 sm:py-2.5 sm:pr-2.5 sm:pl-5">
+    <ScrollHeader className="group/header sticky top-0 z-30 px-3 pt-2.5 transition-[padding] duration-500 ease-(--ease-out-expo) sm:px-6 sm:pt-4 sm:group-data-scrolled/header:pt-2.5">
+      <div className="mx-auto flex max-w-[1240px] items-center gap-3 rounded-full border border-line bg-white/85 py-2 pr-2 pl-4 backdrop-blur-md transition-[background-color,box-shadow,border-color] duration-500 ease-(--ease-out-expo) group-data-scrolled/header:border-line-strong group-data-scrolled/header:bg-white/92 group-data-scrolled/header:shadow-[0_14px_40px_-22px_rgba(11,18,32,0.35)] sm:gap-6 sm:py-2.5 sm:pr-2.5 sm:pl-5">
         <Logo name={name} locale={locale} />
         <nav aria-label={dict.nav.mainMenu} className="hidden min-w-0 flex-1 justify-center gap-0 text-[14px] font-medium xl:flex">
           <NavLinks items={nav} />
@@ -68,6 +69,6 @@ export default function Header({ locale, dict, global }: Props) {
           />
         </div>
       </div>
-    </header>
+    </ScrollHeader>
   );
 }

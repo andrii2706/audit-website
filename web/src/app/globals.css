@@ -31,24 +31,36 @@
   --radius-panel: 2rem;      /* 32px */
   --radius-block: 2.5rem;    /* 40px */
 
-  --animate-fade-up: fade-up 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-  --animate-fade-in: fade-in 0.35s ease-out both;
-  --animate-pop: pop 0.5s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+  /* Motion. One family of curves everywhere: things arrive fast and settle softly (expo-out). */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --animate-fade-up: rise 0.9s var(--ease-out-expo) both;
+  --animate-fade-in: fade-in 0.45s var(--ease-out-quart) both;
+  --animate-panel-in: panel-in 0.6s var(--ease-out-expo) both;
+  --animate-pop: pop 0.6s var(--ease-spring) both;
   --animate-shake: shake 0.4s ease-in-out;
-  --animate-shimmer: shimmer 1.4s linear infinite;
-  --animate-slide-in: slide-in 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+  --animate-slide-in: slide-in 0.6s var(--ease-out-expo) both;
+  --animate-marker: marker 0.9s var(--ease-out-expo) 0.55s both;
 
   --breakpoint-xs: 25rem;    /* 400px — small phones and up */
   --breakpoint-3xl: 112.5rem; /* 1800px — large desktops */
 }
 
-@keyframes fade-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+/* Rise: a short upward move with a touch of blur that clears as it settles. */
+@keyframes rise { from { opacity: 0; transform: translateY(18px); filter: blur(6px); } to { opacity: 1; transform: none; filter: blur(0); } }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes panel-in { from { opacity: 0; transform: translateY(10px) scale(0.99); filter: blur(4px); } to { opacity: 1; transform: none; filter: blur(0); } }
+/* Highlighter stroke under the accent words of the hero title. */
+@keyframes marker { from { background-size: 0% 0.3em; } to { background-size: 100% 0.3em; } }
 @keyframes pop { 0% { opacity: 0; transform: scale(0.6); } 100% { opacity: 1; transform: scale(1); } }
 @keyframes shake { 0%, 100% { transform: none; } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
-@keyframes slide-in { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
-@keyframes menu-in { from { opacity: 0; transform: translateY(-6px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes slide-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes menu-in { from { opacity: 0; transform: translateY(-8px) scale(0.97); filter: blur(4px); } to { opacity: 1; transform: none; filter: blur(0); } }
 @keyframes draw { to { stroke-dashoffset: 0; } }
 
 @layer base {
@@ -94,27 +106,92 @@
 
 /* ——— Scroll reveal — pure CSS (scroll-driven animations), no JavaScript.
    `data-reveal` animates the element, `data-stagger` animates each direct child with a small offset.
-   The animation is tied to the element's position while it enters the viewport, so content is never
-   "waiting" to appear, fast scrolling shows no gaps, and there is nothing to hydrate.
-   Browsers without `animation-timeline` (e.g. Firefox today) simply show the content. */
+   The animation is tied to the element's position while it enters the viewport (so fast scrolling never
+   shows gaps and there is nothing to hydrate) and eased with expo-out, so blocks glide in and settle softly.
+   Browsers without `animation-timeline` (Firefox today) simply show the content. */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
     [data-reveal],
     [data-stagger] > * {
-      /* Animates `transform` (not `translate`) so it never fights Tailwind's hover:-translate-y-* lift. */
-      animation: reveal-up linear both;
+      /* Animates `transform` (not `translate`/`scale`) so it never fights Tailwind's hover lift. */
+      animation: reveal-up var(--ease-out-expo) both;
       animation-timeline: view();
-      animation-range: entry 0% entry 60%;
+      animation-range: entry 0% cover 28%;
     }
-    [data-stagger] > :nth-child(3n + 2) { animation-range: entry 8% entry 68%; }
-    [data-stagger] > :nth-child(3n + 3) { animation-range: entry 16% entry 76%; }
+    [data-stagger] > :nth-child(4n + 2) { animation-range: entry 6% cover 32%; }
+    [data-stagger] > :nth-child(4n + 3) { animation-range: entry 12% cover 36%; }
+    [data-stagger] > :nth-child(4n + 4) { animation-range: entry 18% cover 40%; }
   }
 }
-@keyframes reveal-up { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(44px) scale(0.985); filter: blur(8px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
 
-/* Images fade in over their skeleton once loaded (only with JS; see FadeImage.tsx). */
-html.js img[data-fade] { transition: opacity 0.45s ease-out; }
-html.js img[data-fade]:not([data-loaded]) { opacity: 0; }
+/* Staggered entrance for above-the-fold groups (hero): children rise one after another.
+   --stagger-base / --stagger-step tune the timing per group. */
+@utility animate-stagger {
+  & > * {
+    animation: rise 0.9s var(--ease-out-expo) both;
+    animation-delay: calc(var(--stagger-base, 0ms) + var(--stagger-step, 70ms) * var(--i, 0));
+  }
+  & > :nth-child(2) { --i: 1; }
+  & > :nth-child(3) { --i: 2; }
+  & > :nth-child(4) { --i: 3; }
+  & > :nth-child(5) { --i: 4; }
+  & > :nth-child(6) { --i: 5; }
+  & > :nth-child(7) { --i: 6; }
+  & > :nth-child(8) { --i: 7; }
+}
+
+/* Highlighter under text: put on an inline element (hero accent words). */
+@utility marker {
+  background-image: linear-gradient(var(--color-accent-soft), var(--color-accent-soft));
+  background-repeat: no-repeat;
+  background-position: 0 88%;
+  background-size: 0% 0.3em;
+  animation: var(--animate-marker);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* ——— Page transitions (React <ViewTransition> in app/[locale]/template.tsx).
+   Old page leaves quickly, new page arrives gently; header and the mobile action bar stay put. */
+::view-transition { pointer-events: none; }
+::view-transition-old(root),
+::view-transition-new(root) { animation: none; }
+::view-transition-old(.page) { animation: 160ms var(--ease-out-quart) both page-out; }
+::view-transition-new(.page) { animation: 520ms var(--ease-out-expo) 90ms both page-in; }
+::view-transition-old(.skeleton-out) { animation: 220ms var(--ease-out-quart) both page-out; }
+::view-transition-group(site-header),
+::view-transition-group(action-bar) { animation: none; z-index: 100; }
+::view-transition-old(site-header),
+::view-transition-old(action-bar) { display: none; }
+::view-transition-new(site-header),
+::view-transition-new(action-bar) { animation: none; }
+@keyframes page-out { to { opacity: 0; transform: translateY(-6px); filter: blur(4px); } }
+@keyframes page-in { from { opacity: 0; transform: translateY(14px); filter: blur(6px); } }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) { animation-duration: 0s !important; animation-delay: 0s !important; }
+}
+
+/* ——— Smooth FAQ accordion (native <details>; browsers without ::details-content just open instantly). */
+@supports selector(::details-content) {
+  :root { interpolate-size: allow-keywords; }
+  details.faq::details-content {
+    block-size: 0;
+    overflow: clip;
+    opacity: 0;
+    transition: block-size 0.55s var(--ease-out-expo), opacity 0.4s var(--ease-out-quart), content-visibility 0.55s allow-discrete;
+  }
+  details.faq[open]::details-content { block-size: auto; opacity: 1; }
+}
+
+/* Images fade in over their skeleton once loaded (see FadeImage.tsx; a <noscript> rule in the layout keeps them visible without JS). */
+img[data-fade] { transition: opacity 0.7s var(--ease-out-quart), transform 1.2s var(--ease-out-expo), scale 0.9s var(--ease-out-expo); }
+img[data-fade]:not([data-loaded]) { opacity: 0; transform: scale(1.04); }
 
 /* Loading skeleton block. */
 @utility skeleton {

@@ -66,17 +66,27 @@ This is **Next.js 16**; APIs differ from older versions you may know. Bundled do
 - Ancestors with `backdrop-filter`/`transform` trap `position: fixed` — render overlays through `createPortal(…, document.body)` (see `MobileMenu.tsx`).
 
 ### Motion & loading states
-- Scroll reveal is **pure CSS** (scroll-driven animations, `animation-timeline: view()` in `globals.css`): add `data-reveal` (element) or `data-stagger` (each direct child). No JS, nothing to hydrate; browsers without support just show content. Don't reintroduce JS that mutates attributes of server-rendered elements — it causes hydration mismatches.
-- Above-the-fold content uses CSS `animate-fade-up` (never wait on JS for LCP).
-- Route skeletons: every route has a `loading.tsx` built from `components/Skeletons.tsx` that mirrors its real layout. When you add a route, add its `loading.tsx`.
+- **Curves:** use the tokens in `globals.css` (`--ease-out-expo` everywhere, `--ease-spring` for pops). Tailwind: `ease-(--ease-out-expo)`.
+- **Tailwind v4 gotcha:** `translate-*`, `scale-*` and `rotate-*` set the CSS properties `translate` / `scale` / `rotate`, *not* `transform`. Transition those properties (`transition-[translate,box-shadow]`); `transition-transform` won't animate them.
+- **Page transitions:** React `<ViewTransition>` in `app/[locale]/template.tsx` (class `page`). The header (`site-header`) and the mobile bar (`action-bar`) are named so they stay still. Skeletons hand over via `skeleton-out` (in `SkPage`).
+- **Hero / page heads:** `animate-stagger` utility (children rise one after another; tune with `[--stagger-base:…]`, `[--stagger-step:…]`); `marker` utility for the highlighter under accent words.
+- **Scroll reveal** is pure CSS (scroll-driven animations, `animation-timeline: view()`): add `data-reveal` (element) or `data-stagger` (each direct child). No JS and nothing to hydrate; browsers without support just show the content. Don't reintroduce JS that mutates attributes of server-rendered elements, because it causes hydration mismatches.
+- **Hover:** `cardHover` adds `group`, so children use `group-hover:translate-x-1` (arrows) and `group-hover:scale-[1.04]` (images). Buttons lift, press (`active:scale`) and nudge their trailing icon.
+- **Widgets:**
+  - `AudienceTabs`: sliding pill, measured in a layout effect; until measured, the active tab keeps its own background;
+  - `CountUp`: stats count from 0 on first view, but never identifiers like "№" and never with reduced motion;
+  - FAQ: smooth `::details-content` height;
+  - `ScrollHeader`: `data-scrolled`.
+- Above-the-fold content never waits for JS. Everything is disabled under `prefers-reduced-motion`.
+- **Route skeletons:** every route has a `loading.tsx` built from `components/Skeletons.tsx` that mirrors its real layout. When you add a route, add its `loading.tsx`.
 - **Loading boundaries vs. 404s.** A `loading.tsx` makes the response stream, and a streamed response can't change its status to 404 any more. So:
   - list pages with skeletons live in route groups (`services/(list)/`, `news/(list)/`, `blog/(list)/`, `(home)/`), so their skeleton never wraps the detail pages;
   - every `[slug]/layout.tsx` checks `slugExists()` *before* the page's own skeleton starts streaming;
   - there is no `[locale]/loading.tsx`.
 
   Keep this structure: unknown URLs must return a real HTTP 404.
-- Images: use `components/FadeImage.tsx` inside a container with the `skeleton` class (shimmer until the photo loads, then fade-in).
-- Loaders: `Spinner.tsx`, `NavProgress.tsx` (top bar; dispatch `NAV_START_EVENT` for programmatic navigation). Pending buttons: `disabled` + `aria-busy` + spinner + text.
+- **Images:** use `components/FadeImage.tsx` inside a container with the `skeleton` class (shimmer, then fade and settle from a slight zoom).
+- **Loaders:** `Spinner.tsx`, `NavProgress.tsx` (top bar; dispatch `NAV_START_EVENT` for programmatic navigation). Pending buttons: `disabled` + `aria-busy` + spinner + text.
 
 ### i18n
 - Config: `web/src/i18n/config.ts`. UI strings: `web/src/i18n/dictionaries/{locale}.json` — **all six files must have identical keys**; `uk.json` is the source of truth for the `Dictionary` type.
@@ -107,6 +117,15 @@ This is **Next.js 16**; APIs differ from older versions you may know. Bundled do
   It counts as delivered if Strapi **or** e-mail succeeded. The Public role can read content but never leads.
 - Strapi drops `?status=draft` on anonymous API requests (`cms/src/index.ts`), so unpublished content never leaks.
 - **Do not invent client facts** (registry numbers, prices, people, reviews). Unknown values stay as visible placeholders the client fills in Strapi.
+
+## CI/CD
+
+- `.github/workflows/deploy.yml`:
+  - every PR runs lint + build + type-check;
+  - a push to `staging` / `main` rsyncs the code to the VPS and runs `scripts/server-deploy.sh`.
+- `scripts/server-deploy.sh` builds in `releases/<id>`, health-checks, rolls back on failure, and links secrets/data from `shared/`.
+- What is uploaded is controlled by `.deployignore`. Setup: `docs/CI-CD.md`.
+- The CMS must type-check **without** `cms/types/generated` (it isn't in git), so don't rely on generated Strapi types.
 
 ## Never commit
 

@@ -4,6 +4,7 @@ import type { Dictionary } from '@/i18n/get-dictionary';
 import { t } from '@/i18n/format';
 import type { Article, Category, Faq, Homepage, NewsItem, Service, TeamMember } from '@/lib/strapi';
 import AudienceTabs from './AudienceTabs';
+import CountUp from './CountUp';
 import { FaqList, NewsCard, PersonCard, PostCard, SectionHead, Steps } from './bits';
 import { ArrowUpRight } from './Icons';
 import LeadForm from './LeadForm';
@@ -29,11 +30,12 @@ export function ServicesBento({ locale, dict, featured, total, title, num = '01'
           {big && (
             <Link
               href={`/${locale}/services/${big.slug}`}
-              className="flex min-h-[340px] cursor-pointer flex-col gap-4 rounded-panel border border-transparent bg-accent p-6 text-white transition-[border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-ink sm:col-span-2 sm:min-h-[420px] sm:p-9 lg:row-span-2"
+              className="group relative flex min-h-[340px] cursor-pointer flex-col gap-4 overflow-hidden rounded-panel border border-transparent bg-accent p-6 text-white transition-[translate,box-shadow] duration-500 ease-(--ease-out-expo) hover:-translate-y-1 hover:shadow-[0_32px_64px_-28px_rgba(35,70,255,0.55)] sm:col-span-2 sm:min-h-[420px] sm:p-9 lg:row-span-2"
             >
-              <div className="flex items-center justify-between gap-3">
+              <span aria-hidden="true" className="pointer-events-none absolute -top-24 -right-24 size-72 rounded-full bg-white/15 blur-3xl transition-[translate] duration-1000 ease-(--ease-out-expo) group-hover:translate-x-[-40px] group-hover:translate-y-[30px]" />
+              <div className="relative flex items-center justify-between gap-3">
                 <span className={badge.glass}>{big.badge ?? dict.common.popular}</span>
-                <span className="inline-flex size-12 items-center justify-center rounded-full bg-white text-ink sm:size-13"><ArrowUpRight size={22} /></span>
+                <span className="inline-flex size-12 items-center justify-center rounded-full bg-white text-ink transition-[rotate] duration-500 ease-(--ease-out-expo) group-hover:rotate-45 sm:size-13"><ArrowUpRight size={22} /></span>
               </div>
               <h3 className="mt-auto text-[28px] leading-[1.05] font-semibold tracking-[-0.03em] sm:text-4xl lg:text-[40px]">{big.title}</h3>
               <p className="max-w-md text-base leading-relaxed text-accent-on sm:text-[17px]">{big.excerpt}</p>
@@ -61,7 +63,7 @@ export function ServicesBento({ locale, dict, featured, total, title, num = '01'
                 <h3 className="text-xl leading-tight font-semibold tracking-tight sm:text-[22px]">{s.title}</h3>
                 <p className="text-sm leading-relaxed text-muted">{s.excerpt}</p>
               </div>
-              <span aria-hidden="true" className="inline-flex size-11 items-center justify-center rounded-full border border-line">→</span>
+              <span aria-hidden="true" className="inline-flex size-11 items-center justify-center rounded-full border border-line transition-[background-color,color,border-color,translate] duration-500 ease-(--ease-out-expo) group-hover:translate-x-1 group-hover:border-ink group-hover:bg-ink group-hover:text-white">→</span>
             </Link>
           ))}
         </div>
@@ -103,7 +105,7 @@ export function StatsWhy({ home }: { home: Homepage | null }) {
           <div data-stagger className="grid grid-cols-2 gap-x-4 gap-y-7 lg:grid-cols-4 lg:gap-8">
             {home.stats.map((s) => (
               <div key={s.id} className="flex flex-col gap-1.5 border-l border-dark-line pl-4 sm:pl-5">
-                <b className="text-[34px] leading-none font-semibold tracking-[-0.04em] xs:text-[40px] md:text-5xl lg:text-[56px]">{s.value}</b>
+                <b className="text-[34px] leading-none font-semibold tracking-[-0.04em] xs:text-[40px] md:text-5xl lg:text-[56px]"><CountUp value={s.value} /></b>
                 <span className="text-sm text-dark-muted sm:text-[15px]">{s.label}</span>
               </div>
             ))}

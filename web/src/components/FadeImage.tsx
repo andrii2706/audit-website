@@ -5,8 +5,8 @@ import { useState } from 'react';
 
 /**
  * next/image that fades in once decoded. Put it inside a container with the `skeleton` class:
- * the shimmer shows until the photo arrives. Hidden state applies only under `html.js`
- * (globals.css), so without JavaScript the image is always visible.
+ * the shimmer shows until the photo arrives. The hidden state is in globals.css; a <noscript> style
+ * in the root layout keeps images visible for visitors without JavaScript.
  */
 export default function FadeImage({ onLoad, alt, ...props }: ImageProps) {
   const [loaded, setLoaded] = useState(false);

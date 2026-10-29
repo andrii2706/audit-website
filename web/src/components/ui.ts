@@ -3,8 +3,9 @@
  * Every interactive recipe includes `cursor-pointer`.
  */
 
+// Buttons lift slightly with a soft shadow, press down on click, and nudge their trailing icon.
 const btnBase =
-  'inline-flex cursor-pointer items-center justify-center gap-2.5 rounded-full border font-semibold transition-[background-color,border-color,transform,color] duration-200 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0';
+  'group/btn inline-flex cursor-pointer items-center justify-center gap-2.5 rounded-full border font-semibold transition-[background-color,border-color,translate,scale,color,box-shadow] duration-300 ease-(--ease-out-expo) hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-14px_rgba(11,18,32,0.45)] active:translate-y-0 active:scale-[0.98] active:shadow-none active:duration-100 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none [&>svg:last-child]:transition-[translate] [&>svg:last-child]:duration-300 [&>svg:last-child]:ease-(--ease-out-expo) hover:[&>svg:last-child]:translate-x-0.5';
 
 export const btn = {
   dark: `${btnBase} h-13 px-6 text-base border-transparent bg-ink text-white hover:bg-ink-2 sm:h-14 sm:px-7`,
@@ -16,13 +17,17 @@ export const btn = {
 };
 
 export const chip =
-  'inline-flex h-11 shrink-0 cursor-pointer items-center whitespace-nowrap rounded-full border border-line bg-card px-4 text-[15px] font-medium text-ink transition-[border-color,transform,background-color,color] duration-200 hover:-translate-y-0.5 hover:border-ink aria-pressed:border-ink aria-pressed:bg-ink aria-pressed:text-white';
+  'inline-flex h-11 shrink-0 cursor-pointer items-center whitespace-nowrap rounded-full border border-line bg-card px-4 text-[15px] font-medium text-ink transition-[border-color,translate,scale,background-color,color,box-shadow] duration-300 ease-(--ease-out-expo) hover:-translate-y-0.5 hover:border-ink hover:shadow-[0_8px_20px_-12px_rgba(11,18,32,0.35)] active:scale-[0.97] active:duration-100 aria-pressed:border-ink aria-pressed:bg-ink aria-pressed:text-white';
 
 export const iconBtn =
-  'inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line bg-transparent text-ink transition-colors hover:border-ink';
+  'inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line bg-transparent text-ink transition-[border-color,background-color,scale] duration-300 ease-(--ease-out-expo) hover:border-ink hover:bg-bg active:scale-95 active:duration-100';
 
-/** Card that lifts and gets a dark border on hover (used for links). */
-export const cardHover = 'cursor-pointer transition-[border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-ink';
+/**
+ * Card that lifts with a soft shadow on hover (used for links). Adds `group` so children can react:
+ * `group-hover:translate-x-1` on arrows, `group-hover:scale-[1.04]` on images.
+ */
+export const cardHover =
+  'group cursor-pointer transition-[border-color,translate,box-shadow] duration-500 ease-(--ease-out-expo) hover:-translate-y-1 hover:border-ink/30 hover:shadow-[0_28px_56px_-28px_rgba(11,18,32,0.35)] active:translate-y-0 active:duration-150';
 
 export const container = 'mx-auto w-full max-w-[1240px] px-4 sm:px-6';
 
@@ -49,4 +54,4 @@ export const chipGrid = 'grid grid-cols-2 gap-2 sm:flex sm:flex-wrap [&>*:last-c
 // Standalone (not built on `chip`): combining utilities that set the same property (h-11 + h-auto,
 // whitespace-nowrap + whitespace-normal) has no guaranteed winner in Tailwind v4.
 export const chipCell =
-  'inline-flex min-h-11 min-w-0 cursor-pointer items-center justify-center rounded-full border border-line bg-card px-3 py-2 text-center text-[13px] leading-tight font-medium break-words text-ink transition-[border-color,transform,background-color,color] duration-200 hover:-translate-y-0.5 hover:border-ink xs:px-4 xs:text-sm sm:shrink-0 sm:justify-start sm:py-2.5 sm:text-left sm:text-[15px]';
+  'inline-flex min-h-11 min-w-0 cursor-pointer items-center justify-center rounded-full border border-line bg-card px-3 py-2 text-center text-[13px] leading-tight font-medium break-words text-ink transition-[border-color,translate,scale,background-color,color,box-shadow] duration-300 ease-(--ease-out-expo) hover:-translate-y-0.5 hover:border-ink hover:shadow-[0_8px_20px_-12px_rgba(11,18,32,0.35)] active:scale-[0.97] active:duration-100 xs:px-4 xs:text-sm sm:shrink-0 sm:justify-start sm:py-2.5 sm:text-left sm:text-[15px]';

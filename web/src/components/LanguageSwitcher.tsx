@@ -99,7 +99,7 @@ export default function LanguageSwitcher({ locale, label, busyLabel }: Props) {
       >
         {switching ? <Spinner size={16} /> : <Globe size={16} />}
         <span aria-hidden="true">{(switching ?? locale).toUpperCase()}</span>
-        <span className={cx('transition-transform duration-200', open && 'rotate-180')}><Chevron /></span>
+        <span className={cx('transition-[rotate] duration-300 ease-(--ease-out-expo)', open && 'rotate-180')}><Chevron /></span>
       </button>
       {switching && busyLabel && <span role="status" className="sr-only">{busyLabel}</span>}
 
@@ -107,7 +107,7 @@ export default function LanguageSwitcher({ locale, label, busyLabel }: Props) {
         id={menuId}
         hidden={!open}
         onKeyDown={onMenuKey}
-        className="absolute top-[calc(100%+8px)] right-0 z-40 w-56 origin-top-right animate-[menu-in_0.16s_ease-out] rounded-2xl border border-line bg-card p-1.5 shadow-[0_12px_40px_-12px_rgba(11,18,32,0.25)]"
+        className="absolute top-[calc(100%+8px)] right-0 z-40 w-56 origin-top-right animate-[menu-in_0.35s_var(--ease-out-expo)] rounded-2xl border border-line bg-card p-1.5 shadow-[0_12px_40px_-12px_rgba(11,18,32,0.25)]"
       >
         <p className="px-3 pt-2 pb-1.5 text-xs font-semibold tracking-wide text-muted uppercase">{label}</p>
         <ul className="flex flex-col">

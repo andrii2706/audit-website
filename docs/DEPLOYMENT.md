@@ -1,5 +1,7 @@
 # Deployment
 
+> **Automatic deploys:** once a VPS is prepared as in Option A, `.github/workflows/deploy.yml` deploys every push to `staging` / `main`. See [CI-CD.md](CI-CD.md).
+
 The project is two Node.js processes: **Strapi** (`cms`, port 1337) and **Next.js** (`web`, port 3000). Both need **Node.js 22.19+** (recommended 22.22.0) or 24.x; odd versions don't work.
 
 Typical production layout:

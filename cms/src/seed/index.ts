@@ -132,10 +132,13 @@ export async function seedIfEmpty(strapi: Core.Strapi) {
     const t = CONTENT[locale]();
     const first = locale === 'uk';
     // create() for Ukrainian, update() adds a localization to the existing document.
-    const put = async (uid: any, key: string | undefined, payload: any, published = false) => {
+    const put = async (uid: any, key: string | undefined, payload: any, published = false): Promise<{ documentId: string }> => {
       const opts: any = { locale, data: payload, ...(published ? { status: 'published' } : {}) };
-      if (first || !key) return strapi.documents(uid).create(opts);
-      return strapi.documents(uid).update({ ...opts, documentId: key });
+      const doc = first || !key
+        ? await strapi.documents(uid).create(opts)
+        : await strapi.documents(uid).update({ ...opts, documentId: key });
+      if (!doc) throw new Error(`[seed] could not save ${uid} (${locale})`);
+      return doc as { documentId: string };
     };
 
     for (const c of data.categories) {
