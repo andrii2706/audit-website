@@ -105,7 +105,8 @@
     "contactHint": "Wystarczy telefon lub e-mail.",
     "errContact": "Podaj telefon lub e-mail",
     "channelEmail": "E-mail",
-    "orEmail": "lub napisz na"
+    "orEmail": "lub napisz na",
+    "demoNote": "To wersja demonstracyjna strony: zgłoszenie nie zostało wysłane."
   },
   "service": {
     "price": "Cena",

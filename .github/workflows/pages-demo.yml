@@ -1,0 +1,109 @@
+# Static client preview on GitHub Pages: https://<user>.github.io/<repo>/
+#
+# No server is needed: this job starts Strapi inside the runner (fresh SQLite database, seeded with the
+# starter content in all 6 languages), builds the website against it as plain static files and publishes
+# them to GitHub Pages. Differences from the real site:
+#   - the request form validates and shows the success screen, but sends nothing (a note says so);
+#   - content comes from the seed data, not from your admin panel (news templates are drafts → news list is empty);
+#   - search engines are blocked (robots.txt Disallow + noindex).
+#
+# One-time setup: Settings → Pages → Build and deployment → Source: "GitHub Actions".
+# (GitHub Pages on a private repository needs a paid GitHub plan; on GitHub Free make the repo public.)
+
+name: Pages demo
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only the newest preview matters.
+concurrency:
+  group: pages-demo
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build static preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            cms/package-lock.json
+            web/package-lock.json
+
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: CMS — install
+        working-directory: cms
+        run: npm ci --no-audit --no-fund
+
+      # `npm run dev` first creates cms/.env (random secrets) and web/.env.local, then seeds the empty DB.
+      - name: CMS — start with seed content
+        working-directory: cms
+        env:
+          SEED_ON_EMPTY: 'true'
+          WEB_REVALIDATE_URL: http://127.0.0.1:9/disabled
+        run: |
+          nohup npm run dev > ../strapi.log 2>&1 &
+          for i in $(seq 1 120); do
+            if curl -sf -o /dev/null http://127.0.0.1:1337/_health; then echo "Strapi is up after ${i}s"; break; fi
+            sleep 1
+          done
+          curl -sf -o /dev/null http://127.0.0.1:1337/_health || { tail -80 ../strapi.log; echo "::error::Strapi did not start"; exit 1; }
+          count=$(curl -s 'http://127.0.0.1:1337/api/services?locale=uk&pagination%5BpageSize%5D=1' | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).meta?.pagination?.total??0))')
+          echo "Seeded services: $count"
+          [ "$count" -gt 0 ] || { tail -80 ../strapi.log; echo "::error::The CMS has no content — the preview would be empty"; exit 1; }
+
+      - name: Web — install
+        working-directory: web
+        run: npm ci --no-audit --no-fund
+
+      - name: Web — prepare server-less demo source
+        working-directory: web
+        run: node scripts/prepare-pages-demo.mjs
+
+      - name: Web — static build
+        working-directory: web
+        env:
+          PAGES_DEMO: '1'
+          PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          SITE_URL: ${{ steps.pages.outputs.base_url }}
+          STRAPI_URL: http://127.0.0.1:1337
+          NO_INDEX: 'true'
+          NEXT_TELEMETRY_DISABLED: '1'
+        run: |
+          npm run build
+          node scripts/finish-pages-demo.mjs
+
+      - name: Strapi log (on failure)
+        if: failure()
+        run: tail -100 strapi.log || true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/out
+
+  deploy:
+    name: Publish to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

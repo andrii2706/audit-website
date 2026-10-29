@@ -90,7 +90,7 @@ All variables are described in the `.env.example` files.
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md): content model, i18n, rendering and caching, SEO, leads
-- [CI/CD](docs/CI-CD.md): GitHub Actions checks every PR and deploys `staging` / `main` to a VPS with automatic rollback
+- [CI/CD](docs/CI-CD.md): GitHub Actions checks every PR, publishes a static **GitHub Pages preview** for the client, and deploys `staging` / `main` to a VPS with automatic rollback
 - [Deployment](docs/DEPLOYMENT.md): VPS with PM2 + Nginx, Docker, Postgres, shared hosting, Vercel, checklist
 - [Content editing](docs/CONTENT-EDITING.md): guide for editors working in the Strapi admin
 - [Troubleshooting](docs/TROUBLESHOOTING.md): common install and runtime errors

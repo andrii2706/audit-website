@@ -48,6 +48,7 @@ export default function LeadForm({ locale, dict, variant = 'estimate', serviceOp
         </span>
         <h3 className="text-2xl font-semibold tracking-tight sm:text-[28px]">{dict.successTitle}</h3>
         <p className="text-muted">{t(dict.successText, { channel: channels.find((c) => c.id === channel)?.label ?? 'Telegram' })}</p>
+        {state.demo && <p className="rounded-xl bg-bg px-3.5 py-2.5 text-[13px] text-muted">{dict.demoNote}</p>}
       </div>
     );
   }

@@ -9,6 +9,8 @@ import { createLead, getGlobal, type LeadInput } from '@/lib/strapi';
 export type LeadState = {
   ok: boolean;
   error?: boolean;
+  /** Set only by the GitHub Pages demo build (demo/actions.ts): nothing was sent. */
+  demo?: boolean;
   /** Values are dictionary keys in `form` so the client shows them in its language. `contact` = neither phone nor e-mail. */
   fieldErrors?: Partial<Record<'name' | 'phone' | 'email' | 'contact', 'errName' | 'errPhone' | 'errEmail' | 'errContact'>>;
 };

@@ -1,13 +1,43 @@
 # CI/CD with GitHub Actions
 
-`.github/workflows/deploy.yml` checks every change and deploys automatically to a VPS:
+## Client preview on GitHub Pages (no server needed)
+
+`.github/workflows/pages-demo.yml` publishes a **static preview** on every push to `main` (or by hand: Actions → *Pages demo* → *Run workflow*):
+
+1. The runner starts Strapi with a fresh database seeded with the starter content in all 6 languages.
+2. It builds the website against it as static files and publishes them at `https://<user>.github.io/<repo>/`.
+
+One-time setup: **Settings → Pages → Build and deployment → Source: GitHub Actions**. On GitHub Free, Pages works only for **public** repositories. If the repo is private, make it public or use a paid plan. Another option: the static `web/out` folder also works on Netlify or Cloudflare Pages.
+
+How the preview differs from the real site:
+- the form validates and shows the success screen with the note "demo — not sent";
+- the content is the seed data (the news templates are drafts, so the news page shows its empty state);
+- per-page social preview images are off;
+- search engines are blocked.
+
+How it works: `web/scripts/prepare-pages-demo.mjs` removes the server-only parts in the CI checkout:
+- the proxy;
+- `/api/revalidate`;
+- the server action (replaced by `web/demo/actions.ts`);
+- ISR;
+- the dynamic OG images.
+
+Then `PAGES_DEMO=1` switches `next.config.ts` to `output: 'export'` with the Pages `basePath`, and `scripts/finish-pages-demo.mjs` adds the language-redirect `index.html`. The real code and the VPS deploy are unaffected.
+
+---
+
+## Deploy to a VPS
+
+`.github/workflows/deploy.yml` checks every change and deploys automatically to a VPS. While an environment has no server configured, its deploy is **skipped with a warning** (not failed):
 
 | Event | What happens |
 | --- | --- |
 | Pull request to `main` / `staging` | **check** only: install, lint, build, type-check |
 | Push to `staging` | check → deploy to the **staging** environment |
-| Push to `main` | check → deploy to the **production** environment |
-| Actions → *CI / Deploy* → *Run workflow* | same as a push to the chosen branch |
+| Push to `main` | check → deploy to the **production** environment (or **staging**, see below) |
+| Actions → *CI / Deploy* → *Run workflow* | choose `staging` / `production` by hand, or `auto` (rules above) |
+
+**MVP with only a staging server.** Create only the `staging` environment and add the repository variable `MAIN_DEPLOYS_TO=staging` (Settings → Secrets and variables → Actions → *Variables*). Pushes to `main` then deploy to staging. When production is ready, create the `production` environment and delete the variable (or set it to `production`).
 
 ```
 GitHub Actions ──rsync over SSH──► $APP_DIR/releases/<id>/ ──► scripts/server-deploy.sh (on the server)
@@ -200,7 +230,7 @@ Or: Actions → *CI / Deploy* → *Run workflow* on an older commit / tag.
 
 | Symptom | Fix |
 | --- | --- |
-| `SSH_HOST is not set for the 'production' environment` | Secrets must be added to the **environment**, not only to the repository. |
+| `SSH_HOST is not set for the 'production' environment` | The push went to `main`, which deploys to production. Either fill in the `production` environment, or set the repository variable `MAIN_DEPLOYS_TO=staging`, or push to the `staging` branch. Secrets saved in one environment are not visible in another. |
 | `Host key verification failed` | Update `SSH_KNOWN_HOSTS` (the server was reinstalled or its IP changed). |
 | `Missing …/shared/cms.env` | Create the shared env files (section 1). |
 | Build killed / `JavaScript heap out of memory` | Add swap, or use a server with more RAM. |

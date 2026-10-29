@@ -34,7 +34,7 @@ export default async function NewsPage({ params }: Props) {
         title={dict.pages.newsTitle}
         intro={dict.pages.newsIntro}
       >
-        <a href={`/${locale}/news/rss.xml`} className="mt-5 inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-muted hover:text-accent">
+        <a href={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/${locale}/news/rss.xml`} className="mt-5 inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-muted hover:text-accent">
           <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="19" r="2.2" /><path d="M3 10.5v3a7.5 7.5 0 0 1 7.5 7.5h3A10.5 10.5 0 0 0 3 10.5Zm0-6v3A13.5 13.5 0 0 1 16.5 21h3A16.5 16.5 0 0 0 3 4.5Z" /></svg>
           {dict.pages.newsRss}
         </a>

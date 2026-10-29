@@ -103,7 +103,8 @@
     "contactHint": "Un téléphone ou un e-mail suffit.",
     "errContact": "Indiquez un téléphone ou un e-mail",
     "channelEmail": "E-mail",
-    "orEmail": "ou écrivez à"
+    "orEmail": "ou écrivez à",
+    "demoNote": "Ceci est une version de démonstration : la demande n’a pas été envoyée."
   },
   "service": {
     "price": "Prix",

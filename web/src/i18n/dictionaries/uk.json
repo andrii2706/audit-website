@@ -105,7 +105,8 @@
     "contactHint": "Достатньо телефону або e-mail.",
     "errContact": "Вкажіть телефон або e-mail",
     "channelEmail": "E-mail",
-    "orEmail": "або напишіть на"
+    "orEmail": "або напишіть на",
+    "demoNote": "Це демо-версія сайту: заявку не надіслано."
   },
   "service": {
     "price": "Вартість",

@@ -127,6 +127,13 @@ This is **Next.js 16**; APIs differ from older versions you may know. Bundled do
 - What is uploaded is controlled by `.deployignore`. Setup: `docs/CI-CD.md`.
 - The CMS must type-check **without** `cms/types/generated` (it isn't in git), so don't rely on generated Strapi types.
 
+## GitHub Pages preview
+
+`.github/workflows/pages-demo.yml` + `web/scripts/prepare-pages-demo.mjs` build a static export (`PAGES_DEMO=1`).
+
+- Anything you add that needs a server (route handlers reading the request, server actions, cookies, ISR, dynamic OG images) must either work under `output: 'export'` or be removed or replaced in `prepare-pages-demo.mjs`.
+- Raw `<a href>` to internal non-page URLs must prefix `process.env.NEXT_PUBLIC_BASE_PATH`. `<Link>` handles it automatically.
+
 ## Never commit
 
 `cms/.env`, `web/.env.local`, `cms/.tmp/` (SQLite DB + `web-token.txt`), `cms/public/uploads/`, `node_modules/`, `.next/`, `cms/dist/`, `*.log`.
