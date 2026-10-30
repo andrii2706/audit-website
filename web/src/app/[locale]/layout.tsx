@@ -4,8 +4,9 @@ import '@fontsource-variable/onest';
 import '@fontsource/jetbrains-mono/500.css';
 import '../globals.css';
 import Footer from '@/components/Footer';
-import Header from '@/components/Header';
+import Header, { TopBar } from '@/components/Header';
 import MobileActionBar from '@/components/MobileActionBar';
+import ScrollToTop from '@/components/ScrollToTop';
 import NavProgress from '@/components/NavProgress';
 import { JsonLd } from '@/components/bits';
 import { isLocale, locales, type Locale } from '@/i18n/config';
@@ -32,13 +33,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: g?.seo?.metaDescription || d.meta.defaultDescription,
     absoluteTitle: true,
   });
+  // No canonical/hreflang here: every page sets its own, and the 404 page must not inherit the home page's.
+  const { alternates: _alternates, ...shared } = base;
+  void _alternates;
   return {
-    ...base,
+    ...shared,
     metadataBase: new URL(SITE_URL),
     title: { default: g?.seo?.metaTitle || d.meta.defaultTitle, template: `%s — ${siteName}` },
     applicationName: siteName,
     openGraph: { ...base.openGraph, siteName },
-    robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 } },
+    // Only preview directives: index/follow is the default, and setting it here would contradict the 404 page's noindex.
+    robots: { googleBot: { 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
     formatDetection: { telephone: true, email: true, address: true },
     verification: {
       google: process.env.GOOGLE_SITE_VERIFICATION || undefined,
@@ -67,9 +72,11 @@ export default async function LocaleLayout({ children, params }: Props) {
         <a href="#main" className="sr-only z-50 rounded-full bg-ink px-4 py-2 text-white focus:not-sr-only focus:fixed focus:top-3 focus:left-3">
           {dict.nav.skip}
         </a>
+        <TopBar locale={locale} dict={dict} global={global} />
         <Header locale={locale} dict={dict} global={global} />
-        <main id="main">{children}</main>
+        <main id="main" tabIndex={-1} className="outline-none">{children}</main>
         <Footer locale={locale} dict={dict} global={global} categories={categories} ctaTitle={home?.ctaTitle} />
+        <ScrollToTop label={dict.common.toTop} />
         <MobileActionBar locale={locale} phone={global?.phone} telegramUrl={global?.telegramUrl} labels={{ call: dict.nav.call, consultation: dict.nav.consultation }} />
         <JsonLd data={organizationLd(locale, global)} />
         <JsonLd data={websiteLd(locale, global?.siteName ?? dict.meta.siteName)} />

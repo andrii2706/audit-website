@@ -1,0 +1,73 @@
+{
+  "kind": "collectionType",
+  "collectionName": "document_images",
+  "info": {
+    "singularName": "document-image",
+    "pluralName": "document-images",
+    "displayName": "Документ (сертифікат / рекомендація)",
+    "description": "Scans shown on the About page: certificates, orders, diplomas (kind=certificate) and recommendation letters (kind=recommendation). Only entries with an image are shown."
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "title": {
+      "type": "text",
+      "required": true,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "kind": {
+      "type": "enumeration",
+      "enum": [
+        "certificate",
+        "recommendation"
+      ],
+      "default": "certificate",
+      "required": true,
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images",
+        "files"
+      ],
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    },
+    "order": {
+      "type": "integer",
+      "default": 0,
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    },
+    "sourceUrl": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    }
+  }
+}

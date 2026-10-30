@@ -7,10 +7,6 @@ import { isLocale, type Locale } from '@/i18n/config';
 const LABEL: Record<Locale, string> = {
   uk: 'Завантаження…',
   en: 'Loading…',
-  pl: 'Ładowanie…',
-  fr: 'Chargement…',
-  de: 'Wird geladen…',
-  es: 'Cargando…',
 };
 
 export default function SkeletonStatus() {

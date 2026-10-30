@@ -16,7 +16,9 @@
     "predev": "node scripts/check-node.mjs && node scripts/ensure-env.mjs && node -e \"require('fs').mkdirSync('public/uploads',{recursive:true})\"",
     "predevelop": "node scripts/check-node.mjs && node scripts/ensure-env.mjs && node -e \"require('fs').mkdirSync('public/uploads',{recursive:true})\"",
     "prestart": "node scripts/check-node.mjs && node -e \"require('fs').mkdirSync('public/uploads',{recursive:true})\"",
-    "prebuild": "node scripts/check-node.mjs && node -e \"require('fs').mkdirSync('public/uploads',{recursive:true})\""
+    "prebuild": "node scripts/check-node.mjs && node -e \"require('fs').mkdirSync('public/uploads',{recursive:true})\"",
+    "reseed": "node scripts/reseed.mjs",
+    "import-media": "node scripts/import-media.mjs"
   },
   "dependencies": {
     "@strapi/database": "5.59.0",

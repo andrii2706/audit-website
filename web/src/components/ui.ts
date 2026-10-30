@@ -33,7 +33,7 @@ export const container = 'mx-auto w-full max-w-[1240px] px-4 sm:px-6';
 
 export const eyebrow = 'font-mono text-[13px] uppercase tracking-wide text-muted';
 
-export const h2 = 'text-[30px] font-semibold leading-[1.05] tracking-[-0.03em] xs:text-[34px] md:text-[42px] lg:text-[48px]';
+export const h2 = 'text-[30px] font-semibold leading-[1.05] tracking-[-0.03em] break-words hyphens-auto xs:text-[34px] md:text-[42px] lg:text-[48px]';
 
 export const field =
   'min-h-[50px] w-full rounded-[14px] border border-line-strong bg-white px-3.5 text-base font-normal text-ink outline-none transition focus:border-transparent focus:ring-2 focus:ring-accent aria-invalid:border-danger aria-invalid:bg-danger-soft';

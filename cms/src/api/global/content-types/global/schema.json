@@ -59,6 +59,14 @@
         }
       }
     },
+    "phoneSecondary": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    },
     "email": {
       "type": "email",
       "pluginOptions": {
@@ -75,7 +83,31 @@
         }
       }
     },
+    "mapQuery": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    },
+    "mapUrl": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    },
     "workingHours": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "workingHoursNote": {
       "type": "string",
       "pluginOptions": {
         "i18n": {

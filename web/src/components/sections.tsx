@@ -129,6 +129,26 @@ export function StatsWhy({ home }: { home: Homepage | null }) {
   );
 }
 
+/** Industries the firm works in: numbered tiles, 2 → 3 → 5 columns. Hidden when the list is empty. */
+export function IndustriesSection({ dict, home, num = '04' }: Base & { home: Homepage | null; num?: string }) {
+  if (!home?.industries?.length) return null;
+  return (
+    <section id="industries" className="py-16 sm:py-24">
+      <div className={container}>
+        <SectionHead eyebrowText={`${num} / ${dict.sections.industries}`} title={home.industriesTitle ?? dict.sections.industries} />
+        <ul data-stagger className="grid grid-cols-1 gap-2.5 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 lg:gap-3">
+          {home.industries.map((it, i) => (
+            <li key={it.id} className="flex min-h-[132px] flex-col justify-between gap-4 rounded-tile border border-line bg-card p-5 transition-[border-color,translate] duration-500 ease-(--ease-out-expo) hover:-translate-y-0.5 hover:border-ink/30">
+              <span className="font-mono text-[13px] text-muted">{String(i + 1).padStart(2, '0')}</span>
+              <span className="text-[17px] leading-snug font-semibold tracking-tight">{it.text}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
 export function TeamSection({ dict, home, team, num = '04' }: Base & { home: Homepage | null; team: TeamMember[]; num?: string }) {
   if (!team.length) return null;
   return (
@@ -136,7 +156,7 @@ export function TeamSection({ dict, home, team, num = '04' }: Base & { home: Hom
       <div className={container}>
         <SectionHead eyebrowText={`${num} / ${dict.sections.team}`} title={home?.teamTitle ?? dict.pages.teamTitle} intro={home?.teamSubtitle} />
         <div data-stagger className="grid grid-cols-1 gap-3 xs:grid-cols-2 lg:grid-cols-4">
-          {team.map((m) => <PersonCard key={m.documentId} m={m} />)}
+          {team.map((m) => <PersonCard key={m.documentId} m={m} labels={{ qualification: dict.pages.teamQualification, registry: dict.pages.teamRegistry }} />)}
         </div>
       </div>
     </section>

@@ -17,17 +17,21 @@ All types except **Lead** are localized (i18n plugin). Shared, non-localized fie
 
 | Type (UID)                     | Kind       | Purpose                                                       |
 | ------------------------------ | ---------- | ------------------------------------------------------------- |
-| `service-category`             | collection | Groups services (Audit, Accounting, Legal, Grants…)           |
+| `service-category`             | collection | Groups services: audit & assurance, consulting, legal & tax   |
 | `service`                      | collection | Service page: excerpt, rich description, price/duration, deliverables, steps, tags, SEO; `featured` + `order` control the home bento |
 | `audience`                     | collection | "Who we help" tabs, each with related services                |
-| `team-member`                  | collection | Name, role, experience, credential, photo                     |
+| `team-member`                  | collection | Name, role, experience, credential, bio (full text on `/team`), photo |
 | `faq`                          | collection | Question / answer, ordered                                    |
 | `article`                      | collection | Blog / insights: cover, kind, reading time, rich body, SEO    |
 | `news-item`                    | collection | Company news: date, tag, `pinned`, excerpt, cover, rich body, SEO. Shown on `/news`, on the home page and in RSS |
 | `client-logo`                  | collection | Client name, optional logo and URL                            |
 | `lead`                         | collection | Form submissions (not localized; `status` for the sales pipeline, `locale_code` = site language) |
-| `global`                       | single     | Site name, contacts, registry data, socials, footer, default SEO |
-| `homepage`                     | single     | Hero, deadline card, stats, reasons, section titles, process steps, estimate block, CTA |
+| `vacancy`                      | collection | Career page openings: title, employment, duties / requirements / conditions (one item per line) |
+| `transparency-report`          | collection | `/reports`: year, title, PDF, `isCorrection`, `publishedOn`, note. Corrected versions are extra entries; originals stay |
+| `global`                       | single     | Site name, contacts (2 phones, e-mail, address, `mapQuery`/`mapUrl`, hours + note), registry data, socials, footer, default SEO |
+| `homepage`                     | single     | Hero, deadline card, stats, reasons, industries, section titles, process steps, request block, CTA |
+| `about-page`                   | single     | `/about`: intro, reasons, mission, values, principles, history, "clients come to us when…", register, quality system |
+| `career-page`                  | single     | `/career`: intro, "working here", FAQ, empty-vacancies note (the quality system from `about-page` is shown here too) |
 
 Shared components (`cms/src/components/shared`): `seo`, `stat`, `text-item`, `step`, `bullet`, `link`.
 
@@ -35,10 +39,11 @@ Shared components (`cms/src/components/shared`): `seo`, `stat`, `text-item`, `st
 
 On every start, in this order (all steps are idempotent):
 
-1. `ensureLocales` creates uk/en/pl/fr/de/es and sets `uk` as the default.
+1. `ensureLocales` creates uk/en and sets `uk` as the default.
+   Before seeding, `reseedIfRequested` (only with `RESEED_CONTENT=true`, i.e. `npm run reseed`) deletes all seeded types and any other locales.
 2. `ensurePublicPermissions` lets the Public role `find`/`findOne` the content types. Leads are never readable publicly.
 3. `ensureWebToken` creates the custom API token "web-site" with only `api::lead.lead.create`, and writes it to `.tmp/web-token.txt`.
-4. `seedIfEmpty` runs only if there are no services and `SEED_ON_EMPTY` is not `false`. It creates the Ukrainian documents, then adds each translation to the same document (`documents.update({ documentId, locale })`). Relations are linked per locale.
+4. `seedIfEmpty` runs only if there are no services and `SEED_ON_EMPTY` is not `false`. Data: `seed/structure.ts` (slugs, ordering, contacts) + `seed/content/{uk,en}.ts` (texts). It creates the Ukrainian documents, then adds each translation to the same document (`documents.update({ documentId, locale })`). Relations are linked per locale.
 
 The `strapi.documents.use` middleware POSTs to `WEB_REVALIDATE_URL` after create/update/delete/publish/unpublish of any site type.
 
@@ -52,7 +57,7 @@ web/src/
 │   ├── [locale]/(home)/        Home page + its skeleton (route group, URL is /{locale})
 │   ├── [locale]/services/…     (list)/ catalogue + [slug]/ detail (layout checks the slug → real 404; opengraph-image)
 │   ├── [locale]/news/…         (list)/ news feed, [slug]/ news item, rss.xml/ RSS 2.0 feed per language
-│   ├── [locale]/audiences|about|team|blog|blog/[slug]|contacts
+│   ├── [locale]/about|team|career|reports|audiences|blog|blog/[slug]|contacts
 │   ├── [locale]/**/loading.tsx Per-route skeletons mirroring each page layout
 │   ├── [locale]/not-found.tsx  Localized 404 ([...rest] catches unknown paths)
 │   ├── actions.ts              submitLead server action

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 102" role="img" aria-label="Бізнес Партнери">
+  <path fill="#4cb6dc" d="M38 14C61 6 82 26 76 56c-4-18-17-34-38-42z"/>
+  <path fill="#4cb6dc" d="M50 89C27 97 7 76 14 46c3 18 16 34 36 43z"/>
+  <g fill="#3c8ec8" transform="translate(20 0) skewX(-16) scale(.78 1)">
+    <path fill-rule="evenodd" d="M27 23h8.5v24A12.5 12.5 0 1 1 27 59zm12.5 25.5a6 6 0 1 0 0 12 6 6 0 0 0 0-12z"/>
+    <path fill-rule="evenodd" d="M50.5 47h8v2A12.5 12.5 0 1 1 58.5 69.5V90h-8zm13 1.5a6 6 0 1 0 0 12 6 6 0 0 0 0-12z"/>
+  </g>
+</svg>

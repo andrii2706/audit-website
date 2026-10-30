@@ -34,6 +34,8 @@ const stale = [
   // list pages moved into (list) route groups so their skeletons don't break 404s of detail pages
   'src/app/[locale]/loading.tsx', 'src/app/[locale]/services/page.tsx', 'src/app/[locale]/services/loading.tsx',
   'src/app/[locale]/blog/page.tsx', 'src/app/[locale]/blog/loading.tsx',
+  // languages reduced to uk + en
+  'src/i18n/dictionaries/pl.json', 'src/i18n/dictionaries/fr.json', 'src/i18n/dictionaries/de.json', 'src/i18n/dictionaries/es.json',
 ].filter((p) => existsSync(join(root, p)));
 if (stale.length && existsSync(join(root, 'src/app/[locale]'))) {
   problems.push(`Leftover files from an older version of the project (probably unzipped over an old copy):\n    ${stale.join('\n    ')}\n    Delete them (and the .next folder), or unpack the project into an empty folder.`);

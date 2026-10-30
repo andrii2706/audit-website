@@ -16,9 +16,9 @@ if (!existsSync(out)) {
 const base = (process.env.PAGES_BASE_PATH ?? '').replace(/\/$/, '');
 const html = `<!doctype html>
 <html lang="uk"><head><meta charset="utf-8"><meta name="robots" content="noindex">
-<meta name="viewport" content="width=device-width,initial-scale=1"><title>Аудит Консультант</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Бізнес Партнери</title>
 <script>
-  var locales = ['uk', 'en', 'pl', 'fr', 'de', 'es'], pick = 'uk';
+  var locales = ['uk', 'en'], pick = 'uk';
   try {
     var saved = (document.cookie.match(/(?:^|; )NEXT_LOCALE=([a-z]{2})/) || [])[1];
     var langs = saved ? [saved] : (navigator.languages || [navigator.language || 'uk']);
@@ -26,12 +26,13 @@ const html = `<!doctype html>
       var l = String(langs[i]).slice(0, 2).toLowerCase();
       if (l === 'ru' || l === 'be') l = 'uk';
       if (locales.indexOf(l) !== -1) { pick = l; break; }
+      if (i === langs.length - 1) pick = 'en';
     }
   } catch (e) {}
   location.replace('${base}/' + pick + '/');
 </script>
 <noscript><meta http-equiv="refresh" content="0; url=${base}/uk/"></noscript>
-</head><body><a href="${base}/uk/">Аудит Консультант</a></body></html>
+</head><body><a href="${base}/uk/">Бізнес Партнери</a></body></html>
 `;
 writeFileSync(join(out, 'index.html'), html);
 writeFileSync(join(out, '.nojekyll'), '');

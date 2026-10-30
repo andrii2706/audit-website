@@ -1,8 +1,8 @@
-# Audit Consultant — website
+# Бізнес Партнери — website
 
-Multilingual marketing site for the audit firm **Аудит Консультант** (consulting.lviv.ua): services catalogue, audiences, team, blog, FAQ and lead forms. Content is managed in **Strapi 5**; the public site is **Next.js 16** with **Tailwind CSS v4**.
+Bilingual marketing site for the audit and consulting firm **ТОВ АКФ «Бізнес Партнери»** (bp-audit.com.ua, Lviv): services catalogue, about, team, careers, transparency reports, news, blog, FAQ and lead forms. Content is managed in **Strapi 5**; the public site is **Next.js 16** with **Tailwind CSS v4**.
 
-- 🌍 6 languages: Ukrainian (default), English, Polish, French, German, Spanish
+- 🌍 2 languages: Ukrainian (default) and English
 - 🔎 SEO: canonical + hreflang, sitemap with alternates, robots, JSON-LD (Organization, Service, Article, FAQ, Breadcrumbs), per-page Open Graph images
 - 📱 Responsive from 320px to 4K, native-feeling swipe tabs and a mobile action bar
 - ✨ CSS scroll animations, navigation progress bar, per-page skeleton screens and image placeholders, animated form states (respecting reduced motion)
@@ -17,10 +17,10 @@ Multilingual marketing site for the audit firm **Аудит Консультан
 ├── cms/                  Strapi 5 (content types, seed data, admin)
 │   ├── src/api/          Content types (service, article, team-member, lead…)
 │   ├── src/components/   Shared components (seo, step, stat…)
-│   ├── src/seed/         Starter content + translations (5 languages)
+│   ├── src/seed/         Site content from the client brief (structure.ts + content/uk.ts, content/en.ts)
 │   └── src/index.ts      Bootstrap: locales, permissions, API token, seeding, revalidation hook
 ├── web/                  Next.js 16 site
-│   ├── src/app/[locale]/ Pages (home, services, audiences, about, team, blog, contacts)
+│   ├── src/app/[locale]/ Pages (home, services, about, team, career, reports, news, blog, contacts, audiences)
 │   ├── src/components/   UI (Tailwind)
 │   ├── src/i18n/         Locale config + UI dictionaries
 │   ├── src/lib/          Strapi client, SEO helpers, OG images
@@ -29,6 +29,19 @@ Multilingual marketing site for the audit firm **Аудит Консультан
 ├── ecosystem.config.cjs  PM2 config for both apps
 └── CLAUDE.md             Guidance for AI coding agents
 ```
+
+## Content taken from the old site
+
+`cms/src/seed/legacy.ts` (structure) and `cms/src/seed/old-site/{uk,en}.ts` (texts, copied word for word on 30 Oct 2026) carry everything from the previous bp-audit.com.ua: 6 extra services (NSSMC audit, accounting, business plans, business analysis, consulting, legal services), the old service texts added to the matching services, the 3 publications from 2018 in full, the «Про компанію» / «Ми готові допомогти» texts (About page intro), requisites and the openness policy, the quality policy, 16 client logos, 15 certificates and 5 recommendation letters, and the list of transparency reports 2019–2025. Images/PDFs come in with `npm run import-media`. Old URLs redirect to the new pages (`web/legacy-redirects.ts`).
+
+## Client material still missing
+
+The site is filled from the client's brief. These items were not in it and stay empty until the client sends them (nothing is invented):
+
+- **logo in vector form** (SVG/AI). `web/src/components/BrandMark.tsx`, `web/public/logo.svg` and `web/src/app/icon.svg` hold a temporary redraw of the PNG from the brief;
+- client logos (Логотип клієнта; the section is hidden while empty), team photos;
+- vacancies (Вакансія; the career page shows a "send your CV" note while empty);
+- transparency reports for the last 7 years (Звіт про прозорість; add corrected versions as separate entries with «Виправлена версія» on, the original stays published).
 
 ## Requirements
 
@@ -51,8 +64,8 @@ npm run dev                     # http://localhost:1337/admin — create the fir
 
 On the first start with an empty database the CMS automatically:
 
-- creates the locales uk (default), en, pl, fr, de, es;
-- fills all content in all 6 languages;
+- creates the locales uk (default) and en;
+- fills all content from the client brief in both languages;
 - gives the Public role read access to content;
 - creates the website API token, saves it to `cms/.tmp/web-token.txt` and writes it into `web/.env.local` (development only).
 
@@ -73,6 +86,8 @@ Manual alternative: copy `cms/.env.example` → `cms/.env` and `web/.env.example
 | cms   | `npm run dev`       | Strapi with admin auto-reload                     |
 | cms   | `npm run build`     | Build the admin panel                             |
 | cms   | `npm run start`     | Production Strapi                                 |
+| cms   | `npm run import-media` | Downloads logos, certificate scans and report PDFs from the old site bp-audit.com.ua into Strapi (run with internet access, while the old site is online) |
+| cms   | `npm run reseed`    | **Replaces** all site content with the seed (dev). Leads and uploads stay. Then delete `web/.next` or restart the web app so cached pages refresh |
 | web   | `npm run dev`       | Next.js dev server                                |
 | web   | `npm run build`     | Production build (Strapi must be reachable)       |
 | web   | `npm start`         | Run the standalone build (loads `.env.local`)     |

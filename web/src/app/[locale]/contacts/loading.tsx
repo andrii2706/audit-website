@@ -16,6 +16,10 @@ export default function Loading() {
         </div>
         <SkForm fields={3} />
       </div>
+      <div className={`${container} pb-16 sm:pb-24`}>
+        <div className="skeleton mb-6 h-8 w-56" />
+        <div className="skeleton h-[320px] rounded-card sm:h-[420px] sm:rounded-block" />
+      </div>
     </SkPage>
   );
 }

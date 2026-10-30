@@ -5,7 +5,7 @@ import { getGlobal, getHomepage } from '@/lib/strapi';
 
 export const size = ogSize;
 export const contentType = 'image/png';
-export const alt = 'Audit Consultant';
+export const alt = 'Business Partners';
 
 export default async function Image({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: raw } = await params;

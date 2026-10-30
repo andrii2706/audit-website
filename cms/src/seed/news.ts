@@ -7,7 +7,7 @@ import type { Core } from '@strapi/strapi';
  */
 
 type Sample = { title: string; tag: string; excerpt: string; h: string; body: string[] };
-type Lang = 'uk' | 'en' | 'pl' | 'fr' | 'de' | 'es';
+type Lang = 'uk' | 'en';
 
 const SAMPLES: { slug: string; pinned: boolean; t: Record<Lang, Sample> }[] = [
   {
@@ -26,30 +26,6 @@ const SAMPLES: { slug: string; pinned: boolean; t: Record<Lang, Sample> }[] = [
         h: 'How to fill in this news item',
         body: ['Replace the title, the summary and this text. The date sets the order in the feed; “Pinned” keeps the item on top.', 'Translate it with the locale switcher at the top right and click “Publish” — it appears on the site within seconds.'],
       },
-      pl: {
-        title: '[Szablon] Aktualność firmy', tag: 'Aktualności firmy',
-        excerpt: 'Krótki opis w 1–2 zdaniach: co się wydarzyło i dlaczego to ważne dla klientów. Widoczny na liście aktualności i w wyszukiwarce.',
-        h: 'Jak wypełnić tę aktualność',
-        body: ['Zastąp tytuł, krótki opis i ten tekst. Data ustala kolejność; „Przypięte” utrzymuje wpis na górze.', 'Przetłumacz wpis za pomocą przełącznika języka w prawym górnym rogu i kliknij „Opublikuj” — pojawi się na stronie w kilka sekund.'],
-      },
-      fr: {
-        title: '[Modèle] Actualité de l’entreprise', tag: 'Actualités',
-        excerpt: 'Un résumé en 1–2 phrases : ce qui s’est passé et pourquoi c’est important pour les clients. Affiché dans la liste et dans les résultats de recherche.',
-        h: 'Comment remplir cette actualité',
-        body: ['Remplacez le titre, le résumé et ce texte. La date fixe l’ordre dans le fil ; « Épinglé » garde l’actualité en haut.', 'Traduisez-la via le sélecteur de langue en haut à droite puis cliquez sur « Publier » : elle apparaît sur le site en quelques secondes.'],
-      },
-      de: {
-        title: '[Vorlage] Unternehmensnachricht', tag: 'Unternehmensnews',
-        excerpt: 'Eine Zusammenfassung in 1–2 Sätzen: was passiert ist und warum es für Kunden wichtig ist. Erscheint in der Liste und in Suchergebnissen.',
-        h: 'So füllen Sie diese Nachricht aus',
-        body: ['Ersetzen Sie Titel, Zusammenfassung und diesen Text. Das Datum bestimmt die Reihenfolge; „Angeheftet“ hält die Meldung oben.', 'Übersetzen Sie sie über den Sprachumschalter oben rechts und klicken Sie auf „Veröffentlichen“ – sie erscheint in wenigen Sekunden auf der Website.'],
-      },
-      es: {
-        title: '[Plantilla] Noticia de la empresa', tag: 'Noticias',
-        excerpt: 'Un resumen de 1–2 frases: qué ha pasado y por qué importa a los clientes. Se muestra en la lista de noticias y en los buscadores.',
-        h: 'Cómo completar esta noticia',
-        body: ['Sustituya el título, el resumen y este texto. La fecha define el orden; «Fijada» mantiene la noticia arriba.', 'Tradúzcala con el selector de idioma arriba a la derecha y pulse «Publicar»: aparecerá en el sitio en segundos.'],
-      },
     },
   },
   {
@@ -67,30 +43,6 @@ const SAMPLES: { slug: string; pinned: boolean; t: Record<Lang, Sample> }[] = [
         excerpt: 'A format for regulatory news: what changed, who is affected, from what date, and what clients should do.',
         h: 'Structure of a regulatory update',
         body: ['1) What changed — link the official document. 2) Who is affected. 3) Effective date. 4) What to do now — and how we can help.', 'Finish with a call to action: the site form sends requests both to the admin panel and to the company’s e-mail.'],
-      },
-      pl: {
-        title: '[Szablon] Zmiany w przepisach: co oznaczają dla firm', tag: 'Przepisy',
-        excerpt: 'Format wiadomości regulacyjnych: co się zmieniło, kogo dotyczy, od kiedy obowiązuje i co powinni zrobić klienci.',
-        h: 'Struktura wiadomości regulacyjnej',
-        body: ['1) Co się zmieniło — z linkiem do oficjalnego dokumentu. 2) Kogo dotyczy. 3) Od kiedy obowiązuje. 4) Co zrobić teraz — i jak możemy pomóc.', 'Na końcu dodaj zachętę do kontaktu: formularz wysyła zgłoszenie do panelu i na e-mail firmy.'],
-      },
-      fr: {
-        title: '[Modèle] Évolution réglementaire : ce que cela change pour l’entreprise', tag: 'Réglementation',
-        excerpt: 'Un format pour l’actualité réglementaire : ce qui change, qui est concerné, à partir de quand, et que faire.',
-        h: 'Structure d’une actualité réglementaire',
-        body: ['1) Ce qui change — avec le lien vers le texte officiel. 2) Qui est concerné. 3) Date d’entrée en vigueur. 4) Que faire maintenant — et comment nous pouvons aider.', 'Terminez par un appel à l’action : le formulaire envoie la demande dans l’administration et par e-mail à l’entreprise.'],
-      },
-      de: {
-        title: '[Vorlage] Gesetzesänderung: Was sie für Unternehmen bedeutet', tag: 'Regulierung',
-        excerpt: 'Ein Format für regulatorische News: was sich ändert, wen es betrifft, ab wann es gilt und was Kunden tun sollten.',
-        h: 'Aufbau einer regulatorischen Meldung',
-        body: ['1) Was sich ändert – mit Link zum offiziellen Dokument. 2) Wen es betrifft. 3) Ab wann es gilt. 4) Was jetzt zu tun ist – und wie wir helfen.', 'Zum Schluss ein Aufruf zur Anfrage: Das Formular sendet sie ins Admin-Panel und per E-Mail an das Unternehmen.'],
-      },
-      es: {
-        title: '[Plantilla] Cambio normativo: qué significa para las empresas', tag: 'Normativa',
-        excerpt: 'Un formato para noticias normativas: qué cambia, a quién afecta, desde cuándo y qué deben hacer los clientes.',
-        h: 'Estructura de una noticia normativa',
-        body: ['1) Qué cambia — con enlace al documento oficial. 2) A quién afecta. 3) Fecha de entrada en vigor. 4) Qué hacer ahora — y cómo podemos ayudar.', 'Termine con una llamada a la acción: el formulario envía la solicitud al panel y al correo de la empresa.'],
       },
     },
   },

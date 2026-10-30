@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 
 /**
  * Animates the number inside a stat ("300+", "15 років", "4.9") from 0 when it scrolls into view
- * (identifiers such as "№ 4910" are left as they are).
+ * (identifiers such as "№ 1234" are left as they are).
  * The server (and search engines) always get the final text; the count only runs in the browser,
  * only for blocks that start below the fold, and never with prefers-reduced-motion.
  */

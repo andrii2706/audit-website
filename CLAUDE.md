@@ -4,14 +4,14 @@ Guidance for Claude Code (and any other coding agent) working in this repository
 
 ## What this is
 
-Marketing website for **Аудит Консультант / Audit Consultant**, an audit and accounting firm in Ukraine. Monorepo with two independent Node apps:
+Marketing website for **ТОВ АКФ «Бізнес Партнери» / Business Partners** (bp-audit.com.ua), an audit and consulting firm in Lviv, Ukraine. Monorepo with two independent Node apps:
 
 | Dir    | App                                  | Port | Role                                     |
 | ------ | ------------------------------------ | ---- | ---------------------------------------- |
 | `cms/` | Strapi 5 (TypeScript)                | 1337 | Headless CMS: content + leads, admin UI  |
 | `web/` | Next.js 16 App Router, React 19, TS  | 3000 | Public site, reads Strapi REST API       |
 
-Languages: **uk** (default), en, pl, fr, de, es. Every page lives under `/{locale}/…`.
+Languages: **uk** (default) and **en**. Every page lives under `/{locale}/…`. Unknown browser languages are redirected to `en`, ru/be to `uk`.
 
 Human-facing docs: `README.md`, `docs/ARCHITECTURE.md`, `docs/DEPLOYMENT.md`, `docs/CONTENT-EDITING.md`, `docs/TROUBLESHOOTING.md`.
 
@@ -28,7 +28,8 @@ node scripts/setup.mjs
 
 # CMS
 cd cms && npm install
-npm run dev          # http://localhost:1337/admin (auto-seeds an empty DB in all 6 languages)
+npm run dev          # http://localhost:1337/admin (auto-seeds an empty DB in uk + en)
+npm run reseed       # dev: wipe and re-create all site content from the seed (leads stay)
 npm run build && npm run start
 
 # Web
@@ -63,6 +64,7 @@ This is **Next.js 16**; APIs differ from older versions you may know. Bundled do
 - Never stack two utilities for the same property on one element (`h-11` + `h-auto`, `whitespace-nowrap` + `whitespace-normal`): Tailwind v4 gives no ordering guarantee. Write a standalone recipe instead.
 - Language switcher: custom dropdown of `<Link hrefLang>` items (desktop) and `LanguageChips` (mobile menu); no native `<select>` (its list can't be styled on Windows).
 - `<html>` and `<body>` carry `suppressHydrationWarning` because browser extensions (Grammarly etc.) inject attributes there.
+- Headings get `break-words hyphens-auto`: long Ukrainian words (e.g. «Висококваліфікована») overflow 320px screens otherwise.
 - Ancestors with `backdrop-filter`/`transform` trap `position: fixed` — render overlays through `createPortal(…, document.body)` (see `MobileMenu.tsx`).
 
 ### Motion & loading states
@@ -89,13 +91,15 @@ This is **Next.js 16**; APIs differ from older versions you may know. Bundled do
 - **Loaders:** `Spinner.tsx`, `NavProgress.tsx` (top bar; dispatch `NAV_START_EVENT` for programmatic navigation). Pending buttons: `disabled` + `aria-busy` + spinner + text.
 
 ### i18n
-- Config: `web/src/i18n/config.ts`. UI strings: `web/src/i18n/dictionaries/{locale}.json` — **all six files must have identical keys**; `uk.json` is the source of truth for the `Dictionary` type.
+- Config: `web/src/i18n/config.ts`. UI strings: `web/src/i18n/dictionaries/{locale}.json` — **both files must have identical keys**; `uk.json` is the source of truth for the `Dictionary` type.
 - Interpolation: `t('Hello {name}', { name })`; plurals: `plural(locale, n, forms)` (Intl.PluralRules).
 - CMS content is localized in Strapi (i18n plugin); every data getter in `web/src/lib/strapi.ts` takes `locale`.
-- Adding a language: add it to `locales` in both `web/src/i18n/config.ts` and `cms/src/seed/index.ts` (`LOCALES`), add a dictionary JSON, add seed translations in `cms/src/seed/translations/`.
+- Adding a language: add it to `locales` in both `web/src/i18n/config.ts` and `cms/src/seed/index.ts` (`LOCALES`), add a dictionary JSON, add a content file next to `cms/src/seed/content/uk.ts` (typed by `content/types.ts`).
 
 ### SEO
-- Use `buildMetadata()` from `web/src/lib/seo.ts` in every `generateMetadata` (canonical, hreflang incl. `x-default`, OG, Twitter).
+- Use `buildMetadata()` from `web/src/lib/seo.ts` in every `generateMetadata` (canonical, hreflang incl. `x-default`, OG, Twitter). It adds " — Бізнес Партнери" only when the title stays ≤ 60 characters (`seoTitle`) and pads descriptions under 100 characters with `meta.descriptionTail` (`seoDescription`). Long service/article titles get a short `seo.metaTitle` from `cms/src/seed/seo.ts`.
+- The root layout sets no canonical/hreflang and no `index` robots directive (only googlebot preview hints), so the 404 page keeps a clean `noindex`. `poweredByHeader: false`.
+- Organization JSON-LD includes `geo` when `global.mapQuery` is coordinates.
 - JSON-LD helpers in `seo.ts`; render with `<JsonLd data={…} />`.
 - Sitemap (`app/sitemap.ts`) lists every locale with alternates — add new routes there.
 - OG images: `opengraph-image.tsx` + `lib/og.tsx` (fonts vendored in `web/src/assets/fonts`, no network).
@@ -107,7 +111,13 @@ This is **Next.js 16**; APIs differ from older versions you may know. Bundled do
 
 ### Data / CMS
 - Content types: `cms/src/api/*/content-types/*/schema.json`; shared components: `cms/src/components/shared`.
-- Seed data (uk) in `cms/src/seed/data.ts`, translations in `cms/src/seed/translations/*.ts`. Seeding runs only on an empty DB (`SEED_ON_EMPTY`).
+- Seed: `cms/src/seed/structure.ts` (slugs, categories, ordering, contacts — language-independent) + `cms/src/seed/content/{uk,en}.ts` (texts from the client brief, typed by `content/types.ts`). Seeding runs only on an empty DB (`SEED_ON_EMPTY`); `RESEED_CONTENT=true` (`npm run reseed`) deletes the seeded types first. Strapi limits: `seo.metaTitle` ≤ 70, `metaDescription` ≤ 170 characters.
+- Pages backed by single types: home (`homepage`), about (`about-page`), career (`career-page`, plus `vacancy` collection; the quality-system text `about-page.quality` is shown on the career page at `#quality`). Reports page: `transparency-report` (year, title, file, `isCorrection`, `publishedOn`) — corrected versions are separate entries, originals stay published.
+- Content from the client's **old site** (bp-audit.com.ua, Joomla): structure in `cms/src/seed/legacy.ts`, texts copied **word for word** in `cms/src/seed/old-site/{uk,en}.ts` (written as simple Markdown, converted by `seed/md.ts`; same text as the Claude Doc «Тексти старого сайту bp-audit.com.ua») — extra services (incl. «Консалтинг» = `biznes-konsaltynh`), old publications (publishedAt kept at 2018-10-02), client logos, certificate/recommendation scans (`api::document-image.document-image`, About page galleries — only entries with an image are shown), transparency reports 2019–2025 incl. corrected versions and balance sheets (`docType`), requisites (EDRPOU 37741155, register No. 4463), quality policy. Files are referenced by `sourceUrl`; `npm run import-media` (cms) downloads them into the media library (needs internet; `IMPORT_MEDIA_BASE` overrides the origin). Reports are seeded once, only when none exist.
+- Old URLs: `web/legacy-redirects.ts` (308 redirects via `next.config.ts` `redirects()`, skipped in the Pages demo). Add an entry when a Joomla URL needs a new target.
+- Images from Strapi on a private IP (`STRAPI_URL=http://127.0.0.1:1337`) need `images.dangerouslyAllowLocalIP` (set automatically in `next.config.ts` for private hosts) — Next 16 blocks them otherwise.
+- UI: `MapEmbed` (styled office map: dark contact panel + toned Google Maps iframe by `global.mapQuery`, route/open buttons; home `#map` with the panel, contacts with `withInfo={false}`), `ScrollToTop` (fixed "back to top" button in the root layout; focuses `<main tabIndex=-1>`).
+- Logo: `components/BrandMark.tsx` (inline SVG, also used by favicons and OG images) is a temporary redraw; replace it with the client's vector original.
 - Strapi writes trigger `POST /api/revalidate` on the web app (`cms/src/index.ts` → `web/src/app/api/revalidate/route.ts`), secured by `REVALIDATE_SECRET`.
 - Leads: server action `web/src/app/actions.ts`. The client must give a phone **or** an e-mail. The lead goes to:
   - Strapi `Lead`, via the create-only API token;

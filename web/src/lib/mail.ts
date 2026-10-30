@@ -9,7 +9,7 @@ import type { LeadInput } from './strapi';
 /**
  * E-mail delivery for leads (SMTP via nodemailer). Configured by env:
  *   SMTP_HOST, SMTP_PORT (587), SMTP_SECURE ("true" for port 465), SMTP_USER, SMTP_PASS,
- *   MAIL_FROM            — sender, e.g. "Аудит Консультант <noreply@consulting.lviv.ua>" (default: SMTP_USER)
+ *   MAIL_FROM            — sender, e.g. "Бізнес Партнери <noreply@bp-audit.com.ua>" (default: SMTP_USER)
  *   LEAD_EMAIL_TO        — where new leads go, comma-separated (default: e-mail from Strapi Global)
  *   LEAD_CONFIRMATION    — "false" disables the confirmation e-mail to the client
  * Without SMTP_HOST e-mail is simply skipped (leads are still stored in Strapi).

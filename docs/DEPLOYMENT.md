@@ -7,8 +7,8 @@ The project is two Node.js processes: **Strapi** (`cms`, port 1337) and **Next.j
 Typical production layout:
 
 ```
-https://consulting.lviv.ua       → Nginx → Next.js :3000
-https://cms.consulting.lviv.ua   → Nginx → Strapi  :1337   (admin + /uploads)
+https://bp-audit.com.ua       → Nginx → Next.js :3000
+https://cms.bp-audit.com.ua   → Nginx → Strapi  :1337   (admin + /uploads)
 ```
 
 ## Option A — VPS (Ubuntu) with PM2 and Nginx (recommended)
@@ -61,7 +61,7 @@ Generate random values with:
 node -e "console.log(require('crypto').randomBytes(24).toString('base64'))"
 ```
 
-Also set `PUBLIC_URL=https://cms.consulting.lviv.ua` so admin and media links use the public https address (proxy mode turns on automatically).
+Also set `PUBLIC_URL=https://cms.bp-audit.com.ua` so admin and media links use the public https address (proxy mode turns on automatically).
 
 ```bash
 NODE_ENV=production npm run build
@@ -83,12 +83,12 @@ Edit `web/.env.local`:
 
 ```ini
 STRAPI_URL=http://127.0.0.1:1337       # internal URL is fine for data…
-SITE_URL=https://consulting.lviv.ua
+SITE_URL=https://bp-audit.com.ua
 STRAPI_WEB_TOKEN=<from cms/.tmp/web-token.txt>
 REVALIDATE_SECRET=<same as cms>
 ```
 
-> Media URLs: if images are uploaded, `STRAPI_URL` must also be reachable by the optimizer at that host. For a separate public CMS domain, set `STRAPI_URL=https://cms.consulting.lviv.ua` (it is added to `images.remotePatterns` at build time).
+> Media URLs: if images are uploaded, `STRAPI_URL` must also be reachable by the optimizer at that host. For a separate public CMS domain, set `STRAPI_URL=https://cms.bp-audit.com.ua` (it is added to `images.remotePatterns` at build time).
 
 ```bash
 npm run build                  # Strapi must be running: pages are prerendered from it
@@ -102,7 +102,7 @@ Alternatively, after building both apps run `pm2 start ecosystem.config.cjs` fro
 
 ```nginx
 server {
-  server_name consulting.lviv.ua www.consulting.lviv.ua;
+  server_name bp-audit.com.ua www.bp-audit.com.ua;
   location / {
     proxy_pass http://127.0.0.1:3000;
     proxy_set_header Host $host;
@@ -111,7 +111,7 @@ server {
   }
 }
 server {
-  server_name cms.consulting.lviv.ua;
+  server_name cms.bp-audit.com.ua;
   client_max_body_size 50m;
   location / {
     proxy_pass http://127.0.0.1:1337;
@@ -124,7 +124,7 @@ server {
 
 ```bash
 sudo apt-get install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d consulting.lviv.ua -d www.consulting.lviv.ua -d cms.consulting.lviv.ua
+sudo certbot --nginx -d bp-audit.com.ua -d www.bp-audit.com.ua -d cms.bp-audit.com.ua
 ```
 
 ### 5. Updating
@@ -170,10 +170,42 @@ volumes: { db: {}, uploads: {} }
 
 For real production, build images with multi-stage Dockerfiles. Copy `web/.next/standalone`, `.next/static` and `public` into the runtime image.
 
-## Option C — The client's existing hosting
+## Option C — The client's existing hosting (UAhosting, cPanel)
 
-- **Shared hosting with Node.js support** (cPanel "Setup Node.js App", Plesk): deploy `web` as a Node app with startup file `scripts/start-standalone.mjs`, after building locally or in CI and uploading `web/.next`, `public`, `scripts` and `package.json`. Strapi needs a persistent Node process and ≥1 GB RAM. If the plan can't run it, host the CMS on a small VPS or Strapi Cloud and keep only the site on the shared hosting.
-- **PHP-only hosting** can't run either app. Keep the domain there and point DNS to a VPS, Vercel or Strapi Cloud.
+bp-audit.com.ua is registered at **UAhosting** (shared hosting with cPanel, DNS `ns5.uahosting-dns.net` / `ns6.uahosting-dns.net`, mail server `mail.bp-audit.com.ua`). The old Joomla site lives in `public_html`.
+
+Shared PHP hosting cannot keep two Node processes (Next.js + Strapi) running, so the recommended setup is:
+
+1. **Apps on a small VPS** (Option A — 2 GB RAM is enough for both).
+2. **Domain and e-mail stay at UAhosting.** In cPanel → *Zone Editor* change only these records to the VPS IP:
+
+   | Type | Name | Value |
+   | ---- | ---- | ----- |
+   | A | `bp-audit.com.ua.` | VPS IP |
+   | A | `www.bp-audit.com.ua.` | VPS IP (or CNAME to `bp-audit.com.ua.`) |
+   | A | `cms.bp-audit.com.ua.` | VPS IP |
+
+   Do **not** touch `MX`, `mail`, `webmail` or the SPF `TXT` record: the mailboxes keep working at UAhosting.
+3. **Lead e-mails through the hosting's mailbox.** In cPanel → *Email Accounts* create e.g. `site@bp-audit.com.ua`, then in `web/.env.local` on the VPS:
+
+   ```env
+   SMTP_HOST=mail.bp-audit.com.ua
+   SMTP_PORT=465
+   SMTP_SECURE=true
+   SMTP_USER=site@bp-audit.com.ua
+   SMTP_PASS=<mailbox password>
+   MAIL_FROM="Бізнес Партнери <site@bp-audit.com.ua>"
+   LEAD_EMAIL_TO=businesspartners@ukr.net
+   ```
+
+   Add `include` of the VPS IP to the SPF record only if you send from the VPS with another server; with the hosting's SMTP nothing changes.
+4. **Content from the old site.** Before switching DNS, run `npm run import-media` in `cms/` on any machine with internet access while the old site is still online: it downloads client logos, certificates, recommendation letters and the 2025 transparency report into Strapi. Then upload the remaining report PDFs in Strapi (they are listed on `/reports` as «Файл ще не завантажено»).
+5. **Old URLs keep working.** `web/legacy-redirects.ts` sends the Joomla addresses (`/about`, `/service/...`, `/zvity/zvit-pro-prozorist`, `/news/123-...`, `/contact-us`, `/en/...`, `/index.php`) to the new pages with permanent redirects — nothing to configure.
+6. Switch DNS (TTL is usually 1–4 h), get certificates on the VPS (`certbot --nginx -d bp-audit.com.ua -d www.bp-audit.com.ua -d cms.bp-audit.com.ua`) and keep the old `public_html` as a backup for a few weeks.
+
+If UAhosting confirms that the plan has **"Setup Node.js App"** (CloudLinux), the website alone can run there: build in CI, upload `web/.next/standalone` with startup file `server.js` (or `scripts/start-standalone.mjs`), and keep Strapi on a VPS or Strapi Cloud — it needs a persistent process, native `better-sqlite3`/`sharp` binaries and ≥1 GB RAM. A PHP-only plan can't run either app.
+
+> Security: the cPanel/FTP password was sent in plain text by e-mail — change it in the UAhosting billing panel and never put it into the repository or CI secrets. Deployment uses SSH keys to the VPS only.
 
 ## Option D — Vercel (web) + Strapi Cloud / VPS (cms)
 
@@ -189,7 +221,8 @@ For real production, build images with multi-stage Dockerfiles. Copy `web/.next/
 - [ ] `SEED_ON_EMPTY=false` after the first launch
 - [ ] Postgres (or regular SQLite backups of `cms/.tmp/data.db`) and backups of `cms/public/uploads`
 - [ ] HTTPS on both domains
-- [ ] Placeholders filled in the admin (registry data, rating, photos, logos)
+- [ ] `npm run import-media` done while the old site is online; remaining report PDFs uploaded; team photos added
+- [ ] Old-site redirects checked: `curl -I https://bp-audit.com.ua/contact-us` → 308 to `/uk/contacts`
 - [ ] Google Search Console and Bing Webmaster verified (`GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION`), `https://<site>/sitemap.xml` submitted
 - [ ] Staging environments use `NO_INDEX=true`
 - [ ] E-mail for leads: `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` in `web/.env.local`. Set SPF/DKIM for the sender domain so mail doesn't land in spam, then send a test request.

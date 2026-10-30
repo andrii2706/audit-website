@@ -104,9 +104,17 @@ export type Global = {
   edrpou?: string | null;
   registryNumber?: string | null;
   phone?: string | null;
+  /** Second office phone (TZ: two numbers in the header and footer). */
+  phoneSecondary?: string | null;
   email?: string | null;
   address?: string | null;
   workingHours?: string | null;
+  /** Saturday / Sunday note shown under the working hours. */
+  workingHoursNote?: string | null;
+  /** Text query for the embedded Google map, e.g. "вулиця Лемківська, 9А, Львів". */
+  mapQuery?: string | null;
+  /** "Open in Google Maps" link. */
+  mapUrl?: string | null;
   telegramUrl?: string | null;
   viberUrl?: string | null;
   whatsappUrl?: string | null;
@@ -137,6 +145,8 @@ export type Homepage = {
   stats?: Stat[];
   whyTitle?: string | null;
   reasons?: TextItem[];
+  industriesTitle?: string | null;
+  industries?: Bullet[];
   teamTitle?: string | null;
   teamSubtitle?: string | null;
   estimateTitle?: string | null;
@@ -146,6 +156,78 @@ export type Homepage = {
   faqTitle?: string | null;
   faqText?: string | null;
   ctaTitle?: string | null;
+};
+
+export type AboutPage = {
+  heroTitle: string;
+  heroIntro?: string | null;
+  intro?: Blocks;
+  reasonsTitle?: string | null;
+  reasons?: TextItem[];
+  missionTitle?: string | null;
+  mission?: string | null;
+  valuesTitle?: string | null;
+  values?: TextItem[];
+  principlesTitle?: string | null;
+  principlesIntro?: string | null;
+  principles?: TextItem[];
+  principlesOutro?: string | null;
+  historyTitle?: string | null;
+  history?: Blocks;
+  requestsTitle?: string | null;
+  requests?: Bullet[];
+  registryTitle?: string | null;
+  registry?: Blocks;
+  qualityTitle?: string | null;
+  quality?: Blocks;
+  requisitesTitle?: string | null;
+  requisites?: Blocks;
+  policyTitle?: string | null;
+  policy?: Blocks;
+  documentsTitle?: string | null;
+  recommendationsTitle?: string | null;
+  seo?: Seo;
+};
+
+/** Certificate / licence scan or recommendation letter (About page galleries). */
+export type DocumentImage = {
+  documentId: string;
+  title: string;
+  kind: 'certificate' | 'recommendation';
+  image?: (NonNullable<Media> & { ext?: string; mime?: string }) | null;
+};
+
+export type CareerPage = {
+  heroTitle: string;
+  heroIntro?: string | null;
+  aboutTitle?: string | null;
+  about?: Blocks;
+  faqTitle?: string | null;
+  faqs?: TextItem[];
+  vacanciesTitle?: string | null;
+  vacanciesEmpty?: string | null;
+  seo?: Seo;
+};
+
+export type Vacancy = {
+  documentId: string;
+  title: string;
+  employment?: string | null;
+  duties?: string | null;
+  requirements?: string | null;
+  conditions?: string | null;
+};
+
+export type TransparencyReport = {
+  documentId: string;
+  year: number;
+  title?: string | null;
+  file?: (NonNullable<Media> & { name?: string; ext?: string; size?: number }) | null;
+  isCorrection?: boolean | null;
+  /** report = transparency report, balance = annual balance sheet. */
+  docType?: 'report' | 'balance' | null;
+  publishedOn?: string | null;
+  note?: string | null;
 };
 
 // ——— Base request
@@ -192,8 +274,42 @@ export const getHomepage = (locale: Locale) =>
     'populate[processSteps]': true,
     'populate[stats]': true,
     'populate[reasons]': true,
+    'populate[industries]': true,
     'populate[estimateBullets]': true,
   });
+
+export const getAboutPage = (locale: Locale) =>
+  strapi<AboutPage>('about-page', {
+    locale,
+    'populate[reasons]': true,
+    'populate[values]': true,
+    'populate[principles]': true,
+    'populate[requests]': true,
+    'populate[seo]': true,
+  });
+
+/** Document scans that have an image (entries without one are not shown). */
+export const getDocumentImages = async (locale: Locale) =>
+  ((await strapi<DocumentImage[]>('document-images', {
+    locale, sort: 'order:asc', 'populate[image]': true, 'pagination[pageSize]': 100 })) ?? []).filter((d) => !!d.image?.url);
+
+export const getCareerPage = (locale: Locale) =>
+  strapi<CareerPage>('career-page', { locale, 'populate[faqs]': true, 'populate[seo]': true });
+
+export const getVacancies = async (locale: Locale) =>
+  (await strapi<Vacancy[]>('vacancies', { locale, sort: 'order:asc', 'pagination[pageSize]': 50 })) ?? [];
+
+/** Transparency reports, newest year first; within a year: report, its corrections, then the balance sheet. */
+export const getTransparencyReports = async (locale: Locale) =>
+  (await strapi<TransparencyReport[]>('transparency-reports', {
+    locale,
+    'sort[0]': 'year:desc',
+    'sort[1]': 'docType:desc',
+    'sort[2]': 'isCorrection:asc',
+    'sort[3]': 'publishedOn:asc',
+    'populate[file]': true,
+    'pagination[pageSize]': 100,
+  })) ?? [];
 
 export const getFeaturedServices = async (locale: Locale) =>
   (await strapi<Service[]>('services', {
@@ -251,7 +367,7 @@ export const getFaqs = async (locale: Locale) => (await strapi<Faq[]>('faqs', { 
 
 export const getClients = async (locale: Locale) =>
   (await strapi<ClientLogo[]>('client-logos', {
-    locale, sort: 'order:asc', 'populate[logo]': true })) ?? [];
+    locale, sort: 'order:asc', 'populate[logo]': true, 'pagination[pageSize]': 100 })) ?? [];
 
 export const getArticles = async (locale: Locale, limit = 50) =>
   (await strapi<Article[]>('articles', {

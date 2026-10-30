@@ -85,3 +85,8 @@ Run `npm start` (it uses `scripts/start-standalone.mjs`, which copies `.next/sta
 ## TypeScript errors about `.next/types` after moving routes
 
 Delete `web/.next` and rebuild.
+
+
+## `Argument of type '"api::…"' is not assignable to parameter of type 'ContentType'`
+
+`cms/types/generated` was written by an older version of the project (for example after unzipping a new version over the old folder), so it doesn't know the new content types. TypeScript fails before Strapi gets to regenerate it. `npm run dev` now deletes an outdated `types/generated` automatically; on an older copy delete the folder by hand (`Remove-Item -Recurse -Force cms\types\generated` in PowerShell) and start again.

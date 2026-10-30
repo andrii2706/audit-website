@@ -4,7 +4,7 @@
 
 `.github/workflows/pages-demo.yml` publishes a **static preview** on every push to `main` (or by hand: Actions → *Pages demo* → *Run workflow*):
 
-1. The runner starts Strapi with a fresh database seeded with the starter content in all 6 languages.
+1. The runner starts Strapi with a fresh database seeded with the starter content in both languages (uk, en).
 2. It builds the website against it as static files and publishes them at `https://<user>.github.io/<repo>/`.
 
 One-time setup: **Settings → Pages → Build and deployment → Source: GitHub Actions**. On GitHub Free, Pages works only for **public** repositories. If the repo is private, make it public or use a paid plan. Another option: the static `web/out` folder also works on Netlify or Cloudflare Pages.
@@ -91,7 +91,7 @@ node -e "console.log(require('crypto').randomBytes(24).toString('base64'))"
 ```ini
 HOST=127.0.0.1
 PORT=1337
-PUBLIC_URL=https://cms.consulting.lviv.ua
+PUBLIC_URL=https://cms.bp-audit.com.ua
 APP_KEYS="<4 random values, comma-separated>"
 API_TOKEN_SALT=<random>
 ADMIN_JWT_SECRET=<random>
@@ -111,7 +111,7 @@ DATABASE_FILENAME=.tmp/data.db
 STRAPI_URL=http://127.0.0.1:1337
 STRAPI_WEB_TOKEN=               # leave empty: the first deploy fills it in automatically
 REVALIDATE_SECRET=<same as cms.env>
-SITE_URL=https://consulting.lviv.ua
+SITE_URL=https://bp-audit.com.ua
 NO_INDEX=
 # SMTP_HOST=… SMTP_USER=… SMTP_PASS=… MAIL_FROM=…   (lead e-mails, see web/.env.example)
 ```
@@ -124,7 +124,7 @@ For **staging** on the same server, use other ports and block search engines:
 | `APP_NAME` (PM2 names) | `audit` | `audit-staging` |
 | CMS `PORT` / `STRAPI_URL` | `1337` | `1338` |
 | website port / `WEB_REVALIDATE_URL` | `3000` | `3001` |
-| `SITE_URL` | `https://consulting.lviv.ua` | `https://staging.consulting.lviv.ua` |
+| `SITE_URL` | `https://bp-audit.com.ua` | `https://staging.bp-audit.com.ua` |
 | `NO_INDEX` | *(empty)* | `true` |
 
 Two environments on one server need about 1.5 GB of RAM at runtime. 4 GB plus swap is enough, and 8 GB is comfortable.
@@ -135,7 +135,7 @@ Two environments on one server need about 1.5 GB of RAM at runtime. 4 GB plus sw
 
 ```nginx
 server {
-  server_name consulting.lviv.ua www.consulting.lviv.ua;
+  server_name bp-audit.com.ua www.bp-audit.com.ua;
   location / {
     proxy_pass http://127.0.0.1:3000;
     proxy_set_header Host $host;
@@ -144,7 +144,7 @@ server {
   }
 }
 server {
-  server_name cms.consulting.lviv.ua;
+  server_name cms.bp-audit.com.ua;
   client_max_body_size 50m;
   location / {
     proxy_pass http://127.0.0.1:1337;
@@ -165,7 +165,7 @@ auth_basic_user_file /etc/nginx/.htpasswd;
 ```bash
 ln -s /etc/nginx/sites-available/audit /etc/nginx/sites-enabled/
 nginx -t && systemctl reload nginx
-certbot --nginx -d consulting.lviv.ua -d www.consulting.lviv.ua -d cms.consulting.lviv.ua
+certbot --nginx -d bp-audit.com.ua -d www.bp-audit.com.ua -d cms.bp-audit.com.ua
 ```
 
 ## 2. SSH key for GitHub Actions
@@ -194,7 +194,7 @@ ssh-keyscan -H <server-ip>                            # output → SSH_KNOWN_HOS
 | Variable | `APP_NAME` | `audit` |
 | Variable | `CMS_PORT` | `1337` |
 | Variable | `WEB_PORT` | `3000` |
-| Variable | `SITE_URL` | `https://consulting.lviv.ua` (shown as the deployment link) |
+| Variable | `SITE_URL` | `https://bp-audit.com.ua` (shown as the deployment link) |
 | Variable | `SSH_PORT` | `22` (only if different) |
 
 Recommended for `production`:

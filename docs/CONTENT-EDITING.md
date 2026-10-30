@@ -4,7 +4,7 @@ Admin panel: `https://cms.<domain>/admin` (locally http://localhost:1337/admin).
 
 ## Languages
 
-Every piece of content exists in 6 languages: **uk** (main), en, pl, fr, de, es.
+Every piece of content exists in 2 languages: **uk** (main) and **en**.
 
 - Use the **locale switcher** at the top right of an entry to choose the language you're editing.
 - Fields with a 🌐 icon are translated per language. Other fields (phone, e-mail, links, logos) are shared and change everywhere at once.
@@ -19,8 +19,13 @@ Entries have **Draft** and **Published** states. Only published content appears 
 
 | On the site                          | In the admin (Content Manager)                    |
 | ------------------------------------ | ------------------------------------------------- |
-| Phone, e-mail, address, messengers, footer, default SEO | **Global** (single type)          |
-| Home hero, deadline card, stats, "why us", section titles, process, estimate block | **Homepage** (single type) |
+| Phones (2), e-mail, address, map link, working hours, messengers, footer, default SEO | **Налаштування сайту** (Global) |
+| Home hero, deadline card, stats, "why us", industries, section titles, process, request form block | **Головна сторінка** (Homepage) |
+| About page: intro, reasons, mission, values, principles, history, register, quality system | **Сторінка «Про компанію»** |
+| Career page: intro, "working here", FAQ, empty-vacancies note | **Сторінка «Кар'єра»** (+ **Вакансія** for each opening) |
+| Certificates and recommendation letters (About page) | **Документ (сертифікат / рекомендація)**: title, kind, image. Shown only when an image is uploaded |
+| Client logos (home «Нам довіряють») | **Client logo**: name + logo (a name without a logo is shown as text) |
+| Transparency reports (`/reports`) | **Звіт про прозорість**: one entry per file; a corrected report is a new entry with «Виправлена версія» on, keep the original published |
 | Services list and pages              | **Service** (+ **Service category**)              |
 | Large tiles on the home page         | Service → `featured` = true, sorted by `order`    |
 | "Who we help" tabs                   | **Audience** (pick related services)              |
@@ -44,6 +49,24 @@ Entries have **Draft** and **Published** states. Only published content appears 
 5. Click **Publish**. The news appears on `/news`, on the home page and in the RSS feed within seconds. **Unpublish** removes it just as quickly.
 
 Delete the two templates once you have your own news. They won't come back.
+
+## Transparency reports
+
+The law requires the reports for the last 7 calendar years on the site, and a corrected report must not replace the original.
+
+1. **Content Manager → Звіт про прозорість → Create new entry**.
+2. Fill **year**, **title** (e.g. «Звіт про прозорість за 2025 рік»), **publishedOn** and upload the PDF into **file**.
+3. Balance sheets are entries with **docType = balance** for the same year.
+4. For a corrected version create a **new** entry for the same year with **«Виправлена версія» (isCorrection)** switched on and, optionally, a short **note** (what was corrected). Leave the original published: the page lists both, original first.
+5. Switch the locale to **en** and fill the title there too (the file and dates are shared).
+
+## Vacancies
+
+**Вакансія**: title, employment (e.g. «Повна зайнятість»), duties, requirements, conditions. Write one item per line in the three text fields; the site turns lines into bullet lists. While there are no published vacancies, the career page shows the note from **Сторінка «Кар'єра» → vacanciesEmpty** and a «Надіслати резюме» button (mailto to the e-mail in site settings).
+
+## Map
+
+The contacts page embeds Google Maps by the text in **Налаштування сайту → mapQuery** (e.g. «вулиця Лемківська, 9А, Львів»); **mapUrl** is the «Відкрити на карті» link in the footer and on the contacts page.
 
 ## Requests by e-mail
 

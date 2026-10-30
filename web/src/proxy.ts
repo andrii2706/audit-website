@@ -17,7 +17,8 @@ function detectLocale(req: NextRequest): Locale {
     if (isLocale(lang)) return lang;
     if (lang === 'ru' || lang === 'be') return 'uk';
   }
-  return defaultLocale;
+  // Visitors whose browser asks for some other language get the English version.
+  return prefs.some((p) => p.lang && p.lang !== '*') ? 'en' : defaultLocale;
 }
 
 /** Every page lives under /{locale}/…; requests without a locale prefix are redirected. */

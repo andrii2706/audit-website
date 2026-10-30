@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import FadeImage from '@/components/FadeImage';
+import MapEmbed from '@/components/MapEmbed';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { JsonLd } from '@/components/bits';
 import { ArrowRight, Shield, Telegram } from '@/components/Icons';
-import { AudienceSection, BlogSection, EstimateSection, FaqSection, NewsSection, ProcessSection, ServicesBento, StatsWhy, TeamSection } from '@/components/sections';
+import { AudienceSection, BlogSection, EstimateSection, FaqSection, IndustriesSection, NewsSection, ProcessSection, ServicesBento, StatsWhy, TeamSection } from '@/components/sections';
 import { badge, btn, chipCell, chipGrid, container } from '@/components/ui';
 import { isLocale } from '@/i18n/config';
 import { plural, t } from '@/i18n/format';
@@ -42,7 +43,7 @@ export default async function HomePage({ params }: Props) {
   ]);
   const h = dict.hero;
   const days = daysUntil(home?.deadlineDate);
-  const companiesStat = home?.stats?.find((s) => s.value.includes('300')) ?? home?.stats?.[1];
+  const companiesStat = home?.stats?.[0];
 
   return (
     <>
@@ -75,13 +76,14 @@ export default async function HomePage({ params }: Props) {
 
             <div className="mt-1 grid gap-3 sm:flex sm:flex-wrap">
               <Link href={`/${locale}#estimate`} className={`${btn.dark} w-full sm:w-auto`}>{h.estimate} <ArrowRight /></Link>
+              <Link href={`/${locale}/contacts`} className={`${btn.light} w-full sm:w-auto`}>{h.questions}</Link>
               {global?.telegramUrl && (
                 <a href={global.telegramUrl} target="_blank" rel="noopener noreferrer" className={`${btn.light} w-full sm:w-auto`}><Telegram /> {h.telegram}</a>
               )}
             </div>
           </div>
 
-          <div className="grid min-w-0 animate-stagger grid-cols-1 gap-3 [--stagger-base:220ms] [--stagger-step:110ms] xs:grid-cols-2">
+          <div className="grid min-w-0 animate-stagger grid-cols-1 content-start gap-3 [--stagger-base:220ms] [--stagger-step:110ms] xs:grid-cols-2">
             {home?.deadlineTitle && (
               <div className="flex min-h-[220px] flex-col gap-4 rounded-card bg-ink p-6 text-white xs:col-span-2 sm:p-7">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -99,7 +101,7 @@ export default async function HomePage({ params }: Props) {
                 </div>
               </div>
             )}
-            <div className="flex flex-col gap-2 rounded-card border border-line bg-card p-6">
+            {(home?.googleRating || companiesStat) && <div className="flex flex-col gap-2 rounded-card border border-line bg-card p-6">
               {home?.googleRating ? (
                 <>
                   <span className="text-[44px] leading-tight font-semibold tracking-tight">{home.googleRating.toFixed(1)}</span>
@@ -108,12 +110,12 @@ export default async function HomePage({ params }: Props) {
                 </>
               ) : (
                 <>
-                  <span className="text-[44px] leading-tight font-semibold tracking-tight">{companiesStat?.value ?? '300+'}</span>
+                  <span className="text-[44px] leading-tight font-semibold tracking-tight">{companiesStat?.value}</span>
                   <span className="text-sm text-muted">{companiesStat?.label ?? h.companiesFallback}</span>
                   <span className="mt-auto font-mono text-sm text-muted">{h.standards}</span>
                 </>
               )}
-            </div>
+            </div>}
             <div className="flex flex-col gap-2.5 rounded-card bg-accent-soft p-6">
               <Shield />
               <span className="text-[17px] leading-snug font-semibold">{home?.trustTitle}</span>
@@ -148,11 +150,25 @@ export default async function HomePage({ params }: Props) {
       <AudienceSection locale={locale} dict={dict} items={audiences} title={home?.audienceTitle} />
       <ProcessSection locale={locale} dict={dict} home={home} />
       <StatsWhy home={home} />
-      <TeamSection locale={locale} dict={dict} home={home} team={team} />
-      <EstimateSection locale={locale} dict={dict} home={home} categories={categories} />
-      <NewsSection locale={locale} dict={dict} news={news} num="06" />
-      <BlogSection locale={locale} dict={dict} home={home} posts={posts} num={news.length ? '07' : '06'} />
-      <FaqSection locale={locale} dict={dict} home={home} faqs={faqs} num={news.length ? '08' : '07'} />
+      <IndustriesSection locale={locale} dict={dict} home={home} num="04" />
+      <TeamSection locale={locale} dict={dict} home={home} team={team} num="05" />
+      <EstimateSection locale={locale} dict={dict} home={home} categories={categories} num="06" />
+      <NewsSection locale={locale} dict={dict} news={news} num="07" />
+      <BlogSection locale={locale} dict={dict} home={home} posts={posts} num={news.length ? '08' : '07'} />
+      <FaqSection locale={locale} dict={dict} home={home} faqs={faqs} num={news.length ? '09' : '08'} />
+      {(global?.mapQuery || global?.address) && (
+        <section id="map" aria-labelledby="map-title" className={`${container} pb-16 sm:pb-24`}>
+          <div data-reveal className="mb-6 flex flex-wrap items-end justify-between gap-4">
+            <div className="flex flex-col gap-2">
+              <h2 id="map-title" className="text-2xl font-semibold tracking-tight sm:text-3xl">{dict.pages.contactsMap}</h2>
+            </div>
+            <Link href={`/${locale}/contacts`} className={btn.outline}>{dict.nav.contacts}</Link>
+          </div>
+          <div data-reveal>
+            <MapEmbed locale={locale} global={global!} labels={{ title: t(dict.pages.mapTitle, { address: global?.address ?? '' }), office: dict.pages.mapOffice, open: dict.pages.mapOpen, route: dict.pages.mapRoute, phone: dict.pages.mapPhone, email: dict.pages.mapEmail, hours: dict.footer.hours }} />
+          </div>
+        </section>
+      )}
       {faqs.length > 0 && <JsonLd data={faqLd(faqs)} />}
     </>
   );

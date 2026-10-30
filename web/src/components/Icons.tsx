@@ -35,3 +35,21 @@ export const Chevron = ({ size = 14 }: P) => (
 export const Check = ({ size = 16 }: P) => (
   <svg {...base(size)} strokeWidth={2.6}><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
 );
+export const Clock = ({ size = 15 }: P) => (
+  <svg {...base(size)}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+);
+export const Mail = ({ size = 15 }: P) => (
+  <svg {...base(size)}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></svg>
+);
+export const MapPin = ({ size = 16 }: P) => (
+  <svg {...base(size)}><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z" /><circle cx="12" cy="10" r="2.5" /></svg>
+);
+export const Navigation = ({ size = 16 }: P) => (
+  <svg {...base(size)}><path d="M3 11l18-8-8 18-2-8-8-2z" /></svg>
+);
+export const Download = ({ size = 16 }: P) => (
+  <svg {...base(size)}><path d="M12 4v11" /><path d="M7 10l5 5 5-5" /><path d="M5 20h14" /></svg>
+);
+export const FileText = ({ size = 22 }: P) => (
+  <svg {...base(size)}><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5" /><path d="M9 13h6" /><path d="M9 17h4" /></svg>
+);

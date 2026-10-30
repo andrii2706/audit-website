@@ -5,19 +5,11 @@ import { useParams } from 'next/navigation';
 import { isLocale, type Locale } from '@/i18n/config';
 import uk from '@/i18n/dictionaries/uk.json';
 import en from '@/i18n/dictionaries/en.json';
-import pl from '@/i18n/dictionaries/pl.json';
-import fr from '@/i18n/dictionaries/fr.json';
-import de from '@/i18n/dictionaries/de.json';
-import es from '@/i18n/dictionaries/es.json';
 import { btn, container, h2 } from '@/components/ui';
 
 const texts: Record<Locale, { nf: typeof uk.notFound; services: string }> = {
   uk: { nf: uk.notFound, services: uk.pages.servicesTitle },
   en: { nf: en.notFound, services: en.pages.servicesTitle },
-  pl: { nf: pl.notFound, services: pl.pages.servicesTitle },
-  fr: { nf: fr.notFound, services: fr.pages.servicesTitle },
-  de: { nf: de.notFound, services: de.pages.servicesTitle },
-  es: { nf: es.notFound, services: es.pages.servicesTitle },
 };
 
 export default function NotFound() {

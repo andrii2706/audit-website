@@ -47,6 +47,14 @@
           "localized": false
         }
       }
+    },
+    "sourceUrl": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     }
   },
   "pluginOptions": {

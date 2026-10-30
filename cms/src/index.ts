@@ -1,9 +1,10 @@
 import type { Core } from '@strapi/strapi';
-import { ensureLocales, ensurePublicPermissions, ensureWebToken, LOCALES, seedIfEmpty } from './seed';
+import { ensureLocales, ensurePublicPermissions, ensureWebToken, importLegacyMedia, LOCALES, reseedIfRequested, seedIfEmpty, seedLegacyReports } from './seed';
 import { ensureNewsSamples } from './seed/news';
 
 /** Content types whose changes must refresh the website. */
 const SITE_UIDS = new Set([
+  'api::document-image.document-image',
   'api::service-category.service-category',
   'api::service.service',
   'api::audience.audience',
@@ -11,6 +12,10 @@ const SITE_UIDS = new Set([
   'api::faq.faq',
   'api::article.article',
   'api::news-item.news-item',
+  'api::about-page.about-page',
+  'api::career-page.career-page',
+  'api::vacancy.vacancy',
+  'api::transparency-report.transparency-report',
   'api::client-logo.client-logo',
   'api::global.global',
   'api::homepage.homepage',
@@ -48,9 +53,13 @@ export default {
     await ensureLocales(strapi);
     await ensurePublicPermissions(strapi);
     await ensureWebToken(strapi);
-    if (process.env.SEED_ON_EMPTY !== 'false') {
+    // `npm run reseed` empties the site content first, so the seed below fills it again.
+    const reseeded = await reseedIfRequested(strapi);
+    if (reseeded || process.env.SEED_ON_EMPTY !== 'false') {
       await seedIfEmpty(strapi);
+      await seedLegacyReports(strapi);
       await ensureNewsSamples(strapi, LOCALES);
     }
+    await importLegacyMedia(strapi);
   },
 };

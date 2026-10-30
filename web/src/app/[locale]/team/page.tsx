@@ -25,8 +25,8 @@ export default async function TeamPage({ params }: Props) {
     <>
       <PageHero crumbLabel={dict.nav.breadcrumbs} crumbs={[{ name: dict.nav.home, href: `/${locale}` }, { name: dict.nav.team }]} title={home?.teamTitle ?? dict.pages.teamTitle} intro={home?.teamSubtitle} />
       <section className={`${container} pb-16 sm:pb-24`}>
-        <div data-stagger className="grid grid-cols-1 gap-3 xs:grid-cols-2 lg:grid-cols-4">
-          {team.map((m) => <PersonCard key={m.documentId} m={m} />)}
+        <div data-stagger className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {team.map((m) => <PersonCard key={m.documentId} m={m} withBio labels={{ qualification: dict.pages.teamQualification, registry: dict.pages.teamRegistry }} />)}
         </div>
       </section>
       {team.map((m) => (

@@ -1,3 +1,4 @@
+import BrandMark from '@/components/BrandMark';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { ImageResponse } from 'next/og';
@@ -28,8 +29,8 @@ export async function renderOg({ site, title, subtitle, tag }: { site: string; t
     (
       <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: '#F4F5F7', padding: 64, fontFamily: 'Onest, OnestCyr, OnestExt' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ width: 56, height: 56, borderRadius: 16, background: '#0B1220', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 600 }}>
-            {site.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
+          <div style={{ width: 56, height: 64, display: 'flex' }}>
+            <BrandMark />
           </div>
           <div style={{ fontSize: 30, fontWeight: 600, color: '#0B1220' }}>{site}</div>
           {tag && <div style={{ marginLeft: 'auto', background: '#D7F75B', color: '#0B1220', borderRadius: 999, padding: '8px 20px', fontSize: 24, fontWeight: 600 }}>{tag}</div>}

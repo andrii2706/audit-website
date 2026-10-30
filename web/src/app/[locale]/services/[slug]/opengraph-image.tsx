@@ -5,7 +5,7 @@ import { getGlobal, getServiceBySlug } from '@/lib/strapi';
 
 export const size = ogSize;
 export const contentType = 'image/png';
-export const alt = 'Audit Consultant — service';
+export const alt = 'Business Partners — service';
 
 export default async function Image({ params }: { params: Promise<{ locale: string; slug: string }> }) {
   const { locale: raw, slug } = await params;

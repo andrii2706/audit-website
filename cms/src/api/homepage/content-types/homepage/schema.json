@@ -179,6 +179,24 @@
         }
       }
     },
+    "industriesTitle": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "industries": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.bullet",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
     "teamTitle": {
       "type": "string",
       "pluginOptions": {

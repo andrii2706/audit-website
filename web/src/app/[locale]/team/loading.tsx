@@ -6,7 +6,7 @@ export default function Loading() {
     <SkPage>
       <SkHero />
       <div className={`${container} pb-16 sm:pb-24`}>
-        <SkGrid count={8} card={SkPersonCard} className="grid-cols-1 xs:grid-cols-2 lg:grid-cols-4" />
+        <SkGrid count={6} card={SkPersonCard} className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" />
       </div>
     </SkPage>
   );
