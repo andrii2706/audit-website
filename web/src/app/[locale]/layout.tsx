@@ -7,6 +7,8 @@ import Footer from '@/components/Footer';
 import Header, { TopBar } from '@/components/Header';
 import MobileActionBar from '@/components/MobileActionBar';
 import ScrollToTop from '@/components/ScrollToTop';
+import ContentProtection from '@/components/ContentProtection';
+import { protectionTokens, resolveProtection } from '@/lib/protection';
 import NavProgress from '@/components/NavProgress';
 import { JsonLd } from '@/components/bits';
 import { isLocale, locales, type Locale } from '@/i18n/config';
@@ -45,6 +47,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     // Only preview directives: index/follow is the default, and setting it here would contradict the 404 page's noindex.
     robots: { googleBot: { 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
     formatDetection: { telephone: true, email: true, address: true },
+    // AI-training opt-out (read by DeviantArt-style "noai" crawlers) and the W3C TDM reservation.
+    other: resolveProtection(g).blockAiCrawlers ? { robots: 'noai, noimageai', 'tdm-reservation': '1' } : undefined,
     verification: {
       google: process.env.GOOGLE_SITE_VERIFICATION || undefined,
       other: process.env.BING_SITE_VERIFICATION ? { 'msvalidate.01': process.env.BING_SITE_VERIFICATION } : undefined,
@@ -60,8 +64,15 @@ export default async function LocaleLayout({ children, params }: Props) {
   const locale: Locale = raw;
   const [dict, global, categories, home] = await Promise.all([getDictionary(locale), getGlobal(locale), getCategories(locale), getHomepage(locale)]);
 
+  const protection = resolveProtection(global);
   return (
-    <html lang={locale} data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html
+      lang={locale}
+      data-scroll-behavior="smooth"
+      data-protect={protectionTokens(protection) || undefined}
+      style={protection.blockPrint ? ({ '--print-note': JSON.stringify(dict.common.printBlocked) } as React.CSSProperties) : undefined}
+      suppressHydrationWarning
+    >
       {/* suppressHydrationWarning: browser extensions (Grammarly, password managers) inject attributes into <body> before React hydrates. Affects only this element’s own attributes. */}
       <body className="min-h-dvh" suppressHydrationWarning>
         {/* Images fade in over their skeleton (FadeImage). Without JavaScript nothing would reveal them, so show them right away. */}
@@ -77,6 +88,9 @@ export default async function LocaleLayout({ children, params }: Props) {
         <main id="main" tabIndex={-1} className="outline-none">{children}</main>
         <Footer locale={locale} dict={dict} global={global} categories={categories} ctaTitle={home?.ctaTitle} />
         <ScrollToTop label={dict.common.toTop} />
+        {protection.enabled && (
+          <ContentProtection copy={protection.blockCopy} menu={protection.blockContextMenu} images={protection.blockImageSaving} keys={protection.blockShortcuts} contacts={protection.allowContactCopy} />
+        )}
         <MobileActionBar locale={locale} phone={global?.phone} telegramUrl={global?.telegramUrl} labels={{ call: dict.nav.call, consultation: dict.nav.consultation }} />
         <JsonLd data={organizationLd(locale, global)} />
         <JsonLd data={websiteLd(locale, global?.siteName ?? dict.meta.siteName)} />

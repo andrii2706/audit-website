@@ -27,6 +27,83 @@ const PUBLIC_READ: Record<string, string[]> = {
 };
 
 /** Grants the Public role read access to site content (leads are never readable). */
+/** Office points this project shipped before (wrong brief longitude, then the company's Maps place). */
+const OLD_MAP_QUERIES = ['49.8525392,24.02329', '49.8525358,24.0258649', '49.8521722,24.0259265'];
+
+/**
+ * One-off data fix for databases seeded earlier: if the map still points to one of the old points (or nothing),
+ * set the correct office location. A point the admin entered by hand is never touched.
+ */
+export async function ensureOfficeLocation(strapi: Core.Strapi) {
+  const c = structure.contacts;
+  const res = await strapi.db.query('api::global.global').updateMany({
+    where: { $or: [{ mapQuery: { $in: OLD_MAP_QUERIES } }, { mapQuery: { $null: true } }, { mapQuery: '' }] },
+    data: { mapQuery: c.mapQuery, mapPlace: c.mapPlace || null, mapUrl: c.mapUrl },
+  });
+  if (res?.count) strapi.log.info(`[seed] Office map point updated in ${res.count} settings entr${res.count === 1 ? 'y' : 'ies'}`);
+}
+
+/**
+ * «Заявки» list in the admin: newest first, with the columns a manager needs. Applied once (marker in the settings),
+ * so later changes made in the admin («View settings») are kept.
+ */
+export async function ensureLeadListView(strapi: Core.Strapi) {
+  const store = strapi.store({ type: 'plugin', name: 'content_manager' });
+  const key = 'configuration_content_types::api::lead.lead';
+  const conf = (await store.get({ key })) as any;
+  if (!conf || (conf.settings?.bpLeadView ?? 0) >= 2) return;
+  conf.settings = { ...conf.settings, defaultSortBy: 'createdAt', defaultSortOrder: 'DESC', pageSize: 20, bpLeadView: 2 };
+  conf.layouts = { ...conf.layouts, list: ['name', 'phone', 'email', 'service', 'createdAt'] };
+  await store.set({ key, value: conf });
+}
+
+/** Field paths the admin permission system expects: plain attributes plus "component.field" for components. */
+function permissionFields(strapi: Core.Strapi, attributes: Record<string, any>, prefix = '', depth = 0): string[] {
+  const out: string[] = [];
+  for (const [name, attr] of Object.entries(attributes)) {
+    if (['createdAt', 'updatedAt', 'publishedAt', 'createdBy', 'updatedBy', 'locale', 'localizations', 'documentId', 'id'].includes(name)) continue;
+    const path = prefix + name;
+    if (attr.type === 'component' && depth < 3) {
+      const comp = strapi.components[attr.component as keyof typeof strapi.components] as any;
+      const nested = comp ? permissionFields(strapi, comp.attributes, `${path}.`, depth + 1) : [];
+      out.push(...(nested.length ? nested : [path]));
+    } else {
+      out.push(path);
+    }
+  }
+  return out;
+}
+
+/**
+ * Gives the built-in Editor role full Content Manager access to every site content type (Strapi only grants
+ * the types that existed when the role was created, so later types — about, career, reports, news… — were hidden
+ * from editors). Missing permissions are added; existing ones are left as the admin configured them.
+ */
+export async function ensureEditorPermissions(strapi: Core.Strapi) {
+  const role = await strapi.db.query('admin::role').findOne({ where: { code: 'strapi-editor' } });
+  if (!role) return;
+  const existing = await strapi.db.query('admin::permission').findMany({ where: { role: role.id }, select: ['action', 'subject'] });
+  const has = new Set(existing.map((p: any) => `${p.action}|${p.subject}`));
+  const locales = LOCALES.map((l) => l.code);
+  let added = 0;
+  for (const [uid, ct] of Object.entries(strapi.contentTypes) as [string, any][]) {
+    if (!uid.startsWith('api::')) continue;
+    const localized = !!ct.pluginOptions?.i18n?.localized;
+    const fields = permissionFields(strapi, ct.attributes);
+    const actions = ['create', 'read', 'update', 'delete', ...(ct.options?.draftAndPublish ? ['publish'] : [])];
+    for (const a of actions) {
+      const action = `plugin::content-manager.explorer.${a}`;
+      if (has.has(`${action}|${uid}`)) continue;
+      const properties: Record<string, unknown> = {};
+      if (!['delete', 'publish'].includes(a)) properties.fields = fields;
+      if (localized) properties.locales = locales;
+      await strapi.db.query('admin::permission').create({ data: { action, actionParameters: {}, subject: uid, properties, conditions: [], role: role.id } });
+      added += 1;
+    }
+  }
+  if (added) strapi.log.info(`[seed] Editor role: ${added} Content Manager permissions added`);
+}
+
 export async function ensurePublicPermissions(strapi: Core.Strapi) {
   const role = await strapi.db.query('plugin::users-permissions.role').findOne({ where: { type: 'public' } });
   if (!role) return;
@@ -217,7 +294,7 @@ export async function seedIfEmpty(strapi: Core.Strapi) {
       address: L.address,
       ...(first ? {
         phone: c.phone, phoneSecondary: c.phoneSecondary, email: c.email, edrpou: c.edrpou || null, registryNumber: c.registryNumber || null,
-        mapQuery: c.mapQuery, mapUrl: c.mapUrl, telegramUrl: c.telegramUrl || null, viberUrl: c.viberUrl || null, whatsappUrl: c.whatsappUrl || null, socials: [],
+        mapQuery: c.mapQuery, mapPlace: c.mapPlace || null, mapUrl: c.mapUrl, protection: c.protection, telegramUrl: c.telegramUrl || null, viberUrl: c.viberUrl || null, whatsappUrl: c.whatsappUrl || null, socials: [],
       } : {}),
     });
     if (first) ids.global = g.documentId;

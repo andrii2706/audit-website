@@ -234,3 +234,32 @@ img[data-fade]:not([data-loaded]) { opacity: 0; transform: scale(1.04); }
   & pre { @apply overflow-x-auto rounded-2xl bg-ink p-4 text-sm text-white; }
   & img { @apply rounded-2xl; }
 }
+
+/* ——— Content protection (Strapi → Глобальні налаштування → «Захист контенту»; tokens set on <html data-protect>).
+   The JavaScript half is components/ContentProtection.tsx. */
+html[data-protect~='copy'] body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+html[data-protect~='copy'] :is(input, textarea, select, [contenteditable='true'], [data-allow-copy]),
+html[data-protect~='copy'][data-protect~='contacts'] :is(a[href^='tel:'], a[href^='mailto:']) {
+  -webkit-user-select: text;
+  user-select: text;
+}
+html[data-protect~='images'] :is(img, svg, video, picture) {
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+}
+@media print {
+  html[data-protect~='print'] body > * {
+    display: none !important;
+  }
+  html[data-protect~='print'] body::before {
+    content: var(--print-note, 'Printing is disabled.');
+    display: block;
+    padding: 48px 32px;
+    font: 600 18px/1.5 system-ui, sans-serif;
+    color: #0b1220;
+  }
+}

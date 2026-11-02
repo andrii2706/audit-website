@@ -1,0 +1,19 @@
+{
+  "collectionName": "components_shared_content_protections",
+  "info": {
+    "displayName": "Захист контенту",
+    "icon": "lock",
+    "description": "Що сайт блокує для відвідувачів. Вимкніть пункт, щоб дозволити дію."
+  },
+  "options": {},
+  "attributes": {
+    "enabled": { "type": "boolean", "default": true },
+    "blockCopy": { "type": "boolean", "default": true },
+    "blockContextMenu": { "type": "boolean", "default": true },
+    "blockImageSaving": { "type": "boolean", "default": true },
+    "blockPrint": { "type": "boolean", "default": true },
+    "blockShortcuts": { "type": "boolean", "default": true },
+    "blockAiCrawlers": { "type": "boolean", "default": true },
+    "allowContactCopy": { "type": "boolean", "default": true }
+  }
+}

@@ -98,7 +98,7 @@ export default async function ContactsPage({ params }: Props) {
         <section aria-labelledby="map-title" className={`${container} pb-16 sm:pb-24`}>
           <h2 id="map-title" data-reveal className="mb-5 text-2xl font-semibold tracking-tight sm:mb-6 sm:text-3xl">{dict.pages.contactsMap}</h2>
           <div data-reveal>
-            <MapEmbed locale={locale} global={g!} withInfo={false} labels={{ title: t(dict.pages.mapTitle, { address: g?.address ?? mapQuery }), office: dict.pages.mapOffice, open: dict.pages.mapOpen, route: dict.pages.mapRoute, phone: dict.pages.mapPhone, email: dict.pages.mapEmail, hours: dict.footer.hours }} />
+            <MapEmbed locale={locale} global={g!} labels={{ title: t(dict.pages.mapTitle, { address: g?.address ?? mapQuery }), office: dict.pages.mapOffice, open: dict.pages.mapOpen, route: dict.pages.mapRoute, phone: dict.pages.mapPhone, email: dict.pages.mapEmail, hours: dict.footer.hours }} />
           </div>
         </section>
       )}

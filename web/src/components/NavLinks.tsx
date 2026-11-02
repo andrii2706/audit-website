@@ -15,7 +15,7 @@ export default function NavLinks({ items }: { items: { href: string; label: stri
             key={n.href}
             href={n.href}
             aria-current={active ? 'page' : undefined}
-            className="relative cursor-pointer rounded-full px-2.5 py-2.5 whitespace-nowrap transition-colors hover:bg-bg aria-[current=page]:bg-bg aria-[current=page]:text-accent-ink"
+            className="relative cursor-pointer rounded-full px-3 py-2.5 whitespace-nowrap transition-colors hover:bg-bg aria-[current=page]:bg-bg aria-[current=page]:text-accent-ink"
           >
             {n.label}
           </Link>

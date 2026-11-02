@@ -66,11 +66,28 @@ The law requires the reports for the last 7 calendar years on the site, and a co
 
 ## Map
 
-The contacts page embeds Google Maps by the text in **Налаштування сайту → mapQuery** (e.g. «вулиця Лемківська, 9А, Львів»); **mapUrl** is the «Відкрити на карті» link in the footer and on the contacts page.
+**Налаштування сайту → mapQuery** = the office coordinates «lat,lng» (now 49.8531048,24.0258748 = «вулиця Лемківська, 9а» in Google Maps, the point the client sent). The embedded map puts its pin exactly there, «Прокласти маршрут» leads there and search engines get them. **mapUrl** is the «Відкрити в Google Maps» link (the «вулиця Лемківська, 9а» card in Google Maps). **mapPlace** is optional: text the map searches for instead of the coordinates (e.g. a company name once it has its own Google Maps listing). To move the pin: open the building in Google Maps, copy the two numbers after `!3d` and `!4d` in the address bar (the pin; the numbers after `@` are only the camera) into mapQuery as «lat,lng». The home page and the contacts page show the same map card.
+
+## Content protection
+
+**Налаштування сайту → «Захист контенту»** (one block, the same for both languages). Every switch is on by default:
+
+| Switch | What it does |
+| --- | --- |
+| enabled | Master switch: off disables all of the below |
+| blockCopy | No text selection, copy, cut or «select all» (form fields stay usable) |
+| blockContextMenu | No right-click menu |
+| blockImageSaving | No dragging images out or long-press «save image» on phones |
+| blockPrint | Printing shows a notice instead of the page |
+| blockShortcuts | Blocks Ctrl/⌘+S, P, U and the developer-tools shortcuts (F12, Ctrl+Shift+I/J/C) |
+| blockAiCrawlers | robots.txt shuts out AI crawlers (GPTBot, ClaudeBot, Google-Extended, CCBot, Perplexity…), `noai` meta |
+| allowContactCopy | Phone numbers and e-mails can still be selected and copied |
+
+Always on (server): pages can't be shown inside other sites (`X-Frame-Options`, `frame-ancestors`) and carry a text-and-data-mining reservation (`tdm-reservation`, `/.well-known/tdmrep.json`). No website can make copying impossible (screenshots, browser «reader» modes and disabled JavaScript still work); this stops casual copying and simple scrapers.
 
 ## Requests by e-mail
 
-Every request from a site form arrives in **Lead** and, when SMTP is configured, also by e-mail to the address in **Global → e-mail** (or `LEAD_EMAIL_TO`). Click **Reply** in your mail client to answer the client directly. Clients who leave an e-mail get an automatic confirmation in their language.
+Every request from a site form arrives in **Content Manager → Заявка** (newest first) and, when SMTP is configured, also by e-mail to the address in **Global → e-mail** (or `LEAD_EMAIL_TO`). Click **Reply** in your mail client to answer the client directly. Clients who leave an e-mail get an automatic confirmation in their language.
 
 ## SEO fields
 

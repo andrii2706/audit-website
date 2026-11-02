@@ -122,6 +122,16 @@ server {
 }
 ```
 
+Optional: stop other sites from embedding the CMS images and site pictures directly (hotlinking). Add to the `cms.bp-audit.com.ua` server block:
+
+```nginx
+location /uploads/ {
+  valid_referers none blocked server_names bp-audit.com.ua *.bp-audit.com.ua ~\.google\. ~\.bing\.;
+  if ($invalid_referer) { return 403; }
+  proxy_pass http://127.0.0.1:1337;
+}
+```
+
 ```bash
 sudo apt-get install -y certbot python3-certbot-nginx
 sudo certbot --nginx -d bp-audit.com.ua -d www.bp-audit.com.ua -d cms.bp-audit.com.ua
@@ -214,6 +224,8 @@ If UAhosting confirms that the plan has **"Setup Node.js App"** (CloudLinux), th
 3. Strapi Cloud: connect the repo with root `cms`. Use its managed Postgres; uploads go to its media storage.
 
 ## Production checklist
+
+- [ ] `npm run check-mail` in `web/` sends a test e-mail (SMTP works), and a test request from the live form arrives by e-mail and in Strapi → Заявка.
 
 - [ ] Node 22.19+ (22.22.0) on the server
 - [ ] All `tobemodified` secrets replaced; `REVALIDATE_SECRET` is identical in both apps

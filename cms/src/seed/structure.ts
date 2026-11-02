@@ -81,10 +81,15 @@ export const contacts = {
   // From the old site (bp-audit.com.ua → «Про компанію»).
   edrpou: '37741155',
   registryNumber: '4463',
-  // Exact office point (same coordinates as mapUrl from the brief).
-  mapQuery: '49.8525392,24.02329',
-  mapUrl: 'https://www.google.com/maps/@49.8525392,24.02329,17z',
+  // Office «вулиця Лемківська, 9а» — the exact Google Maps point sent by the client (02.11.2026). The brief's longitude
+  // (24.02329) pointed to the other side of the road. The embed uses these exact coordinates.
+  mapQuery: '49.8531048,24.0258748',
+  // Optional text the embedded map searches for instead of the coordinates (empty = use mapQuery).
+  mapPlace: '',
+  mapUrl: 'https://www.google.com/maps/place/?q=place_id:ChIJBQeoDAndOkcRrtekOqNKLRY',
   telegramUrl: '',
+  // Content protection on the site (Strapi → Глобальні налаштування → «Захист контенту»); everything on by default.
+  protection: { enabled: true, blockCopy: true, blockContextMenu: true, blockImageSaving: true, blockPrint: true, blockShortcuts: true, blockAiCrawlers: true, allowContactCopy: true },
   viberUrl: '',
   whatsappUrl: '',
 };

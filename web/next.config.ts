@@ -11,6 +11,20 @@ const strapi = new URL(process.env.STRAPI_URL || 'http://localhost:1337');
 const demo = process.env.PAGES_DEMO === '1';
 const basePath = demo ? (process.env.PAGES_BASE_PATH ?? '').replace(/\/$/, '') : '';
 
+/**
+ * Sent with every page (not in the static Pages demo, which can't set headers). Frame protection stops other sites from
+ * showing these pages inside their own (content theft, clickjacking); `tdm-reservation` opts the content out of
+ * text-and-data mining (W3C TDMRep). nginx may add HSTS on top (docs/DEPLOYMENT.md).
+ */
+const SECURITY_HEADERS = [
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()' },
+  { key: 'tdm-reservation', value: '1' },
+];
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Do not let `next dev` (re)create AGENTS.md — project guidance lives in ../CLAUDE.md
@@ -20,7 +34,7 @@ const nextConfig: NextConfig = {
   ...(demo ? { basePath, trailingSlash: true } : {}),
   env: { NEXT_PUBLIC_BASE_PATH: basePath },
   // Old bp-audit.com.ua (Joomla) URLs → new pages. Static export can't redirect, so the demo skips them.
-  ...(demo ? {} : { redirects: async () => legacyRedirects }),
+  ...(demo ? {} : { redirects: async () => legacyRedirects, headers: async () => [{ source: '/:path*', headers: SECURITY_HEADERS }] }),
   // Fonts read from disk by the Open Graph image routes must ship with the standalone build.
   outputFileTracingIncludes: { '/**': ['./src/assets/fonts/**'] },
   images: {

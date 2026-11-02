@@ -21,8 +21,11 @@ type Props = {
  */
 export default function MapEmbed({ locale, global: g, labels, withInfo = true, className }: Props) {
   const query = (g.mapQuery || g.address)!;
-  const src = `https://www.google.com/maps?q=${encodeURIComponent(query)}&hl=${locale}&z=17&output=embed`;
-  const route = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}`;
+  const src = `https://www.google.com/maps?q=${encodeURIComponent(g.mapPlace || query)}&hl=${locale}&z=17&output=embed`;
+  // With the Google place id from mapUrl the route ends at that place card («вулиця Лемківська, 9а»), not at whatever
+  // address Google guesses for the coordinates.
+  const placeId = g.mapUrl?.match(/place_id:([\w-]+)/)?.[1];
+  const route = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}${placeId ? `&destination_place_id=${placeId}` : ''}`;
   const open = g.mapUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
   const phones = [g.phone, g.phoneSecondary].filter(Boolean) as string[];
   const [street, ...rest] = (g.address ?? '').split(/,\s*(?=Офісний|офісний|Na Lemkivska|Office)/);

@@ -62,14 +62,18 @@ Create it with `mkdir cms/public/uploads`. The `predev`/`prestart` npm scripts n
 - `REVALIDATE_SECRET` must be identical in `cms/.env` and `web/.env.local`.
 - `WEB_REVALIDATE_URL` must be reachable *from the CMS server* (e.g. `http://127.0.0.1:3000/api/revalidate`).
 - The data cache also refreshes every hour by itself.
+- After `npm run reseed` (or any change written straight into the database) the CMS pings the site once when it has started. If the site wasn't running then, restart the CMS once more, or delete `web/.next/cache` and restart the site. In `npm run dev` the site doesn't cache CMS data at all.
 
-## Lead e-mails don't arrive
+## Lead e-mails don't arrive / requests don't appear in Strapi
 
+- **Testing on the GitHub Pages demo?** It has no server: the form only validates and shows «Демо-версія: заявку не надіслано». Nothing is e-mailed or saved there. Test on a running server (local `npm start`, staging or production).
+- Run `npm run check-mail` in `web/` (optionally `npm run check-mail -- you@example.com`): it connects to the SMTP server with the current settings and sends a test e-mail, or prints what is wrong.
 - Is `SMTP_HOST` set in `web/.env.local`? If it's empty, e-mail is disabled (leads still go to Strapi).
 - Check the site log for `[mail] …` errors (wrong password, port or TLS). Port 465 needs `SMTP_SECURE=true`; 587 needs `false`.
 - Gmail / Google Workspace needs an **App Password**, not the normal password.
 - Is there a recipient? `LEAD_EMAIL_TO` or the e-mail in Strapi → Global.
-- Mail in spam: configure SPF/DKIM for the domain in `MAIL_FROM`.
+- Mail in spam: configure SPF/DKIM for the domain in `MAIL_FROM`. ukr.net is strict: send from a mailbox on bp-audit.com.ua (UAhosting SMTP) whose domain has SPF, not from a Gmail address.
+- Requests in Strapi: **Content Manager → Заявка** (newest first). Leads are saved with the `STRAPI_WEB_TOKEN` from `web/.env.local`; a `[strapi] lead 401` line in the site log means the token belongs to another database: delete the token line value, restart the CMS (it writes a new one in dev) or create a token with `Lead → create` in Settings → API Tokens.
 
 ## `EADDRINUSE: address already in use :::3000`
 

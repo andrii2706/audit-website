@@ -38,6 +38,16 @@ export default function LeadForm({ locale, dict, variant = 'estimate', serviceOp
   const isEstimate = variant === 'estimate';
   const shell = cx('flex min-w-0 flex-col gap-5 sm:gap-6', isEstimate && 'rounded-card bg-card p-5 sm:p-8', className);
 
+  // GitHub Pages demo: there is no server, so say plainly that nothing was sent (no success tick, no "we'll call you").
+  if (state.ok && state.demo) {
+    return (
+      <div role="status" className={cx(shell, 'min-h-72 animate-fade-up justify-center')}>
+        <span aria-hidden="true" className="inline-flex size-14 animate-pop items-center justify-center rounded-full bg-star text-2xl font-bold text-ink">!</span>
+        <h3 className="text-2xl font-semibold tracking-tight sm:text-[28px]">{dict.demoTitle}</h3>
+        <p className="text-muted">{dict.demoNote}</p>
+      </div>
+    );
+  }
   if (state.ok) {
     return (
       <div role="status" className={cx(shell, 'min-h-72 animate-fade-up justify-center')}>
@@ -48,7 +58,6 @@ export default function LeadForm({ locale, dict, variant = 'estimate', serviceOp
         </span>
         <h3 className="text-2xl font-semibold tracking-tight sm:text-[28px]">{dict.successTitle}</h3>
         <p className="text-muted">{t(dict.successText, { channel: channels.find((c) => c.id === channel)?.label ?? 'Telegram' })}</p>
-        {state.demo && <p className="rounded-xl bg-bg px-3.5 py-2.5 text-[13px] text-muted">{dict.demoNote}</p>}
       </div>
     );
   }

@@ -45,7 +45,7 @@ export function TopBar({ locale, dict, global }: { locale: Locale; dict: Diction
   const link = 'cursor-pointer whitespace-nowrap transition-colors hover:text-accent-ink';
   return (
     <div className="hidden text-[13px] text-muted md:block">
-      <div className="mx-auto flex h-10 max-w-[1240px] items-center gap-5 px-6 lg:gap-6">
+      <div className="mx-auto flex h-10 max-w-[1240px] items-center gap-5 px-6 lg:gap-6 2xl:max-w-[1400px]">
         {global.workingHours && (
           <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
             <Clock /> {global.workingHours}
@@ -74,11 +74,13 @@ type Props = { locale: Locale; dict: Dictionary; global: Global | null };
 export default function Header({ locale, dict, global }: Props) {
   const name = global?.siteName ?? dict.meta.siteName;
   const nav = navItems(locale, dict);
+  // Phones: a solid strip behind the pill (also painted upwards with a shadow, so nothing shows under the status bar or an
+  // in-app browser's top bar). From `sm` the pill floats on its own over the page.
   return (
-    <ScrollHeader className="group/header sticky top-0 z-30 px-3 pt-2.5 transition-[padding] duration-500 ease-(--ease-out-expo) sm:px-6 sm:pt-4 sm:group-data-scrolled/header:pt-2.5">
-      <div className="mx-auto flex max-w-[1240px] items-center gap-3 rounded-full border border-line bg-white/85 py-2 pr-2 pl-4 backdrop-blur-md transition-[background-color,box-shadow,border-color] duration-500 ease-(--ease-out-expo) group-data-scrolled/header:border-line-strong group-data-scrolled/header:bg-white/92 group-data-scrolled/header:shadow-[0_14px_40px_-22px_rgba(11,18,32,0.35)] sm:gap-6 sm:py-2.5 sm:pr-2.5 sm:pl-5">
+    <ScrollHeader className="group/header sticky top-0 z-30 border-b border-transparent bg-bg px-3 pt-[max(0.625rem,env(safe-area-inset-top))] pb-2 shadow-[0_-100vh_0_0_var(--color-bg)] transition-[padding,border-color] duration-500 ease-(--ease-out-expo) group-data-scrolled/header:border-line sm:border-b-0 sm:bg-transparent sm:px-6 sm:pt-4 sm:pb-0 sm:shadow-none sm:group-data-scrolled/header:pt-2.5">
+      <div className="mx-auto flex max-w-[1240px] items-center gap-3 rounded-full 2xl:max-w-[1400px] border border-line bg-white py-2 pr-2 pl-4 transition-[background-color,box-shadow,border-color] duration-500 ease-(--ease-out-expo) group-data-scrolled/header:border-line-strong group-data-scrolled/header:shadow-[0_14px_40px_-22px_rgba(11,18,32,0.35)] sm:gap-6 xl:gap-4 2xl:gap-6 sm:bg-white/85 sm:py-2.5 sm:pr-2.5 sm:pl-5 sm:backdrop-blur-md sm:group-data-scrolled/header:bg-white/92">
         <Logo name={name} locale={locale} tagline={global?.tagline} />
-        <nav aria-label={dict.nav.mainMenu} className="hidden min-w-0 flex-1 justify-center gap-0 text-[14px] font-medium xl:flex">
+        <nav aria-label={dict.nav.mainMenu} className="hidden min-w-0 flex-1 justify-center gap-1 text-[14px] font-medium xl:flex 2xl:gap-1.5">
           <NavLinks items={nav} />
         </nav>
         <div className="ml-auto flex items-center gap-2">
@@ -86,7 +88,7 @@ export default function Header({ locale, dict, global }: Props) {
             <LanguageSwitcher locale={locale} label={dict.nav.language} busyLabel={dict.common.switchingLanguage} />
           </div>
           {global?.phone && (
-            <a href={telHref(global.phone)} className={`${iconBtn} max-sm:hidden`} aria-label={`${dict.nav.call} ${formatPhone(global.phone)}`}>
+            <a href={telHref(global.phone)} className={`${iconBtn} max-sm:hidden xl:max-2xl:hidden`} aria-label={`${dict.nav.call} ${formatPhone(global.phone)}`}>
               <Phone />
             </a>
           )}

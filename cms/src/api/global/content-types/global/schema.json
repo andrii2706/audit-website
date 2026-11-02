@@ -91,6 +91,14 @@
         }
       }
     },
+    "mapPlace": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    },
     "mapUrl": {
       "type": "string",
       "pluginOptions": {
@@ -164,6 +172,16 @@
       "pluginOptions": {
         "i18n": {
           "localized": true
+        }
+      }
+    },
+    "protection": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.content-protection",
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
         }
       }
     }

@@ -111,8 +111,10 @@ export type Global = {
   workingHours?: string | null;
   /** Saturday / Sunday note shown under the working hours. */
   workingHoursNote?: string | null;
-  /** Text query for the embedded Google map, e.g. "вулиця Лемківська, 9А, Львів". */
+  /** Office coordinates "lat,lng" (route link, JSON-LD geo) or an address. */
   mapQuery?: string | null;
+  /** What the embedded map searches for (company name + street) so Google shows the company's own pin. */
+  mapPlace?: string | null;
   /** "Open in Google Maps" link. */
   mapUrl?: string | null;
   telegramUrl?: string | null;
@@ -121,6 +123,19 @@ export type Global = {
   socials?: LinkItem[];
   footerNote?: string | null;
   seo?: Seo;
+  /** «Захист контенту»: what the site blocks for visitors (missing = everything on). */
+  protection?: Partial<ContentProtection> | null;
+};
+
+export type ContentProtection = {
+  enabled: boolean;
+  blockCopy: boolean;
+  blockContextMenu: boolean;
+  blockImageSaving: boolean;
+  blockPrint: boolean;
+  blockShortcuts: boolean;
+  blockAiCrawlers: boolean;
+  allowContactCopy: boolean;
 };
 
 export type Homepage = {
@@ -239,9 +254,15 @@ async function strapi<T>(path: string, query: Query = {}): Promise<T | null> {
   for (const [k, v] of Object.entries(query)) if (v !== undefined) qs.set(k, String(v));
   const url = `${STRAPI_URL}/api/${path}${qs.size ? `?${qs}` : ''}`;
   try {
-    const res = await fetch(url, { next: { revalidate: REVALIDATE_SECONDS, tags: [CACHE_TAG] } });
+    // `npm run dev`: always fresh CMS data (reseeds and direct database fixes don't send the revalidation webhook).
+    const revalidate = process.env.NODE_ENV === 'development' ? 0 : REVALIDATE_SECONDS;
+    const res = await fetch(url, { next: { revalidate, tags: [CACHE_TAG] } });
     if (!res.ok) {
-      if (res.status !== 404) console.error(`[strapi] ${res.status} ${url}`);
+      if (res.status !== 404) {
+        // 400 "Invalid key …" = the CMS runs an older content schema than the site: restart/rebuild Strapi.
+        const detail = (await res.text().catch(() => '')).match(/"message":"([^"]+)"/)?.[1];
+        console.error(`[strapi] ${res.status} ${url}${detail ? ` — ${detail}` : ''}`);
+      }
       return null;
     }
     const json = (await res.json()) as { data: T };
@@ -260,9 +281,14 @@ export function mediaUrl(m: Media): string | null {
 
 // ——— Page queries
 
-export const getGlobal = (locale: Locale) =>
-  strapi<Global>('global', {
-    locale, 'populate[socials]': true, 'populate[seo]': true });
+/**
+ * Global settings. A CMS that hasn't been restarted with the newer schema rejects the WHOLE request (400) for an
+ * unknown populate key such as `protection`; then the site would lose contacts, the map and the footer. So the
+ * optional block is requested first and, if that fails, the settings are fetched without it.
+ */
+export const getGlobal = async (locale: Locale) =>
+  (await strapi<Global>('global', { locale, 'populate[socials]': true, 'populate[seo]': true, 'populate[protection]': true })) ??
+  strapi<Global>('global', { locale, 'populate[socials]': true, 'populate[seo]': true });
 
 export const getHomepage = (locale: Locale) =>
   strapi<Homepage>('homepage', {

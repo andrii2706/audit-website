@@ -26,6 +26,7 @@ function getTransport() {
         auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } : undefined,
       })
     : null;
+  if (!transporter) console.warn('[mail] SMTP_HOST is not set: lead e-mails (company notification and client confirmation) are switched off. See web/.env.example.');
   return transporter;
 }
 

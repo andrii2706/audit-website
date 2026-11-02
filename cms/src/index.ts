@@ -1,5 +1,5 @@
 import type { Core } from '@strapi/strapi';
-import { ensureLocales, ensurePublicPermissions, ensureWebToken, importLegacyMedia, LOCALES, reseedIfRequested, seedIfEmpty, seedLegacyReports } from './seed';
+import { ensureEditorPermissions, ensureLeadListView, ensureOfficeLocation, ensureLocales, ensurePublicPermissions, ensureWebToken, importLegacyMedia, LOCALES, reseedIfRequested, seedIfEmpty, seedLegacyReports } from './seed';
 import { ensureNewsSamples } from './seed/news';
 
 /** Content types whose changes must refresh the website. */
@@ -22,20 +22,24 @@ const SITE_UIDS = new Set([
 ]);
 const WRITE_ACTIONS = new Set(['create', 'update', 'delete', 'publish', 'unpublish', 'discardDraft']);
 
+/** Asks Next.js to drop its cached CMS data (WEB_REVALIDATE_URL + REVALIDATE_SECRET in cms/.env). */
+function notifyWebsite(strapi: Core.Strapi, reason: Record<string, string>, quiet = false) {
+  const url = process.env.WEB_REVALIDATE_URL;
+  const secret = process.env.REVALIDATE_SECRET;
+  if (!url || !secret) return;
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-revalidate-secret': secret },
+    body: JSON.stringify(reason),
+  }).catch((err) => !quiet && strapi.log.warn(`[revalidate] ${err.message}`));
+}
+
 export default {
   register({ strapi }: { strapi: Core.Strapi }) {
     // After any content write, ask Next.js to refresh its cache (on-demand revalidation).
     strapi.documents.use(async (ctx, next) => {
       const result = await next();
-      const url = process.env.WEB_REVALIDATE_URL;
-      const secret = process.env.REVALIDATE_SECRET;
-      if (url && secret && SITE_UIDS.has(ctx.uid) && WRITE_ACTIONS.has(ctx.action)) {
-        fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-revalidate-secret': secret },
-          body: JSON.stringify({ uid: ctx.uid, action: ctx.action }),
-        }).catch((err) => strapi.log.warn(`[revalidate] ${err.message}`));
-      }
+      if (SITE_UIDS.has(ctx.uid) && WRITE_ACTIONS.has(ctx.action)) notifyWebsite(strapi, { uid: ctx.uid, action: ctx.action });
       return result;
     });
   },
@@ -53,6 +57,9 @@ export default {
     await ensureLocales(strapi);
     await ensurePublicPermissions(strapi);
     await ensureWebToken(strapi);
+    await ensureEditorPermissions(strapi);
+    await ensureLeadListView(strapi);
+    await ensureOfficeLocation(strapi);
     // `npm run reseed` empties the site content first, so the seed below fills it again.
     const reseeded = await reseedIfRequested(strapi);
     if (reseeded || process.env.SEED_ON_EMPTY !== 'false') {
@@ -61,5 +68,8 @@ export default {
       await ensureNewsSamples(strapi, LOCALES);
     }
     await importLegacyMedia(strapi);
+    // Reseeds and the data fixes above write to the database directly (no webhook), so refresh the site once after start.
+    // Quiet: the website is often not running yet when the CMS starts.
+    notifyWebsite(strapi, { reason: 'cms-start' }, true);
   },
 };

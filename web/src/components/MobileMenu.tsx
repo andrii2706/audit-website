@@ -44,7 +44,7 @@ export default function MobileMenu({ locale, nav, phones, email, hours, name, la
       </button>
       {/* Portal: the sticky header uses backdrop-filter, which would otherwise trap position:fixed inside it. */}
       {open && createPortal(
-        <div role="dialog" aria-modal="true" aria-label={labels.menu} className="fixed inset-0 z-50 flex animate-fade-in flex-col gap-6 overflow-y-auto bg-ink px-4 pt-5 pb-8 text-white sm:px-8">
+        <div role="dialog" aria-modal="true" aria-label={labels.menu} className="fixed inset-0 z-50 flex animate-fade-in flex-col gap-6 overflow-y-auto overscroll-contain bg-ink px-4 pt-[max(1.25rem,env(safe-area-inset-top))] pb-[max(2rem,env(safe-area-inset-bottom))] text-white shadow-[0_-100vh_0_0_var(--color-ink)] sm:px-8">
           <div className="flex items-center justify-between gap-3">
             <span className="flex min-w-0 items-center gap-2.5">
               <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-white"><BrandMark className="h-7 w-auto" /></span>

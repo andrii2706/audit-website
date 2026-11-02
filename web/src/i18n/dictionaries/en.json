@@ -89,7 +89,8 @@
     "loading": "Loading…",
     "switchingLanguage": "Switching language…",
     "allNews": "All news",
-    "toTop": "Back to top"
+    "toTop": "Back to top",
+    "printBlocked": "Printing pages of this site is disabled. Please contact us to receive the materials."
   },
   "form": {
     "q1": "1. Which service?",
@@ -124,7 +125,8 @@
     "errContact": "Enter a phone number or an e-mail",
     "channelEmail": "E-mail",
     "orEmail": "or write to",
-    "demoNote": "This is a demo version of the site: the request was not sent."
+    "demoNote": "This is a test copy of the site without a server, so the form only checks the fields: no e-mail is sent and nothing is saved in the CMS. On the live site the request is stored in Strapi, the company gets an e-mail and the client gets a confirmation.",
+    "demoTitle": "Demo: the request was not sent"
   },
   "service": {
     "price": "Price",
