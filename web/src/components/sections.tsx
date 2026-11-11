@@ -155,7 +155,7 @@ export function TeamSection({ dict, home, team, num = '04' }: Base & { home: Hom
     <section id="team" className="py-16 sm:py-24">
       <div className={container}>
         <SectionHead eyebrowText={`${num} / ${dict.sections.team}`} title={home?.teamTitle ?? dict.pages.teamTitle} intro={home?.teamSubtitle} />
-        <div data-stagger className="grid grid-cols-1 gap-3 xs:grid-cols-2 lg:grid-cols-4">
+        <div data-stagger className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {team.map((m) => <PersonCard key={m.documentId} m={m} labels={{ qualification: dict.pages.teamQualification, registry: dict.pages.teamRegistry }} />)}
         </div>
       </div>
@@ -224,7 +224,7 @@ export function BlogSection({ locale, dict, home, posts, num = '06' }: Base & { 
 export function FaqSection({ dict, home, faqs, num = '07' }: Base & { home: Homepage | null; faqs: Faq[]; num?: string }) {
   if (!faqs.length) return null;
   return (
-    <section className={`${container} grid gap-8 pb-16 sm:pb-24 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.6fr)] lg:gap-12`}>
+    <section id="faq" className={`${container} grid scroll-mt-28 gap-8 pt-6 pb-20 sm:pt-10 sm:pb-28 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.6fr)] lg:gap-12 lg:pt-14`}>
       <div data-reveal className="flex flex-col gap-4">
         <span className={eyebrow}>{num} / {dict.sections.faq}</span>
         <h2 className={h2}>{home?.faqTitle ?? dict.sections.faq}</h2>

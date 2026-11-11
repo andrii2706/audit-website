@@ -36,10 +36,11 @@ npm run build && npm run start
 cd web && npm install      # STRAPI_WEB_TOKEN is filled by the CMS on first start (dev)
 npm run dev          # http://localhost:3000
 npm run typecheck && npm run lint
+npm test             # vitest unit tests (also `npm test` in cms/)
 npm run build && npm start   # standalone server via scripts/start-standalone.mjs
 ```
 
-Always run `npm run typecheck`, `npm run lint` and `npm run build` in `web/` after changes. The build needs Strapi running to prerender pages (without it, pages render empty and are revalidated later).
+Always run `npm run typecheck`, `npm run lint`, `npm test` and `npm run build` in `web/` (and `npm test` in `cms/`) after changes. The build needs Strapi running to prerender pages (without it, pages render empty and are revalidated later).
 
 ## Next.js 16 specifics — read before writing code
 
@@ -120,21 +121,40 @@ This is **Next.js 16**; APIs differ from older versions you may know. Bundled do
 - Logo: `components/BrandMark.tsx` (inline SVG, also used by favicons and OG images) is a temporary redraw; replace it with the client's vector original.
 - Strapi writes trigger `POST /api/revalidate` on the web app (`cms/src/index.ts` → `web/src/app/api/revalidate/route.ts`), secured by `REVALIDATE_SECRET`. Direct database writes (reseed, `ensure*` fixes) don't pass that middleware, so the CMS also pings it once after every start. In `next dev` CMS requests are not cached at all (`revalidate: 0`); in production they are cached for `REVALIDATE_SECONDS` (1 h) — and that cache survives restarts in `.next/cache`.
 - Leads: server action `web/src/app/actions.ts`. The client must give a phone **or** an e-mail. The lead goes to:
-  - Strapi `Lead`, via the create-only API token;
+  - Strapi `Lead`, via the website API token (it may create leads but never read them);
   - e-mail via `lib/mail.ts` (nodemailer, SMTP env): a notification to the company (Reply-To = client) and a localized confirmation to the client;
   - optionally Telegram.
 
-  It counts as delivered if Strapi **or** e-mail succeeded. The Public role can read content but never leads.
-- Content protection: Strapi `global.protection` (component `shared.content-protection`, all on by default, missing = all on) → `lib/protection.ts`. `<html data-protect="copy menu images print keys contacts">` drives CSS (globals.css: `user-select`, image drag, print notice) and `components/ContentProtection.tsx` (copy/cut/contextmenu/dragstart/shortcut listeners; form fields, `[data-allow-copy]` and tel/mailto links stay copyable). `robots.ts` adds AI crawlers (`AI_CRAWLERS`) when `blockAiCrawlers`; layout adds `noai` + `tdm-reservation` meta. Security headers (frame-ancestors, nosniff, tdm-reservation) in `next.config.ts` (not in the Pages demo).
-- CMS bootstrap also: `ensureEditorPermissions` (Editor role gets Content Manager access to every `api::` type, adding only missing permissions) and `ensureLeadListView` (Заявка list newest first, useful columns; applied once).
+  It counts as delivered if Strapi **or** e-mail succeeded. The validation errors come before the minimum-fill-time check, so an instant empty submit shows errors, never a fake "thank you".
+- **Closed content API:** the Public role has no read access (`ensurePublicPermissions` removes it on every start unless `PUBLIC_CONTENT_API=true`) and nginx returns 403 for `/api/` on the CMS host. `lib/strapi.ts` sends `Authorization: Bearer STRAPI_WEB_TOKEN` on every read; the token «web-site» = `WEB_TOKEN_PERMISSIONS` (find/findOne of site types + `lead.create`), synced on every start by `ensureWebToken`. When you add a content type the site reads, add it to `SITE_READ` in `cms/src/seed/index.ts`. `STRAPI_URL` = internal address (data), `STRAPI_PUBLIC_URL` = address in visitors' browsers (`mediaUrl`).
+- Content protection: Strapi `global.protection` (component `shared.content-protection`, all on by default, missing = all on) → `lib/protection.ts`. `<html data-protect="copy menu images print keys contacts">` drives CSS (globals.css: `user-select`, image drag, print notice) and `components/ContentProtection.tsx` (copy/cut/contextmenu/dragstart/shortcut listeners; form fields, `[data-allow-copy]` and tel/mailto links stay copyable). `robots.ts` adds AI crawlers (`AI_CRAWLERS`) when `blockAiCrawlers`; layout adds `noai` + `tdm-reservation` meta; `proxy.ts` answers 403 to AI crawlers, scraping tools and empty User-Agents (`lib/bots.ts`; only GET from non-local IPs, i.e. through nginx; setting cached 5 min; `BLOCK_BOTS=false` disables). With copying allowed, `ContentProtection` appends «Джерело: URL» to long copies. Certificate/letter scans go through `/api/document/[id]` (watermark by `lib/watermark.ts`, sharp; `documentImageUrl()`; toggle `watermarkDocuments`); the Pages demo uses the originals. Security headers (CSP, frame-ancestors, HSTS on https, COOP, nosniff, Permissions-Policy, tdm-reservation) in `next.config.ts` (not in the Pages demo).
+- CMS bootstrap also: `ensureEditorPermissions` (Editor role gets Content Manager access to every `api::` type, adding only missing permissions), `ensureLeadListView` (Заявка list newest first, useful columns incl. `stage`; applied once per version marker `bpLeadView`) and `ensureAdminLabels` (Ukrainian field labels + help texts from `seed/admin-labels.ts`; only replaces raw field names or labels listed in `PREVIOUS_LABELS`, so admin edits stay). Every new schema field needs an entry in `ADMIN_LABELS` (a test enforces it). The admin UI offers Ukrainian (`src/admin/app.tsx`).
+- Lead processing state is `stage` (new / in_progress / done / spam). Never name a field `status`: Strapi 5 reserves it (draft/published) and the admin can't show it. Rename migrations live in `cms/database/migrations/` (run before the schema sync).
 - `npm run check-mail` (web) tests SMTP and sends a test e-mail. The Pages demo form shows «Демо-версія: заявку не надіслано» (no server there).
 - Strapi drops `?status=draft` on anonymous API requests (`cms/src/index.ts`), so unpublished content never leaks.
 - **Do not invent client facts** (registry numbers, prices, people, reviews). Unknown values stay as visible placeholders the client fills in Strapi.
 
+## Tests
+
+- **Unit + component** (Vitest): `web/tests/*.test.ts` (Node) and `*.test.tsx` (`// @vitest-environment jsdom`, Testing Library); alias `@` → `src`, `server-only` aliased to a stub; `STRAPI_URL=http://cms.test` in tests. `npm run test:coverage` enforces 90 % lines / 85 % branches on `src/lib`, `proxy.ts`, API routes and the tested components (CI runs it). `cms/tests/*.test.ts` (excluded from the Strapi tsconfig/build) with fake `strapi` objects.
+- **End-to-end** (Playwright 1.63, pinned to the preinstalled browser build): `web/e2e/*.spec.ts`, desktop + Pixel 7, against a running production build + CMS (`E2E_BASE_URL`, `E2E_CMS_URL`). CI job `e2e` starts both from scratch; deploys wait for it. Bot tests send `x-real-ip` to look like an outside visitor.
+- Covered: lead parsing/validation (`lib/lead.ts`), rate limiter + client IP (`lib/rate-limit.ts`), secret compare, SEO helpers, phone/format helpers, content protection settings, dictionary parity (uk = en keys and placeholders; plural objects may differ), legacy redirects (unique, targets exist in the seed), locale detection + bot blocking in `proxy.ts`, `lib/bots.ts`, watermark, data layer (`lib/strapi.ts` with mocked fetch), server action `submitLead`, API routes, components (`ContentProtection`, `Blocks`, `LeadForm`, `MapEmbed`); CMS: `md()`, seed integrity (slugs, both languages, team, reports, SEO title ≤ 70), middleware/admin security config, `ensureSecurityBaseline`, public permissions + website token, `ensureOfficeLocation`, admin labels, migrations, nginx/setup.sh guards.
+- New pure helpers get a test; keep server-only code (`'use server'` files) thin and move logic into testable modules.
+
+## Security
+
+Full list with file locations: `docs/SECURITY.md`. When changing related code keep these invariants:
+- `web/next.config.ts` CSP: add an origin only when a feature needs it (images from the CMS, frames from Google Maps). No third-party scripts.
+- Lead form: honeypot + `startedAt` minimum fill time + `leadLimiter`/`leadGlobalLimiter`; all field cleaning in `lib/lead.ts`. The demo (`web/demo/actions.ts`) reuses `parseLead`.
+- `/api/revalidate`: `secretMatches()` + blocked in nginx.
+- CMS: `ensureSecurityBaseline` (no public sign-up, no public lead permissions) and `ensurePublicPermissions` (content API closed) run on every start; no `strapi::poweredBy`; CORS from `PUBLIC_URL` + `SITE_URL` (or `CORS_ORIGINS`); admin login rate limit in `config/admin.ts`.
+- Server: `scripts/server/` (setup.sh, nginx templates with rate limits incl. page GETs, `/api/` closed on the CMS host, hotlink protection, `X-Real-IP`, fail2ban, backup). `valid_referers` must not repeat a name already in `server_names` (nginx refuses to start). The app trusts `X-Real-IP`/last `X-Forwarded-For` hop for rate limiting, so nginx must stay in front.
+- CMS dependencies: Strapi 5.61.0 with `overrides` for `nodemailer` and `zod@^4` (security fixes). Re-run `npm audit --omit=dev` after upgrades.
+
 ## CI/CD
 
 - `.github/workflows/deploy.yml`:
-  - every PR runs lint + build + type-check;
+  - every PR runs lint + unit/component tests with coverage + build + type-check, then the Playwright e2e job;
   - a push to `staging` / `main` rsyncs the code to the VPS and runs `scripts/server-deploy.sh`.
 - `scripts/server-deploy.sh` builds in `releases/<id>`, health-checks, rolls back on failure, and links secrets/data from `shared/`.
 - What is uploaded is controlled by `.deployignore`. Setup: `docs/CI-CD.md`.

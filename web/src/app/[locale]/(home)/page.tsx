@@ -51,10 +51,11 @@ export default async function HomePage({ params }: Props) {
       <section className="pt-8 pb-12 sm:pt-14 sm:pb-14 lg:pt-[72px]">
         <div className={`${container} grid gap-10 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:gap-12`}>
           <div className="flex min-w-0 animate-stagger flex-col gap-6 [--stagger-step:90ms] sm:gap-7">
+            {/* Phones: badge and note wrap onto two lines inside a card, so it gets roomier padding; from sm it is a one-line pill. */}
             {(home?.heroBadge || home?.heroBadgeNote) && (
-              <div className="inline-flex max-w-full flex-wrap items-center gap-x-2.5 gap-y-1.5 self-start rounded-2xl border border-line bg-card py-1.5 pr-3 pl-1.5 text-[12px] font-medium xs:text-[13px] sm:rounded-full sm:pr-3.5 sm:text-sm">
+              <div className="inline-flex max-w-full flex-wrap items-center gap-x-2.5 gap-y-2.5 self-start rounded-2xl border border-line bg-card py-2.5 pr-4 pl-2.5 text-[12px] font-medium xs:text-[13px] sm:gap-y-1.5 sm:rounded-full sm:py-1.5 sm:pr-3.5 sm:pl-1.5 sm:text-sm">
                 {home?.heroBadge && <span className={badge.accent}>{home.heroBadge}</span>}
-                {home?.heroBadgeNote}
+                {home?.heroBadgeNote && <span className="px-1.5 sm:px-0">{home.heroBadgeNote}</span>}
               </div>
             )}
             <h1 className="text-[38px] leading-[1.03] font-semibold tracking-[-0.04em] xs:text-[44px] sm:text-[56px] lg:text-[64px] xl:text-[72px]">

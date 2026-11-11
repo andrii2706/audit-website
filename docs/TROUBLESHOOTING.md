@@ -52,6 +52,18 @@ Create it with `mkdir cms/public/uploads`. The `predev`/`prestart` npm scripts n
 - Did the first CMS start seed the DB? Seeding happens only if the DB was empty and `SEED_ON_EMPTY` isn't `false`. Check the Strapi log for `[seed]`.
 - `npm run build` prerenders from Strapi. If the CMS was down during the build, pages fill in after the next revalidation, or rebuild.
 
+## Site is empty after an update / log shows `[strapi] 403 … set STRAPI_WEB_TOKEN`
+
+The CMS content API is closed to anonymous requests; the site reads it with the token «web-site». Check that `STRAPI_WEB_TOKEN` in `web/.env.local` (server: `shared/web.env.local`) is the CMS token: the CMS writes it to `cms/.tmp/web-token.txt` when it creates it (and fills an empty `STRAPI_WEB_TOKEN` itself). Lost token: Admin → Settings → API Tokens → delete «web-site», restart the CMS (a new token appears in `cms/.tmp/web-token.txt`), put it into the env file, restart / redeploy the site. `STRAPI_URL` must be the internal address (`http://127.0.0.1:1337`): nginx returns 403 for `/api/` on the public CMS address.
+
+## `curl https://bp-audit.com.ua/…` returns 403 «Автоматизоване копіювання сайту заборонено»
+
+Expected: scraping tools (curl, wget, python-requests…) and AI crawlers are blocked from outside (Налаштування сайту → Захист контенту → «Без ботів ШІ»). For checks use `curl -I` (HEAD is allowed), a browser User-Agent (`curl -A "Mozilla/5.0" …`), or run curl on the server against `http://127.0.0.1:3000`. To switch the hard block off entirely: `BLOCK_BOTS=false` in the web env + restart.
+
+## Many quick page loads return 429 «Too Many Requests»
+
+nginx allows ~5 page requests per second per address after a burst of 120 (stops bulk copying of the whole site). Normal browsing never reaches it; a crawler you run yourself (SEO audit) should slow down or run from the server.
+
 ## Lead form says "Something went wrong"
 
 - `STRAPI_WEB_TOKEN` is missing or wrong. Take it from `cms/.tmp/web-token.txt`, or create a Custom token with only **Lead → create**.
@@ -63,6 +75,10 @@ Create it with `mkdir cms/public/uploads`. The `predev`/`prestart` npm scripts n
 - `WEB_REVALIDATE_URL` must be reachable *from the CMS server* (e.g. `http://127.0.0.1:3000/api/revalidate`).
 - The data cache also refreshes every hour by itself.
 - After `npm run reseed` (or any change written straight into the database) the CMS pings the site once when it has started. If the site wasn't running then, restart the CMS once more, or delete `web/.next/cache` and restart the site. In `npm run dev` the site doesn't cache CMS data at all.
+
+## Form says «Забагато заявок» / "Too many requests"
+
+The site accepts 5 leads per visitor address per 10 minutes (and 200 per hour in total); nginx also limits POSTs to 10 per minute. It lifts by itself. To change the limits: `web/src/lib/rate-limit.ts` and `scripts/server/nginx/bp-audit-http.conf`. Behind a proxy other than our nginx make sure it sets `X-Real-IP`, otherwise all visitors share one limit.
 
 ## Lead e-mails don't arrive / requests don't appear in Strapi
 

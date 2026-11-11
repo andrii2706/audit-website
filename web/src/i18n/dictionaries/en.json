@@ -75,6 +75,7 @@
     "documents": "Documents"
   },
   "common": {
+    "copySource": "Source",
     "allServices": "All services ({n})",
     "allPosts": "All insights",
     "details": "Learn more →",
@@ -118,6 +119,7 @@
     "errPhone": "Please enter your phone number",
     "errEmail": "Please check your e-mail",
     "errGeneric": "We couldn't send your request. Please try again or call us.",
+    "errTooMany": "Too many requests from your connection. Please try again in a few minutes or call us.",
     "honeypot": "Company website",
     "email": "E-mail",
     "emailPlaceholder": "name@company.com",
@@ -213,7 +215,8 @@
     "address": "Address",
     "phones": "Phones",
     "hours": "Working hours",
-    "map": "Open in Google Maps"
+    "map": "Open in Google Maps",
+    "rights": "All rights reserved."
   },
   "notFound": {
     "title": "This page doesn't exist",

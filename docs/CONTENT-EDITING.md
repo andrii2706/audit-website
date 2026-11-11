@@ -1,6 +1,8 @@
 # Content editing guide (Strapi admin)
 
-Admin panel: `https://cms.<domain>/admin` (locally http://localhost:1337/admin). The interface language is set per user under **Profile → Interface language** (Ukrainian or English).
+Admin panel: `https://cms.<domain>/admin` (locally http://localhost:1337/admin). The interface language is set per user under **Profile → Interface language** (Ukrainian or English). Field labels and help texts in the Content Manager are Ukrainian (`cms/src/seed/admin-labels.ts`).
+
+The illustrated manual for the client's staff (Ukrainian) is the Claude Doc «Як користуватися адмінкою сайту bp-audit.com.ua».
 
 ## Languages
 
@@ -34,7 +36,7 @@ Entries have **Draft** and **Published** states. Only published content appears 
 | Company news                         | **Новина** (News): date, tag, «pinned», cover, text |
 | Blog / insights                      | **Article**                                       |
 | "Trusted by" logos                   | **Client logo**                                   |
-| Form submissions                     | **Lead**: change `status` as you process them      |
+| Form submissions                     | **Заявка**: change «Етап обробки» (`stage`) as you process them |
 
 ## Publishing news
 
@@ -80,10 +82,19 @@ The law requires the reports for the last 7 calendar years on the site, and a co
 | blockImageSaving | No dragging images out or long-press «save image» on phones |
 | blockPrint | Printing shows a notice instead of the page |
 | blockShortcuts | Blocks Ctrl/⌘+S, P, U and the developer-tools shortcuts (F12, Ctrl+Shift+I/J/C) |
-| blockAiCrawlers | robots.txt shuts out AI crawlers (GPTBot, ClaudeBot, Google-Extended, CCBot, Perplexity…), `noai` meta |
+| blockAiCrawlers | AI crawlers (GPTBot, ClaudeBot, CCBot, Perplexity…), scraping tools (python-requests, curl, wget, HTTrack, headless browsers) and clients without a User-Agent get **403**; robots.txt and `noai` meta say the same. Search engines and link previews (Google, Bing, Telegram, Facebook…) are never blocked. Takes effect within 5 minutes |
+| watermarkDocuments | Certificate and recommendation-letter scans are shown, opened and saved only as a copy with «bp-audit.com.ua» across it (the original stays in the media library) |
 | allowContactCopy | Phone numbers and e-mails can still be selected and copied |
 
-Always on (server): pages can't be shown inside other sites (`X-Frame-Options`, `frame-ancestors`) and carry a text-and-data-mining reservation (`tdm-reservation`, `/.well-known/tdmrep.json`). No website can make copying impossible (screenshots, browser «reader» modes and disabled JavaScript still work); this stops casual copying and simple scrapers.
+When copying is allowed (blockCopy off), a copied fragment longer than ~80 characters gets «Джерело: <page address>» appended.
+
+Always on (server):
+- the CMS data can't be downloaded as JSON from `cms.…/api/…` (closed to the public; only the site reads it with its token);
+- page downloads are rate-limited (≈5 per second per visitor after a burst of 120) — bulk copying of the whole site gets «429»;
+- images from the CMS and the site can't be embedded by other websites (hotlink protection);
+- pages can't be shown inside other sites (`X-Frame-Options`, `frame-ancestors`) and carry a text-and-data-mining reservation (`tdm-reservation`, `/.well-known/tdmrep.json`) + «© … Усі права захищено» in the footer.
+
+No website can make copying impossible: what a browser shows can be photographed, screenshotted or retyped. These measures stop casual copying, ready-made scraping tools and AI crawlers, and make copies traceable (watermarks, source line).
 
 ## Requests by e-mail
 

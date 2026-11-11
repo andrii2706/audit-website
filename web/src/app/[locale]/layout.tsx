@@ -89,7 +89,7 @@ export default async function LocaleLayout({ children, params }: Props) {
         <Footer locale={locale} dict={dict} global={global} categories={categories} ctaTitle={home?.ctaTitle} />
         <ScrollToTop label={dict.common.toTop} />
         {protection.enabled && (
-          <ContentProtection copy={protection.blockCopy} menu={protection.blockContextMenu} images={protection.blockImageSaving} keys={protection.blockShortcuts} contacts={protection.allowContactCopy} />
+          <ContentProtection copy={protection.blockCopy} menu={protection.blockContextMenu} images={protection.blockImageSaving} keys={protection.blockShortcuts} contacts={protection.allowContactCopy} sourceLabel={dict.common.copySource} />
         )}
         <MobileActionBar locale={locale} phone={global?.phone} telegramUrl={global?.telegramUrl} labels={{ call: dict.nav.call, consultation: dict.nav.consultation }} />
         <JsonLd data={organizationLd(locale, global)} />

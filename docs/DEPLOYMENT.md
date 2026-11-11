@@ -48,6 +48,7 @@ ADMIN_JWT_SECRET=<random>
 TRANSFER_TOKEN_SALT=<random>
 JWT_SECRET=<random>
 ENCRYPTION_KEY=<random>
+SITE_URL=https://bp-audit.com.ua     # allowed CORS origin (with PUBLIC_URL)
 WEB_REVALIDATE_URL=http://127.0.0.1:3000/api/revalidate
 REVALIDATE_SECRET=<random, same as web>
 SEED_ON_EMPTY=true             # set to false after the first start
@@ -82,13 +83,14 @@ cp .env.example .env.local
 Edit `web/.env.local`:
 
 ```ini
-STRAPI_URL=http://127.0.0.1:1337       # internal URL is fine for data…
+STRAPI_URL=http://127.0.0.1:1337       # the site reads the CMS internally (the public /api/ is closed in nginx)
+STRAPI_PUBLIC_URL=https://cms.bp-audit.com.ua   # address in visitors' browsers: report PDFs, images
 SITE_URL=https://bp-audit.com.ua
 STRAPI_WEB_TOKEN=<from cms/.tmp/web-token.txt>
 REVALIDATE_SECRET=<same as cms>
 ```
 
-> Media URLs: if images are uploaded, `STRAPI_URL` must also be reachable by the optimizer at that host. For a separate public CMS domain, set `STRAPI_URL=https://cms.bp-audit.com.ua` (it is added to `images.remotePatterns` at build time).
+> Keep `STRAPI_URL` internal: the CMS content API is closed to the internet (`location /api/ { return 403; }` in nginx) and to anonymous requests (Strapi permissions); the site reads it with `STRAPI_WEB_TOKEN`. Media links use `STRAPI_PUBLIC_URL`; both hosts are added to `images.remotePatterns` and the CSP at build time.
 
 ```bash
 npm run build                  # Strapi must be running: pages are prerendered from it

@@ -69,7 +69,7 @@ export default async function ServicePage({ params }: Props) {
         </dl>
       </PageHero>
 
-      <div className={`${container} grid items-start gap-10 pb-16 sm:pb-24 lg:grid-cols-[minmax(0,1fr)_360px]`}>
+      <div className={`${container} grid items-start gap-10 pb-16 sm:pb-24 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_440px] xl:gap-12`}>
         <div className="flex min-w-0 flex-col gap-12 sm:gap-14">
           {!!s.deliverables?.length && (
             <section>
@@ -106,11 +106,12 @@ export default async function ServicePage({ params }: Props) {
           )}
         </div>
 
-        <aside aria-label={t(d.order, { title: s.title })} className="min-w-0 lg:sticky lg:top-28">
-          <div className="animate-fade-up rounded-card border border-line bg-card px-5 pt-6 [animation-delay:150ms] sm:px-6">
-            <h2 className="text-xl font-semibold tracking-tight sm:text-[22px]">{t(d.order, { title: s.title })}</h2>
-            <p className="mt-1.5 text-sm text-muted">{d.orderNote}</p>
-            <LeadForm locale={locale} dict={dict.form} variant="compact" service={s.title} sourcePage={`/${locale}/services/${s.slug}`} className="pt-5 pb-6" />
+        {/* The order form is ~950px tall: it only sticks on screens tall enough to show it whole. */}
+        <aside aria-label={t(d.order, { title: s.title })} className="min-w-0 lg:top-28 lg:[@media(min-height:1100px)]:sticky">
+          <div className="animate-fade-up rounded-card border border-line bg-card px-5 pt-6 [animation-delay:150ms] sm:px-7 sm:pt-8 xl:px-8">
+            <h2 className="text-[22px] leading-tight font-semibold tracking-tight break-words sm:text-2xl xl:text-[28px]">{t(d.order, { title: s.title })}</h2>
+            <p className="mt-2 text-[15px] text-muted">{d.orderNote}</p>
+            <LeadForm locale={locale} dict={dict.form} variant="compact" service={s.title} sourcePage={`/${locale}/services/${s.slug}`} className="pt-6 pb-7 sm:pb-8" />
           </div>
           {(global?.phone || global?.email) && (
             <p className="mt-4 flex flex-col gap-1 text-[15px] text-muted">

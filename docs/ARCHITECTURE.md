@@ -25,7 +25,7 @@ All types except **Lead** are localized (i18n plugin). Shared, non-localized fie
 | `article`                      | collection | Blog / insights: cover, kind, reading time, rich body, SEO    |
 | `news-item`                    | collection | Company news: date, tag, `pinned`, excerpt, cover, rich body, SEO. Shown on `/news`, on the home page and in RSS |
 | `client-logo`                  | collection | Client name, optional logo and URL                            |
-| `lead`                         | collection | Form submissions (not localized; `status` for the sales pipeline, `locale_code` = site language) |
+| `lead`                         | collection | Form submissions (not localized; `stage` = processing state new/in_progress/done/spam, `locale_code` = site language) |
 | `vacancy`                      | collection | Career page openings: title, employment, duties / requirements / conditions (one item per line) |
 | `transparency-report`          | collection | `/reports`: year, title, PDF, `isCorrection`, `publishedOn`, note. Corrected versions are extra entries; originals stay |
 | `global`                       | single     | Site name, contacts (2 phones, e-mail, address, `mapQuery`/`mapUrl`, hours + note), registry data, socials, footer, default SEO |
@@ -41,8 +41,8 @@ On every start, in this order (all steps are idempotent):
 
 1. `ensureLocales` creates uk/en and sets `uk` as the default.
    Before seeding, `reseedIfRequested` (only with `RESEED_CONTENT=true`, i.e. `npm run reseed`) deletes all seeded types and any other locales.
-2. `ensurePublicPermissions` lets the Public role `find`/`findOne` the content types. Leads are never readable publicly.
-3. `ensureWebToken` creates the custom API token "web-site" with only `api::lead.lead.create`, and writes it to `.tmp/web-token.txt`.
+2. `ensurePublicPermissions` keeps the content API closed: the Public role gets no read permissions (`PUBLIC_CONTENT_API=true` reopens read-only access). Leads are never readable publicly.
+3. `ensureWebToken` creates (or brings up to date) the custom API token "web-site": `find`/`findOne` on the site content types + `api::lead.lead.create`, and writes a new token to `.tmp/web-token.txt`. The site sends it with every CMS request.
 4. `seedIfEmpty` runs only if there are no services and `SEED_ON_EMPTY` is not `false`. Data: `seed/structure.ts` (slugs, ordering, contacts) + `seed/content/{uk,en}.ts` (texts). It creates the Ukrainian documents, then adds each translation to the same document (`documents.update({ documentId, locale })`). Relations are linked per locale.
 
 The `strapi.documents.use` middleware POSTs to `WEB_REVALIDATE_URL` after create/update/delete/publish/unpublish of any site type.
@@ -129,18 +129,18 @@ There is an RSS 2.0 feed per language at `/{locale}/news/rss.xml`, announced in 
    - drops honeypot submissions;
    - validates name, phone and e-mail, returning localized field errors;
    - records the source page and locale;
-   - creates the Lead in Strapi with the create-only API token.
+   - creates the Lead in Strapi with the website API token (create only, never read).
 3. In parallel, `lib/mail.ts` e-mails the lead over SMTP:
    - to the company (`LEAD_EMAIL_TO`, or the e-mail in Strapi Global), with Reply-To set to the client;
    - to the client, a confirmation in the page's language (when they left an e-mail; `LEAD_CONFIRMATION=false` turns it off).
 
    The request counts as delivered if it reached Strapi **or** the company mailbox, so a CMS outage doesn't lose leads.
 4. It also sends an optional Telegram message (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`).
-5. Editors process leads in Strapi (Content Manager → Lead, `status` field).
+5. Editors process leads in Strapi (Content Manager → Заявка, «Етап обробки» = `stage`).
 
 ## Security notes
 
-- The API token can only create leads. Even if leaked, it can't read data.
+- The API token reads only published site content (public on the site anyway) and can create leads; even if leaked, it can't read leads or change anything.
 - The revalidation endpoint requires a shared secret.
 - Secrets live only in `cms/.env` and `web/.env.local`, both git-ignored.
 - JSON-LD is serialized with `<` escaped.

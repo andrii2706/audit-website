@@ -1,6 +1,6 @@
 # CI + deployment for the Audit Consultant site (Strapi CMS + Next.js).
 #
-#   pull request      → check only
+#   pull request      → check + end-to-end tests
 #   push to `staging` → check → deploy to the "staging" environment
 #   push to `main`    → check → deploy to the "production" environment,
 #                       or to "staging" while the repository variable MAIN_DEPLOYS_TO=staging (MVP: one server)
@@ -32,7 +32,7 @@ permissions:
 
 jobs:
   check:
-    name: Lint, build, type-check
+    name: Lint, test, build, type-check
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -54,6 +54,10 @@ jobs:
         working-directory: cms
         run: npx tsc --noEmit
 
+      - name: CMS — unit tests
+        working-directory: cms
+        run: npm test
+
       - name: Web — install
         working-directory: web
         run: npm ci --no-audit --no-fund
@@ -61,6 +65,10 @@ jobs:
       - name: Web — lint
         working-directory: web
         run: npm run lint
+
+      - name: Web — unit + component tests (with coverage thresholds)
+        working-directory: web
+        run: npm run test:coverage
 
       # No CMS is reachable here, so pages prerender with empty data (the "fetch failed" lines in
       # the log are expected). The goal is to prove the code compiles and every route builds.
@@ -75,6 +83,81 @@ jobs:
       - name: Web — type-check
         working-directory: web
         run: npm run typecheck
+
+  # End-to-end: the real CMS (seeded) + the production website build, driven by Playwright in Chrome (desktop + phone).
+  e2e:
+    name: End-to-end tests
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            cms/package-lock.json
+            web/package-lock.json
+
+      - name: CMS — install
+        working-directory: cms
+        run: npm ci --no-audit --no-fund
+
+      # `npm run dev` creates cms/.env + web/.env.local with random secrets and seeds the empty database.
+      - name: CMS — start with seed content
+        working-directory: cms
+        env:
+          SEED_ON_EMPTY: 'true'
+          WEB_REVALIDATE_URL: http://127.0.0.1:9/disabled
+        run: |
+          nohup npm run dev > ../strapi.log 2>&1 &
+          for i in $(seq 1 150); do curl -sf -o /dev/null http://127.0.0.1:1337/_health && break; sleep 1; done
+          curl -sf -o /dev/null http://127.0.0.1:1337/_health || { tail -80 ../strapi.log; echo "::error::Strapi did not start"; exit 1; }
+          token=$(tr -d '[:space:]' < .tmp/web-token.txt)
+          echo "::add-mask::$token"
+          echo "STRAPI_WEB_TOKEN=$token" >> "$GITHUB_ENV"
+
+      - name: Web — install
+        working-directory: web
+        run: npm ci --no-audit --no-fund
+
+      - name: Web — build and start (production mode)
+        working-directory: web
+        env:
+          STRAPI_URL: http://127.0.0.1:1337
+          SITE_URL: http://localhost:3000
+          NEXT_TELEMETRY_DISABLED: '1'
+        run: |
+          npm run build
+          nohup env PORT=3000 HOSTNAME=127.0.0.1 npm start > ../web.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf -o /dev/null http://127.0.0.1:3000/uk && break; sleep 1; done
+          curl -sf -o /dev/null http://127.0.0.1:3000/uk || { tail -80 ../web.log; echo "::error::The website did not start"; exit 1; }
+
+      - name: Playwright — browser
+        working-directory: web
+        run: npx playwright install --with-deps chromium
+
+      - name: Playwright — run
+        working-directory: web
+        env:
+          E2E_BASE_URL: http://localhost:3000
+          E2E_CMS_URL: http://127.0.0.1:1337
+        run: npm run test:e2e
+
+      - name: Logs and report (on failure)
+        if: failure()
+        run: |
+          tail -100 strapi.log || true
+          tail -100 web.log || true
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: web/playwright-report
+          retention-days: 7
 
   # Decides which GitHub environment (and therefore which server, secrets and variables) to deploy to.
   target:
@@ -110,7 +193,7 @@ jobs:
 
   deploy:
     name: Deploy (${{ needs.target.outputs.environment }})
-    needs: [check, target]
+    needs: [check, e2e, target]
     if: needs.target.outputs.environment != ''
     runs-on: ubuntu-latest
     timeout-minutes: 30

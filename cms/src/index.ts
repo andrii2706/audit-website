@@ -1,5 +1,5 @@
 import type { Core } from '@strapi/strapi';
-import { ensureEditorPermissions, ensureLeadListView, ensureOfficeLocation, ensureLocales, ensurePublicPermissions, ensureWebToken, importLegacyMedia, LOCALES, reseedIfRequested, seedIfEmpty, seedLegacyReports } from './seed';
+import { ensureEditorPermissions, ensureAdminLabels, ensureLeadListView, ensureOfficeLocation, migrateLeadStage, ensureSecurityBaseline, ensureLocales, ensurePublicPermissions, ensureWebToken, importLegacyMedia, LOCALES, reseedIfRequested, seedIfEmpty, seedLegacyReports } from './seed';
 import { ensureNewsSamples } from './seed/news';
 
 /** Content types whose changes must refresh the website. */
@@ -56,9 +56,12 @@ export default {
     });
     await ensureLocales(strapi);
     await ensurePublicPermissions(strapi);
+    await ensureSecurityBaseline(strapi);
     await ensureWebToken(strapi);
     await ensureEditorPermissions(strapi);
+    await migrateLeadStage(strapi);
     await ensureLeadListView(strapi);
+    await ensureAdminLabels(strapi);
     await ensureOfficeLocation(strapi);
     // `npm run reseed` empties the site content first, so the seed below fills it again.
     const reseeded = await reseedIfRequested(strapi);

@@ -1,5 +1,27 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { defaultLocale, isLocale, LOCALE_COOKIE, locales, type Locale } from '@/i18n/config';
+import { shouldBlockBot } from '@/lib/bots';
+import { resolveProtection } from '@/lib/protection';
+import { clientIp } from '@/lib/rate-limit';
+import { getGlobal } from '@/lib/strapi';
+
+/**
+ * «Захист контенту → Без ботів ШІ» (Strapi), re-read at most every 5 minutes. CMS unreachable = blocking stays on.
+ * BLOCK_BOTS=false (web env) switches the hard block off regardless of the CMS.
+ */
+let botSetting: { at: number; on: boolean } | null = null;
+async function botBlockingOn(): Promise<boolean> {
+  if (process.env.BLOCK_BOTS === 'false') return false;
+  if (botSetting && Date.now() - botSetting.at < 5 * 60_000) return botSetting.on;
+  const on = resolveProtection(await getGlobal('uk').catch(() => null)).blockAiCrawlers;
+  botSetting = { at: Date.now(), on };
+  return on;
+}
+
+/** For tests: forget the cached CMS setting. */
+export function resetBotSetting() {
+  botSetting = null;
+}
 
 /** Picks the best supported locale from the cookie, then the Accept-Language header. */
 function detectLocale(req: NextRequest): Locale {
@@ -21,8 +43,18 @@ function detectLocale(req: NextRequest): Locale {
   return prefs.some((p) => p.lang && p.lang !== '*') ? 'en' : defaultLocale;
 }
 
-/** Every page lives under /{locale}/…; requests without a locale prefix are redirected. */
-export function proxy(req: NextRequest) {
+/**
+ * 1. AI crawlers, scraping tools and clients without a User-Agent get 403 (see lib/bots.ts).
+ * 2. Every page lives under /{locale}/…; requests without a locale prefix are redirected.
+ */
+export async function proxy(req: NextRequest) {
+  const bot = shouldBlockBot({ method: req.method, userAgent: req.headers.get('user-agent'), ip: clientIp(req.headers) });
+  if (bot && (await botBlockingOn())) {
+    return new NextResponse('403 Forbidden: automated copying of this website is not allowed. / Автоматизоване копіювання сайту заборонено.\n', {
+      status: 403,
+      headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store', 'x-robots-tag': 'noindex' },
+    });
+  }
   const { pathname } = req.nextUrl;
   const hasLocale = locales.some((l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`));
   if (hasLocale) return;

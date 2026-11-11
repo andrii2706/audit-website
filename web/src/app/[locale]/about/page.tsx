@@ -12,7 +12,8 @@ import { isLocale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
 import { cx } from '@/lib/format';
 import { breadcrumbLd, buildMetadata, faqLd, pageUrl } from '@/lib/seo';
-import { getAboutPage, getDocumentImages, getFaqs, getHomepage, mediaUrl } from '@/lib/strapi';
+import { resolveProtection } from '@/lib/protection';
+import { documentImageUrl, getAboutPage, getDocumentImages, getFaqs, getGlobal, getHomepage } from '@/lib/strapi';
 
 export const revalidate = 3600;
 type Props = { params: Promise<{ locale: string }> };
@@ -35,7 +36,8 @@ const sectionY = 'py-16 sm:py-24';
 export default async function AboutPage({ params }: Props) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
-  const [dict, about, home, faqs, docs] = await Promise.all([getDictionary(locale), getAboutPage(locale), getHomepage(locale), getFaqs(locale), getDocumentImages(locale)]);
+  const [dict, about, home, faqs, docs, global] = await Promise.all([getDictionary(locale), getAboutPage(locale), getHomepage(locale), getFaqs(locale), getDocumentImages(locale), getGlobal(locale)]);
+  const { watermarkDocuments } = resolveProtection(global);
   const s = dict.sections;
   let n = 0;
   const num = () => String(++n).padStart(2, '0');
@@ -228,7 +230,7 @@ export default async function AboutPage({ params }: Props) {
             <SectionHead eyebrowText={`${num()} / ${s.documents}`} title={title ?? s.documents} />
             <ul data-stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {list.map((d) => {
-                const src = mediaUrl(d.image ?? null)!;
+                const src = documentImageUrl(d, watermarkDocuments)!;
                 const isImage = !d.image?.mime || d.image.mime.startsWith('image/');
                 return (
                   <li key={d.documentId}>

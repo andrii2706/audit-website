@@ -34,6 +34,10 @@
     ".tmp/",
     ".strapi/",
 
+    // Unit tests (vitest) are not part of the Strapi server build
+    "tests/",
+    "vitest.config.ts",
+
     // Do not include admin files in the server compilation
     "src/admin/",
     // Do not include test files

@@ -7,6 +7,11 @@
 import type { Locale } from '@/i18n/config';
 
 const STRAPI_URL = (process.env.STRAPI_URL || 'http://localhost:1337').replace(/\/$/, '');
+/**
+ * Address of the CMS for visitors' browsers (links to report PDFs, images in texts, og:image). On the server the site
+ * reads the CMS at http://127.0.0.1:1337 (STRAPI_URL), which a visitor can't open, so links use the public address.
+ */
+const STRAPI_PUBLIC_URL = (process.env.STRAPI_PUBLIC_URL || STRAPI_URL).replace(/\/$/, '');
 export const REVALIDATE_SECONDS = 3600;
 export const CACHE_TAG = 'strapi';
 
@@ -135,6 +140,8 @@ export type ContentProtection = {
   blockPrint: boolean;
   blockShortcuts: boolean;
   blockAiCrawlers: boolean;
+  /** Certificates / recommendation letters are shown with the site's watermark (lib/watermark.ts). */
+  watermarkDocuments: boolean;
   allowContactCopy: boolean;
 };
 
@@ -256,8 +263,14 @@ async function strapi<T>(path: string, query: Query = {}): Promise<T | null> {
   try {
     // `npm run dev`: always fresh CMS data (reseeds and direct database fixes don't send the revalidation webhook).
     const revalidate = process.env.NODE_ENV === 'development' ? 0 : REVALIDATE_SECONDS;
-    const res = await fetch(url, { next: { revalidate, tags: [CACHE_TAG] } });
+    // The CMS content API is closed to the public: the site reads it with its own token (server side only).
+    const token = process.env.STRAPI_WEB_TOKEN;
+    const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : undefined, next: { revalidate, tags: [CACHE_TAG] } });
     if (!res.ok) {
+      if (res.status === 401 || res.status === 403) {
+        console.error(`[strapi] ${res.status} ${url} — set STRAPI_WEB_TOKEN (web/.env.local) to the CMS token «web-site»`);
+        return null;
+      }
       if (res.status !== 404) {
         // 400 "Invalid key …" = the CMS runs an older content schema than the site: restart/rebuild Strapi.
         const detail = (await res.text().catch(() => '')).match(/"message":"([^"]+)"/)?.[1];
@@ -276,7 +289,25 @@ async function strapi<T>(path: string, query: Query = {}): Promise<T | null> {
 
 export function mediaUrl(m: Media): string | null {
   if (!m?.url) return null;
-  return m.url.startsWith('http') ? m.url : `${STRAPI_URL}${m.url}`;
+  return m.url.startsWith('http') ? m.url : `${STRAPI_PUBLIC_URL}${m.url}`;
+}
+
+/** Where the server fetches an uploaded file from (only files in this CMS's own /uploads/, never other hosts). */
+export function uploadSourceUrl(m: Media): string | null {
+  const u = m?.url;
+  if (!u) return null;
+  if (u.startsWith('/uploads/') && !u.includes('..')) return `${STRAPI_URL}${u}`;
+  return u.startsWith(`${STRAPI_URL}/uploads/`) && !u.includes('..') ? u : null;
+}
+
+/**
+ * Picture for a certificate / recommendation scan: the watermarked version from /api/document/{id}
+ * («Захист контенту → Водяний знак на документах», on by default), or the original file.
+ */
+export function documentImageUrl(d: Pick<DocumentImage, 'documentId' | 'image'>, watermark: boolean): string | null {
+  const isImage = !d.image?.mime || d.image.mime.startsWith('image/');
+  if (watermark && isImage && process.env.PAGES_DEMO !== '1') return `/api/document/${encodeURIComponent(d.documentId)}`;
+  return mediaUrl(d.image ?? null);
 }
 
 // ——— Page queries

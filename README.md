@@ -24,8 +24,12 @@ Bilingual marketing site for the audit and consulting firm **ТОВ АКФ «Б�
 │   ├── src/components/   UI (Tailwind)
 │   ├── src/i18n/         Locale config + UI dictionaries
 │   ├── src/lib/          Strapi client, SEO helpers, OG images
+│   ├── tests/            Unit + component tests (vitest)
+│   ├── e2e/              End-to-end tests (Playwright)
 │   └── scripts/          Cross-platform standalone launcher
-├── docs/                 Architecture, deployment, content editing, troubleshooting
+├── scripts/              setup.mjs (local env files), server-deploy.sh (release + rollback on the VPS)
+│   └── server/           setup.sh (VPS preparation), nginx templates, fail2ban, nightly backup
+├── docs/                 Architecture, deployment, hosting, security, content editing, troubleshooting
 ├── ecosystem.config.cjs  PM2 config for both apps
 └── CLAUDE.md             Guidance for AI coding agents
 ```
@@ -93,12 +97,17 @@ Manual alternative: copy `cms/.env.example` → `cms/.env` and `web/.env.example
 | web   | `npm start`         | Run the standalone build (loads `.env.local`)     |
 | web   | `npm run typecheck` | TypeScript check                                  |
 | web   | `npm run lint`      | ESLint                                            |
+| web   | `npm test`          | Unit + component tests (vitest, Testing Library): lead form, server action, rate limits, bot blocking, watermark, content protection, CMS data layer, API routes, SEO, redirects, dictionaries |
+| web   | `npm run test:coverage` | The same with a coverage report (`web/coverage/`); fails under 90 % lines |
+| web   | `npm run test:e2e`  | End-to-end tests (Playwright, desktop + phone) against a running site + CMS — see `web/playwright.config.ts` |
+| cms   | `npm test`          | Unit tests (vitest): seed data integrity, Markdown converter, security config, permissions/token, bootstrap helpers, migrations, nginx/server config |
+| root  | `scripts/server/setup.sh` | One-time VPS preparation (packages, nginx, secrets, firewall, backups) — see docs/HOSTING-UAHOSTING.md |
 
 ## Environment variables
 
-**`cms/.env`**: `HOST`, `PORT`, `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `JWT_SECRET`, `ENCRYPTION_KEY`, `DATABASE_*`, `WEB_REVALIDATE_URL`, `REVALIDATE_SECRET`, `SEED_ON_EMPTY`.
+**`cms/.env`**: `HOST`, `PORT`, `PUBLIC_URL`, `SITE_URL` (CORS), `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `JWT_SECRET`, `ENCRYPTION_KEY`, `DATABASE_*`, `WEB_REVALIDATE_URL`, `REVALIDATE_SECRET`, `SEED_ON_EMPTY`, `PUBLIC_CONTENT_API` (default closed).
 
-**`web/.env.local`**: `STRAPI_URL`, `STRAPI_WEB_TOKEN`, `REVALIDATE_SECRET`, `SITE_URL`, optional `SMTP_*` / `MAIL_FROM` / `LEAD_EMAIL_TO` / `LEAD_CONFIRMATION` (lead e-mails), `GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION`, `NO_INDEX`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.
+**`web/.env.local`**: `STRAPI_URL`, `STRAPI_PUBLIC_URL`, `STRAPI_WEB_TOKEN`, `BLOCK_BOTS`, `REVALIDATE_SECRET`, `SITE_URL`, optional `SMTP_*` / `MAIL_FROM` / `LEAD_EMAIL_TO` / `LEAD_CONFIRMATION` (lead e-mails), `GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION`, `NO_INDEX`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.
 
 All variables are described in the `.env.example` files.
 
@@ -106,6 +115,8 @@ All variables are described in the `.env.example` files.
 
 - [Architecture](docs/ARCHITECTURE.md): content model, i18n, rendering and caching, SEO, leads
 - [CI/CD](docs/CI-CD.md): GitHub Actions checks every PR, publishes a static **GitHub Pages preview** for the client, and deploys `staging` / `main` to a VPS with automatic rollback
+- [Going live on a UAhosting VPS](docs/HOSTING-UAHOSTING.md): the chosen path, from an empty VPS to the domain switch (`scripts/server/setup.sh`)
+- [Security](docs/SECURITY.md): every protection (site, form, CMS, server, data) and where it lives
 - [Deployment](docs/DEPLOYMENT.md): VPS with PM2 + Nginx, Docker, Postgres, shared hosting, Vercel, checklist
 - [Content editing](docs/CONTENT-EDITING.md): guide for editors working in the Strapi admin
 - [Troubleshooting](docs/TROUBLESHOOTING.md): common install and runtime errors

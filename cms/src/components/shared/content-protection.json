@@ -14,6 +14,7 @@
     "blockPrint": { "type": "boolean", "default": true },
     "blockShortcuts": { "type": "boolean", "default": true },
     "blockAiCrawlers": { "type": "boolean", "default": true },
+    "watermarkDocuments": { "type": "boolean", "default": true },
     "allowContactCopy": { "type": "boolean", "default": true }
   }
 }

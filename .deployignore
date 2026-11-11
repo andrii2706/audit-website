@@ -16,3 +16,6 @@ cms/public/uploads/
 *.log
 .DS_Store
 Thumbs.db
+web/coverage/
+web/test-results/
+web/playwright-report/

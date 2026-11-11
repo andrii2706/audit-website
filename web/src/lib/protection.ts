@@ -9,13 +9,14 @@ const DEFAULTS: ContentProtection = {
   blockPrint: true,
   blockShortcuts: true,
   blockAiCrawlers: true,
+  watermarkDocuments: true,
   allowContactCopy: true,
 };
 
 /** Effective protection settings: CMS values over the defaults; `enabled: false` switches every blocker off. */
 export function resolveProtection(g: Global | null | undefined): ContentProtection {
   const p = { ...DEFAULTS, ...Object.fromEntries(Object.entries(g?.protection ?? {}).filter(([, v]) => typeof v === 'boolean')) };
-  if (!p.enabled) return { ...p, blockCopy: false, blockContextMenu: false, blockImageSaving: false, blockPrint: false, blockShortcuts: false, blockAiCrawlers: false };
+  if (!p.enabled) return { ...p, blockCopy: false, blockContextMenu: false, blockImageSaving: false, blockPrint: false, blockShortcuts: false, blockAiCrawlers: false, watermarkDocuments: false };
   return p;
 }
 

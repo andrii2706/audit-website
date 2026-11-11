@@ -109,7 +109,7 @@ export default function Footer({ locale, dict, global, categories, ctaTitle }: P
               .filter(Boolean)
               .join(' · ')}
           </span>
-          <span>© {new Date().getFullYear()} {global?.siteName ?? dict.meta.siteName}</span>
+          <span>© {new Date().getFullYear()} {global?.siteName ?? dict.meta.siteName}. {f.rights}</span>
         </div>
       </div>
     </footer>
