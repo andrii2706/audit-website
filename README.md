@@ -1,32 +1,26 @@
-# Breadcrumbs: one config for the whole site
+# Виправлення: помилка "Encountered a script tag" на англійській + палітра скидалась після зміни мови
 
-Install: unzip into the project root (the folder that CONTAINS `web/`), allow overwriting, restart `npm run dev`.
-Install the form zip (concept-form-full.zip) first — the request, contacts and service pages here already include it.
-Nothing to paste, no dictionary changes.
+Встановлення: розпакувати в корінь проєкту (папка, де лежить `web/`), дозволити заміну, перезапустити `npm run dev`.
 
-## How it works now
-- `web/src/lib/breadcrumbs.ts` — the config. `SECTIONS` lists every section with its path and label (labels come
-  from `dict.nav`, so crumbs always match the menu in uk/en). Add a new page there and nowhere else.
-- A page says only where it is:
-      <PageHead crumbs={trail(dict, 'team')} … />                                       Головна / Команда
-      trail(dict, 'services', { name: category, path: '/services#slug' }, { name: s.title, path: `/services/${slug}` })
-                                                                     Головна / Послуги / Аудиторські послуги / Обов’язковий аудит
-      trail(dict, 'blog', { name: a.title, path: `/blog/${a.slug}` })                    Головна / Блог / <стаття>
-- `components/concept/Breadcrumbs.tsx` (used by PageHead) renders the visible trail AND the Google BreadcrumbList
-  JSON-LD from the same data — the separate `breadcrumbLd(...)` block on each page is gone, so they can't differ.
+## Що було
+Скрипт палітри (`<Script strategy="beforeInteractive">`) стояв у `[locale]/layout.tsx`. При перемиканні мови
+цей layout React малює заново вже в браузері, а скрипти, створені в браузері, React не виконує — звідси помилка.
+Заодно `<html data-palette>` повертався до стандартної палітри, і вибір B/C скидався.
 
-## What's better
-- The current page is now the last crumb (no more "Головна /" with a hanging slash), marked aria-current.
-- Phones: one line, Головна / section / current page; a long title is cut with "…"; a category crumb is hidden.
-- JSON-LD has absolute URLs and skips in-page "#category" crumbs (Google wants real pages).
-- Styles in `breadcrumbs.css` next to the component; concept.css isn't touched.
+## Що змінено
+- `PaletteSwitcher.tsx`: новий компонент `PaletteBoot`. Скрипт рендериться тільки на сервері (перше завантаження,
+  без «мигання» кольорів), у браузері більше не створюється. Після кожного оновлення layout (зміна мови)
+  компонент повертає збережену палітру до того, як браузер намалює сторінку.
+- `[locale]/layout.tsx` — тільки дві правки. Якщо ви правили layout самі, не замінюйте файл, а зробіть їх вручну:
+    1. видалити `import Script from 'next/script';`
+       і замінити `import PaletteSwitcher, { paletteBootScript } from ...` на
+       `import PaletteSwitcher, { PaletteBoot } from '@/components/concept/PaletteSwitcher';`
+    2. рядок
+       `{SHOW_SWITCHER && <Script id="palette-boot" strategy="beforeInteractive">{paletteBootScript}</Script>}`
+       замінити на
+       `{SHOW_SWITCHER && <PaletteBoot />}`
+- `e2e/pages.spec.ts`: тест «палітра C лишається після переходу на EN, назад і після перезавантаження,
+  без помилки про script». Там же тест стрічки логотипів з минулого разу.
 
-## Files
-New: lib/breadcrumbs.ts, concept/Breadcrumbs.tsx, concept/breadcrumbs.css, tests/breadcrumbs.test.tsx, e2e/breadcrumbs.spec.ts
-Changed: concept/parts.tsx (PageHead: `crumbs` instead of `homeLabel`), concept/ArticleView.tsx (`trail` instead of
-`section`), and the pages: about, audiences, blog list + article, career, contacts, news list + item, reports,
-request, services list + service, team.
-Not touched: your SiteHeader, MobileMenu, language button, concept.css, layout, home page.
-
-Checked: typecheck, lint, 195 unit tests (breadcrumbs.ts 100% covered), production build, 91 e2e (desktop + phone),
-including "visible crumbs = JSON-LD" on section pages, a service and a blog article.
+Перевірено на Next.js 16.4.6: typecheck, lint, 195 unit, production build, 95 e2e (комп'ютер + телефон);
+у dev-режимі консоль чиста.

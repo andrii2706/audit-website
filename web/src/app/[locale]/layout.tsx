@@ -1,13 +1,12 @@
 import type { Metadata, Viewport } from 'next';
 import { notFound } from 'next/navigation';
-import Script from 'next/script';
 import '@fontsource-variable/onest';
 import '@fontsource/jetbrains-mono/500.css';
 import '../globals.css';
 import '../concept.css';
 import SiteFooter from '@/components/concept/SiteFooter';
 import SiteHeader from '@/components/concept/SiteHeader';
-import PaletteSwitcher, { paletteBootScript } from '@/components/concept/PaletteSwitcher';
+import PaletteSwitcher, { PaletteBoot } from '@/components/concept/PaletteSwitcher';
 import ScrollToTop from '@/components/ScrollToTop';
 import ContentProtection from '@/components/ContentProtection';
 import { protectionTokens, resolveProtection } from '@/lib/protection';
@@ -87,7 +86,7 @@ export default async function LocaleLayout({ children, params }: Props) {
           <style>{'img[data-fade]{opacity:1!important}'}</style>
         </noscript>
         {/* The visitor's palette choice from the demo switcher, applied before the first paint. */}
-        {SHOW_SWITCHER && <Script id="palette-boot" strategy="beforeInteractive">{paletteBootScript}</Script>}
+        {SHOW_SWITCHER && <PaletteBoot />}
         <NavProgress label={dict.common.loading} />
         <a href="#main" className="sr-only z-50 rounded-full bg-ink px-4 py-2 text-white focus:not-sr-only focus:fixed focus:top-3 focus:left-3">
           {dict.nav.skip}

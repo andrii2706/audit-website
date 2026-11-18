@@ -31,3 +31,65 @@ test('the reports page links to the transparency reports', async ({ page }) => {
   await expect(page.locator('main h1')).toBeVisible();
   expect(await page.locator('main a, main [data-pending-file]').count()).toBeGreaterThan(0);
 });
+
+test('client logos: pause on hover, drag and swipe sideways', async ({ page, isMobile }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('/uk');
+  const strip = page.locator('.clients .marquee');
+  await strip.scrollIntoViewIfNeeded();
+  await expect(strip).toHaveClass(/is-live/);
+  const track = strip.locator('.marquee-track');
+  const pos = () => track.evaluate((el) => new DOMMatrixReadOnly(getComputedStyle(el).transform).m41);
+  // runs by itself
+  const a = await pos();
+  await page.waitForTimeout(600);
+  expect(await pos()).toBeLessThan(a);
+  const box = (await strip.boundingBox())!;
+  const y = box.y + box.height / 2;
+  if (!isMobile) {
+    // hover pauses it
+    await page.mouse.move(box.x + box.width / 2, y);
+    await page.waitForTimeout(200);
+    const h = await pos();
+    await page.waitForTimeout(500);
+    expect(Math.abs((await pos()) - h)).toBeLessThan(2);
+  }
+  // drag to the right moves the strip right by about the drag distance
+  const before = await pos();
+  await page.mouse.move(box.x + 200, y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 260, y, { steps: 4 });
+  await page.mouse.move(box.x + 320, y, { steps: 4 });
+  await page.waitForTimeout(150); // hold still: no throw on release
+  await page.mouse.up();
+  const after = await pos();
+  const half = await track.evaluate((el) => el.scrollWidth / 2);
+  const moved = (((after - before) % half) + half) % half; // the loop may wrap
+  expect(moved).toBeGreaterThan(90);
+  expect(moved).toBeLessThan(150);
+  // ← / → when focused
+  await strip.focus();
+  const k = await pos();
+  await page.keyboard.press('ArrowLeft');
+  await page.waitForTimeout(500);
+  const kk = await pos();
+  expect((((kk - k) % half) + half) % half).toBeGreaterThan(50);
+});
+
+test('the chosen palette survives a language switch and a reload', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('console', (m) => { if (m.type() === 'error' && /script tag/i.test(m.text())) errors.push(m.text()); });
+  await page.goto('/uk/about');
+  const pal = page.locator('.pal');
+  test.skip(!(await pal.count()), 'palette switcher is off in this build');
+  await pal.getByRole('button', { name: /^C/ }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-palette', 'c');
+  // client-side switch to English: the [locale] layout renders anew with the default palette
+  await page.locator('a[hreflang="en"]').first().dispatchEvent('click');
+  await expect(page).toHaveURL(/\/en\/about$/);
+  await expect(page.locator('html')).toHaveAttribute('data-palette', 'c');
+  await expect(pal.getByRole('button', { name: /^C/ })).toHaveAttribute('aria-pressed', 'true');
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-palette', 'c');
+  expect(errors).toEqual([]);
+});

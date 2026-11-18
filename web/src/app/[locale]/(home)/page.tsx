@@ -5,6 +5,7 @@ import { JsonLd } from '@/components/bits';
 import CountUp from '@/components/CountUp';
 import ContactSection from '@/components/concept/ContactSection';
 import Glyph, { HeroArt } from '@/components/concept/Glyph';
+import LogoMarquee from '@/components/concept/LogoMarquee';
 import HomeHero from '@/components/concept/HomeHero';
 import { Arrow, FaqList, Label, MapCard, PersonCard, PostCard, QuoteMark, ShieldMark, SvcCard, UpRight, num } from '@/components/concept/parts';
 import ScrollWords from '@/components/concept/ScrollWords';
@@ -166,25 +167,19 @@ export default async function HomePage({ params }: Props) {
           {clients.length > 0 && (
             <div className="clients">
               <p className="wrap c-center muted">{stat0 ? t(dict.common.trustedBy, { n: stat0.value }) : dict.common.trustedByShort}</p>
-              <div className="marquee" role="region" aria-label={c.clients}>
-                <div className="marquee-track">
-                  {[0, 1].map((k) => (
-                    <ul key={k} aria-hidden={k === 1 ? true : undefined} inert={k === 1 ? true : undefined}>
-                      {clients.map((cl) => {
-                        const logo = mediaUrl(cl.logo ?? null);
-                        return (
-                          <li key={cl.documentId}>
-                            <span className="logo-tile">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              {logo ? <img src={logo} alt={cl.name} loading="lazy" style={{ maxHeight: 32, width: 'auto', filter: 'grayscale(1)', opacity: 0.8 }} /> : cl.name}
-                            </span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  ))}
-                </div>
-              </div>
+              <LogoMarquee label={c.clients}>
+                {clients.map((cl) => {
+                  const logo = mediaUrl(cl.logo ?? null);
+                  return (
+                    <li key={cl.documentId}>
+                      <span className="logo-tile">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        {logo ? <img src={logo} alt={cl.name} loading="lazy" draggable={false} style={{ maxHeight: 32, width: 'auto', filter: 'grayscale(1)', opacity: 0.8 }} /> : cl.name}
+                      </span>
+                    </li>
+                  );
+                })}
+              </LogoMarquee>
             </div>
           )}
         </section>

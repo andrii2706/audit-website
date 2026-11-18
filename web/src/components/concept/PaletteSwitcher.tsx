@@ -1,6 +1,6 @@
 'use client';
 
-import { useSyncExternalStore } from 'react';
+import { useLayoutEffect, useSyncExternalStore } from 'react';
 import { PALETTE_EVENT } from './gsap';
 
 export const PALETTES = ['b', 'c'] as const;
@@ -12,6 +12,32 @@ const KEY = 'bp-palette';
  * Kept tiny and self-contained; the CSP allows inline scripts (Next.js needs them anyway).
  */
 export const paletteBootScript = `try{var p=localStorage.getItem('${KEY}');if(p==='b'||p==='c')document.documentElement.setAttribute('data-palette',p)}catch(e){}`;
+
+const noop = () => () => {};
+
+/**
+ * Puts the visitor's palette on <html> before the first paint and keeps it there.
+ * - First load: an inline <script> rendered on the server runs before the page paints (no flash). During hydration
+ *   React keeps that server-rendered tag; it is never created again in the browser, because React does not run
+ *   scripts it renders on the client (and warns about them) — e.g. after switching the language, when the
+ *   [locale] layout renders anew.
+ * - Every render after that (language switch included): the layout sets <html data-palette> back to the default,
+ *   so the stored choice is put back right after React's DOM update, before the browser paints.
+ * Render it first inside <body>, only when the switcher is shown.
+ */
+export function PaletteBoot() {
+  const serverHtml = useSyncExternalStore(noop, () => false, () => true); // true on the server and during hydration
+  useLayoutEffect(() => {
+    try {
+      const p = localStorage.getItem(KEY);
+      if ((p === 'b' || p === 'c') && document.documentElement.getAttribute('data-palette') !== p) {
+        document.documentElement.setAttribute('data-palette', p);
+        window.dispatchEvent(new Event(PALETTE_EVENT));
+      }
+    } catch {}
+  });
+  return serverHtml ? <script id="palette-boot" suppressHydrationWarning dangerouslySetInnerHTML={{ __html: paletteBootScript }} /> : null;
+}
 
 /** Demo control (bottom left): switch between palette B (graphite) and C (warm) to show both to the client. */
 export default function PaletteSwitcher({ labels }: { labels: { palette: string; b: string; c: string } }) {
