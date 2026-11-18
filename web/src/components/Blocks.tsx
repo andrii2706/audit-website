@@ -85,7 +85,9 @@ function renderBlock(n: Node, i: number): ReactNode {
   }
 }
 
-export default function Blocks({ content }: { content?: BlocksData }) {
+/** `bare`: render the blocks without the `prose-content` wrapper (the caller styles them, e.g. concept `.prose`). */
+export default function Blocks({ content, bare = false }: { content?: BlocksData; bare?: boolean }) {
   if (!content?.length) return null;
-  return <div className="prose-content">{(content as Node[]).map(renderBlock)}</div>;
+  const nodes = (content as Node[]).map(renderBlock);
+  return bare ? <>{nodes}</> : <div className="prose-content">{nodes}</div>;
 }

@@ -1,134 +1,32 @@
-# Бізнес Партнери — website
+# Breadcrumbs: one config for the whole site
 
-Bilingual marketing site for the audit and consulting firm **ТОВ АКФ «Бізнес Партнери»** (bp-audit.com.ua, Lviv): services catalogue, about, team, careers, transparency reports, news, blog, FAQ and lead forms. Content is managed in **Strapi 5**; the public site is **Next.js 16** with **Tailwind CSS v4**.
+Install: unzip into the project root (the folder that CONTAINS `web/`), allow overwriting, restart `npm run dev`.
+Install the form zip (concept-form-full.zip) first — the request, contacts and service pages here already include it.
+Nothing to paste, no dictionary changes.
 
-- 🌍 2 languages: Ukrainian (default) and English
-- 🔎 SEO: canonical + hreflang, sitemap with alternates, robots, JSON-LD (Organization, Service, Article, FAQ, Breadcrumbs), per-page Open Graph images
-- 📱 Responsive from 320px to 4K, native-feeling swipe tabs and a mobile action bar
-- ✨ CSS scroll animations, navigation progress bar, per-page skeleton screens and image placeholders, animated form states (respecting reduced motion)
-- ⚡ Static generation + on-demand revalidation: edits in the CMS appear on the site within seconds
-- 📰 Company news: feed page, news pages, home section, RSS per language, NewsArticle markup
-- 📨 Leads by phone **or** e-mail: stored in Strapi, e-mailed to the company (SMTP) with a localized confirmation to the client, optional Telegram
+## How it works now
+- `web/src/lib/breadcrumbs.ts` — the config. `SECTIONS` lists every section with its path and label (labels come
+  from `dict.nav`, so crumbs always match the menu in uk/en). Add a new page there and nowhere else.
+- A page says only where it is:
+      <PageHead crumbs={trail(dict, 'team')} … />                                       Головна / Команда
+      trail(dict, 'services', { name: category, path: '/services#slug' }, { name: s.title, path: `/services/${slug}` })
+                                                                     Головна / Послуги / Аудиторські послуги / Обов’язковий аудит
+      trail(dict, 'blog', { name: a.title, path: `/blog/${a.slug}` })                    Головна / Блог / <стаття>
+- `components/concept/Breadcrumbs.tsx` (used by PageHead) renders the visible trail AND the Google BreadcrumbList
+  JSON-LD from the same data — the separate `breadcrumbLd(...)` block on each page is gone, so they can't differ.
 
-## Repository layout
+## What's better
+- The current page is now the last crumb (no more "Головна /" with a hanging slash), marked aria-current.
+- Phones: one line, Головна / section / current page; a long title is cut with "…"; a category crumb is hidden.
+- JSON-LD has absolute URLs and skips in-page "#category" crumbs (Google wants real pages).
+- Styles in `breadcrumbs.css` next to the component; concept.css isn't touched.
 
-```
-.
-├── cms/                  Strapi 5 (content types, seed data, admin)
-│   ├── src/api/          Content types (service, article, team-member, lead…)
-│   ├── src/components/   Shared components (seo, step, stat…)
-│   ├── src/seed/         Site content from the client brief (structure.ts + content/uk.ts, content/en.ts)
-│   └── src/index.ts      Bootstrap: locales, permissions, API token, seeding, revalidation hook
-├── web/                  Next.js 16 site
-│   ├── src/app/[locale]/ Pages (home, services, about, team, career, reports, news, blog, contacts, audiences)
-│   ├── src/components/   UI (Tailwind)
-│   ├── src/i18n/         Locale config + UI dictionaries
-│   ├── src/lib/          Strapi client, SEO helpers, OG images
-│   ├── tests/            Unit + component tests (vitest)
-│   ├── e2e/              End-to-end tests (Playwright)
-│   └── scripts/          Cross-platform standalone launcher
-├── scripts/              setup.mjs (local env files), server-deploy.sh (release + rollback on the VPS)
-│   └── server/           setup.sh (VPS preparation), nginx templates, fail2ban, nightly backup
-├── docs/                 Architecture, deployment, hosting, security, content editing, troubleshooting
-├── ecosystem.config.cjs  PM2 config for both apps
-└── CLAUDE.md             Guidance for AI coding agents
-```
+## Files
+New: lib/breadcrumbs.ts, concept/Breadcrumbs.tsx, concept/breadcrumbs.css, tests/breadcrumbs.test.tsx, e2e/breadcrumbs.spec.ts
+Changed: concept/parts.tsx (PageHead: `crumbs` instead of `homeLabel`), concept/ArticleView.tsx (`trail` instead of
+`section`), and the pages: about, audiences, blog list + article, career, contacts, news list + item, reports,
+request, services list + service, team.
+Not touched: your SiteHeader, MobileMenu, language button, concept.css, layout, home page.
 
-## Content taken from the old site
-
-`cms/src/seed/legacy.ts` (structure) and `cms/src/seed/old-site/{uk,en}.ts` (texts, copied word for word on 30 Oct 2026) carry everything from the previous bp-audit.com.ua: 6 extra services (NSSMC audit, accounting, business plans, business analysis, consulting, legal services), the old service texts added to the matching services, the 3 publications from 2018 in full, the «Про компанію» / «Ми готові допомогти» texts (About page intro), requisites and the openness policy, the quality policy, 16 client logos, 15 certificates and 5 recommendation letters, and the list of transparency reports 2019–2025. Images/PDFs come in with `npm run import-media`. Old URLs redirect to the new pages (`web/legacy-redirects.ts`).
-
-## Client material still missing
-
-The site is filled from the client's brief. These items were not in it and stay empty until the client sends them (nothing is invented):
-
-- **logo in vector form** (SVG/AI). `web/src/components/BrandMark.tsx`, `web/public/logo.svg` and `web/src/app/icon.svg` hold a temporary redraw of the PNG from the brief;
-- client logos (Логотип клієнта; the section is hidden while empty), team photos;
-- vacancies (Вакансія; the career page shows a "send your CV" note while empty);
-- transparency reports for the last 7 years (Звіт про прозорість; add corrected versions as separate entries with «Виправлена версія» on, the original stays published).
-
-## Requirements
-
-- **Node.js 22.19+** (recommended 22.22.0, see `.nvmrc`; 24.x also works). **Don't use Node 23/25**: `better-sqlite3` has no prebuilt binaries for odd versions and will try to compile with Visual Studio / build tools.
-- npm 10+
-
-```bash
-nvm install 22.22.0 && nvm use 22.22.0   # nvm-windows: same commands, run the terminal as administrator
-```
-
-## Quick start (local development)
-
-```bash
-cd cms
-npm install
-npm run dev                     # http://localhost:1337/admin — create the first administrator
-```
-
-`npm run dev` first runs `cms/scripts/ensure-env.mjs`, which creates `cms/.env` (and `web/.env.local`) with random secrets if they are missing. It never overwrites real values. `node scripts/setup.mjs` from the repo root does the same explicitly.
-
-On the first start with an empty database the CMS automatically:
-
-- creates the locales uk (default) and en;
-- fills all content from the client brief in both languages;
-- gives the Public role read access to content;
-- creates the website API token, saves it to `cms/.tmp/web-token.txt` and writes it into `web/.env.local` (development only).
-
-Then, in a second terminal:
-
-```bash
-cd web
-npm install
-npm run dev                     # http://localhost:3000 → redirects to your browser language
-```
-
-Manual alternative: copy `cms/.env.example` → `cms/.env` and `web/.env.example` → `web/.env.local`, replace every `tobemodified`, use the same `REVALIDATE_SECRET` in both, and paste `cms/.tmp/web-token.txt` into `STRAPI_WEB_TOKEN`.
-
-## Scripts
-
-| Where | Command             | What it does                                      |
-| ----- | ------------------- | ------------------------------------------------- |
-| cms   | `npm run dev`       | Strapi with admin auto-reload                     |
-| cms   | `npm run build`     | Build the admin panel                             |
-| cms   | `npm run start`     | Production Strapi                                 |
-| cms   | `npm run import-media` | Downloads logos, certificate scans and report PDFs from the old site bp-audit.com.ua into Strapi (run with internet access, while the old site is online) |
-| cms   | `npm run reseed`    | **Replaces** all site content with the seed (dev). Leads and uploads stay. Then delete `web/.next` or restart the web app so cached pages refresh |
-| web   | `npm run dev`       | Next.js dev server                                |
-| web   | `npm run build`     | Production build (Strapi must be reachable)       |
-| web   | `npm start`         | Run the standalone build (loads `.env.local`)     |
-| web   | `npm run typecheck` | TypeScript check                                  |
-| web   | `npm run lint`      | ESLint                                            |
-| web   | `npm test`          | Unit + component tests (vitest, Testing Library): lead form, server action, rate limits, bot blocking, watermark, content protection, CMS data layer, API routes, SEO, redirects, dictionaries |
-| web   | `npm run test:coverage` | The same with a coverage report (`web/coverage/`); fails under 90 % lines |
-| web   | `npm run test:e2e`  | End-to-end tests (Playwright, desktop + phone) against a running site + CMS — see `web/playwright.config.ts` |
-| cms   | `npm test`          | Unit tests (vitest): seed data integrity, Markdown converter, security config, permissions/token, bootstrap helpers, migrations, nginx/server config |
-| root  | `scripts/server/setup.sh` | One-time VPS preparation (packages, nginx, secrets, firewall, backups) — see docs/HOSTING-UAHOSTING.md |
-
-## Environment variables
-
-**`cms/.env`**: `HOST`, `PORT`, `PUBLIC_URL`, `SITE_URL` (CORS), `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `JWT_SECRET`, `ENCRYPTION_KEY`, `DATABASE_*`, `WEB_REVALIDATE_URL`, `REVALIDATE_SECRET`, `SEED_ON_EMPTY`, `PUBLIC_CONTENT_API` (default closed).
-
-**`web/.env.local`**: `STRAPI_URL`, `STRAPI_PUBLIC_URL`, `STRAPI_WEB_TOKEN`, `BLOCK_BOTS`, `REVALIDATE_SECRET`, `SITE_URL`, optional `SMTP_*` / `MAIL_FROM` / `LEAD_EMAIL_TO` / `LEAD_CONFIRMATION` (lead e-mails), `GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION`, `NO_INDEX`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.
-
-All variables are described in the `.env.example` files.
-
-## Documentation
-
-- [Architecture](docs/ARCHITECTURE.md): content model, i18n, rendering and caching, SEO, leads
-- [CI/CD](docs/CI-CD.md): GitHub Actions checks every PR, publishes a static **GitHub Pages preview** for the client, and deploys `staging` / `main` to a VPS with automatic rollback
-- [Going live on a UAhosting VPS](docs/HOSTING-UAHOSTING.md): the chosen path, from an empty VPS to the domain switch (`scripts/server/setup.sh`)
-- [Security](docs/SECURITY.md): every protection (site, form, CMS, server, data) and where it lives
-- [Deployment](docs/DEPLOYMENT.md): VPS with PM2 + Nginx, Docker, Postgres, shared hosting, Vercel, checklist
-- [Content editing](docs/CONTENT-EDITING.md): guide for editors working in the Strapi admin
-- [Troubleshooting](docs/TROUBLESHOOTING.md): common install and runtime errors
-
-## Placeholders to fill before launch
-
-Some facts were not available and are placeholders in the CMS. Fill them in the admin under **Global** and **Homepage**:
-
-- registry number, EDRPOU, address;
-- Google rating and review count;
-- team photos;
-- deadline date;
-- client logos.
-
-Nothing has been invented on the client's behalf.
+Checked: typecheck, lint, 195 unit tests (breadcrumbs.ts 100% covered), production build, 91 e2e (desktop + phone),
+including "visible crumbs = JSON-LD" on section pages, a service and a blog article.

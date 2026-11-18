@@ -231,5 +231,31 @@
     "contact": "If it is urgent, call us: {phone}.",
     "signature": "Kind regards,\nthe {site} team",
     "auto": "This is an automatic message — you can reply to it."
+  },
+  "concept": {
+    "palette": "Palette",
+    "paletteB": "Graphite",
+    "paletteC": "Warm",
+    "scroll": "Scroll",
+    "howWeWork": "How we work",
+    "mediaFoot": "Lviv · since 2011 · ISA · IFRS",
+    "numbers": "In numbers",
+    "why": "Why us",
+    "office": "Office",
+    "clients": "Clients",
+    "stepOf": "Step {n} / {total}",
+    "wholeTeam": "Whole team ({n})",
+    "allArticles": "All articles",
+    "moreArticles": "More articles",
+    "contact": "Phone or e-mail",
+    "contactPlaceholder": "+38 (0__) ___ __ __ or e-mail",
+    "successText": "An auditor will contact you during working hours.",
+    "ctaFallback": "How can we help?",
+    "readyTitle": "We are ready to help",
+    "readyText": "Send a request and an auditor will contact you during working hours.",
+    "principles": "Principles",
+    "requests": "Requests",
+    "firmWork": "Working with us",
+    "menu": "Menu"
   }
 }

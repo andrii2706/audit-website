@@ -18,6 +18,12 @@ describe('safeHref', () => {
 });
 
 describe('<Blocks>', () => {
+  it('renders without the prose-content wrapper in bare mode (the editorial .prose styles the blocks)', () => {
+    const content = [{ type: 'paragraph', children: [text('Абзац')] }];
+    const { container } = render(<div data-testid="host"><Blocks content={content} bare /></div>);
+    expect(container.querySelector('.prose-content')).toBeNull();
+    expect(container.querySelector('[data-testid="host"] > p')?.textContent).toBe('Абзац');
+  });
   it('renders headings (h2–h4 only), paragraphs, lists, quotes and inline marks', () => {
     const { container } = render(
       <Blocks

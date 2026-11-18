@@ -23,7 +23,7 @@ test('a filled-in lead is accepted', async ({ page, isMobile }) => {
   await page.waitForTimeout(2800);
   await form.locator('button[type="submit"]').click();
   await expect(page.getByRole('status').filter({ hasText: f.successTitle })).toBeVisible();
-  await expect(page.getByRole('status')).toContainText('Viber');
+  await expect(page.getByRole('status').filter({ hasText: f.successTitle })).toContainText('Viber');
 });
 
 test('the bot trap is invisible and skipped by the keyboard', async ({ page }) => {
@@ -34,4 +34,30 @@ test('the bot trap is invisible and skipped by the keyboard', async ({ page }) =
   const box = await trap.boundingBox();
   if (box) expect(box.x + box.width).toBeLessThan(0);
   await expect(trap.locator('xpath=ancestor::*[@aria-hidden="true"]')).toHaveCount(1);
+});
+
+test('the request page: three steps on phones, the whole form on wide screens', async ({ page, isMobile }) => {
+  await page.goto('/uk/request');
+  const form = page.locator('form.form-steps');
+  const name = form.locator('input[name="name"]');
+  if (!isMobile) {
+    await expect(name).toBeVisible();
+    await expect(form.getByRole('button', { name: 'Viber' })).toBeVisible();
+    await expect(form.getByText(/Крок 1 з 3/)).toBeHidden();
+    return;
+  }
+  await expect(form.getByText(/Крок 1 з 3/)).toBeVisible();
+  await expect(name).toBeHidden();
+  await form.getByRole('button', { name: 'Далі' }).click();
+  await expect(name).toBeVisible();
+  // Enter in a field checks the step instead of sending the form.
+  await name.press('Enter');
+  await expect(form.getByText(f.errName)).toBeVisible();
+  await name.fill('Олена');
+  await form.locator('input[name="phone"]').fill('+380671234567');
+  await form.getByRole('button', { name: 'Далі' }).click();
+  await expect(form.getByRole('button', { name: 'Viber' })).toBeVisible();
+  await expect(form.locator('button[type="submit"]')).toBeVisible();
+  await form.getByRole('button', { name: 'Назад' }).click();
+  await expect(name).toHaveValue('Олена');
 });

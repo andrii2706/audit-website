@@ -1,24 +1,25 @@
 @import 'tailwindcss';
 
-/* ——— Design tokens (Variant D). Use them as Tailwind utilities: bg-accent, text-muted, border-line, rounded-card… */
+/* ——— Design tokens. Colours follow the active palette (variables in concept.css: B graphite, C warm), so every
+   utility (bg-accent, text-muted, border-line…) changes with it. */
 @theme {
-  --color-ink: #0b1220;
-  --color-ink-2: #1b2436;
-  --color-muted: #4a5363;
-  --color-muted-2: #5a6372;
-  --color-line: #e3e6eb;
-  --color-line-strong: #d5d9e0;
-  --color-bg: #f4f5f7;
-  --color-card: #ffffff;
-  --color-placeholder: #eceef2;
-  --color-accent: #2346ff;
-  --color-accent-hover: #1a36d6;
-  --color-accent-ink: #1a36d6;
-  --color-accent-soft: #e9edff;
-  --color-accent-on: #e4e9ff;
-  --color-lime: #d7f75b;
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-muted-2: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-placeholder: color-mix(in srgb, var(--line) 55%, var(--bg));
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-ink);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-on: var(--accent-soft);
+  --color-lime: var(--lime);
   --color-dark-muted: #aeb6c4;
-  --color-dark-line: #2a3345;
+  --color-dark-line: #2f3743;
   --color-star: #f5a524;
   --color-danger: #b42318;
   --color-danger-soft: #fef3f2;

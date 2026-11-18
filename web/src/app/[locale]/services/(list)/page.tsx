@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { JsonLd, PageHero, ServiceCard } from '@/components/bits';
-import { chipCell, chipGrid, container } from '@/components/ui';
+import { JsonLd } from '@/components/bits';
+import { Label, PageHead, SvcCard } from '@/components/concept/parts';
 import { isLocale } from '@/i18n/config';
 import { t } from '@/i18n/format';
 import { getDictionary } from '@/i18n/get-dictionary';
-import { breadcrumbLd, buildMetadata, pageUrl } from '@/lib/seo';
+import { trail } from '@/lib/breadcrumbs';
+import { buildMetadata, pageUrl } from '@/lib/seo';
 import { getAllServices, getCategories } from '@/lib/strapi';
 
 export const revalidate = 3600;
@@ -22,38 +23,31 @@ export default async function ServicesPage({ params }: Props) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const [dict, categories, services] = await Promise.all([getDictionary(locale), getCategories(locale), getAllServices(locale)]);
+  const groups = categories.map((c) => ({ c, list: services.filter((s) => s.category?.slug === c.slug) })).filter((g) => g.list.length);
 
   return (
     <>
-      <PageHero
-        crumbLabel={dict.nav.breadcrumbs}
-        crumbs={[{ name: dict.nav.home, href: `/${locale}` }, { name: dict.nav.services }]}
-        title={dict.pages.servicesTitle}
-        intro={t(dict.pages.servicesIntro, { n: services.length })}
-      >
-        <nav aria-label={dict.nav.services} className={`${chipGrid} mt-7`}>
-          {categories.map((c) => <a key={c.documentId} href={`#${c.slug}`} className={chipCell}>{c.name}</a>)}
+      <PageHead locale={locale} crumbs={trail(dict, 'services')} crumbsLabel={dict.nav.breadcrumbs} title={dict.pages.servicesTitle} intro={t(dict.pages.servicesIntro, { n: services.length })}>
+        <nav className="chips page-chips" aria-label={dict.nav.services}>
+          {groups.map(({ c, list }) => (
+            <a key={c.documentId} className="chip chip-light" href={`#${c.slug}`}>{c.name} <span className="mono">{list.length}</span></a>
+          ))}
         </nav>
-      </PageHero>
-
-      <div className={`${container} pb-16 sm:pb-24`}>
-        {categories.map((c, i) => {
-          const list = services.filter((s) => s.category?.slug === c.slug);
-          if (!list.length) return null;
-          return (
-            <section key={c.documentId} id={c.slug} aria-labelledby={`h-${c.slug}`} className={i === 0 ? 'pb-10 sm:pb-12' : 'border-t border-line py-10 sm:py-12'}>
-              <div data-reveal className="mb-6 flex flex-wrap items-end justify-between gap-x-10 gap-y-3">
-                <h2 id={`h-${c.slug}`} className="text-[26px] font-semibold tracking-tight sm:text-3xl lg:text-[40px]">{c.name}</h2>
-                {c.intro && <p className="max-w-lg text-muted">{c.intro}</p>}
-              </div>
-              <div data-stagger className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {list.map((s) => <ServiceCard key={s.documentId} locale={locale} s={s} more={dict.common.details} />)}
-              </div>
-            </section>
-          );
-        })}
-      </div>
-      <JsonLd data={breadcrumbLd([{ name: dict.nav.home, url: pageUrl(locale) }, { name: dict.nav.services, url: pageUrl(locale, '/services') }])} />
+      </PageHead>
+      {groups.map(({ c, list }) => (
+        <section key={c.documentId} className="section section-tight" id={c.slug} aria-labelledby={`h-${c.slug}`}>
+          <div className="wrap">
+            <Label>{c.name}</Label>
+            <div className="cat-head">
+              <h2 id={`h-${c.slug}`} className="display h2-left">{c.name}</h2>
+              {c.intro && <p className="muted">{c.intro}</p>}
+            </div>
+            <ul className="svc-grid svc-grid-3">
+              {list.map((s, i) => <SvcCard key={s.documentId} locale={locale} s={s} i={i} withExcerpt />)}
+            </ul>
+          </div>
+        </section>
+      ))}
       <JsonLd
         data={{
           '@context': 'https://schema.org',

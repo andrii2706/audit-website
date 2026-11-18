@@ -1,0 +1,74 @@
+/* ——— Request form: every field of the previous site form (service, revenue, phone/e-mail, comment, where to answer)
+   in the editorial look. The card is a size container, so the layout follows the form's own width. */
+.form-full { container-type: inline-size; gap: 18px; }
+.form-full label { font-size: 14px; font-weight: 500; }
+.form textarea { min-height: 96px; padding: 14px 18px; border: 1px solid var(--line-strong); border-radius: 16px; font: 400 16px/1.5 var(--font); color: var(--ink); background: var(--bg); resize: vertical; }
+.form textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.form input::placeholder, .form textarea::placeholder { color: color-mix(in srgb, var(--muted) 70%, transparent); }
+.form.is-pending .q, .form.is-pending .f-grid { opacity: .6; pointer-events: none; transition: opacity .3s; }
+/* questions */
+.q { min-width: 0; margin: 0; padding: 0; border: 0; }
+.q-l { margin-bottom: 10px; padding: 0; font-size: 14px; font-weight: 500; }
+/* segmented choice: service (2 columns, an odd last answer spans both) and revenue (3 columns) */
+.seg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 4px; background: var(--bg); border: 1px solid var(--line); border-radius: 16px; }
+.seg-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.seg:not(.seg-3) > button:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.seg button { min-height: 46px; padding: 8px 10px; border: 0; border-radius: 12px; background: transparent; font: 500 14px/1.25 var(--font); color: var(--muted); text-align: center; overflow-wrap: break-word; cursor: pointer; transition: background-color .3s, color .3s; }
+.seg button:hover { color: var(--ink); background: var(--card); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--on-dark); }
+/* fields: one column, two (phone | e-mail) when the card is wide enough */
+.f-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.f-grid label input { margin-bottom: 0; }
+.f-hint { margin-top: -4px; font-size: 13px; color: var(--muted); }
+.f-hint.form-err { color: #b42318; }
+@container (max-width: 359px) { .seg:not(.seg-3) { grid-template-columns: minmax(0, 1fr); } .seg:not(.seg-3) button { text-align: left; padding-inline: 14px; } }
+@container (min-width: 440px) { .f-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .f-wide { grid-column: 1 / -1; } }
+/* where to answer: icon + name buttons, two per row on narrow cards, a wrapping row of chips when wide */
+.ch { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.ch > button:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.ch button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 10px; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--card); font: 500 14px var(--font); color: var(--ink); cursor: pointer; transition: background-color .3s, color .3s, border-color .3s, translate .4s var(--ease); }
+.ch button:hover { border-color: var(--ink); translate: 0 -1px; }
+.ch button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--on-dark); }
+.ch-n { white-space: nowrap; }
+@container (min-width: 440px) {
+  .ch { display: flex; flex-wrap: wrap; }
+  .ch button { padding: 0 16px 0 14px; }
+}
+/* errors, submit, done */
+.form-alert { padding: 12px 14px; border-radius: 14px; background: #fef3f2; color: #b42318; font-size: 14px; }
+.f-actions { display: flex; gap: 8px; }
+.f-actions .btn { min-height: 52px; }
+.f-submit, .st-next { flex: 1 1 auto; justify-content: center; }
+.st-back { flex: 0 0 52px; justify-content: center; padding: 0; border: 1px solid var(--line-strong); background: var(--card); color: var(--ink); }
+.st-back:hover { border-color: var(--ink); }
+/* steps (estimate form on phones): progress line, one step at a time; wider screens show the whole form */
+.st-1 { display: flex; flex-direction: column; gap: 18px; }
+.st-top { scroll-margin-top: 96px; }
+.st-head { font-size: 13px; color: var(--muted); outline: none; }
+.st-head b { font-weight: 500; color: var(--ink); }
+.st-bar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin-top: 10px; }
+.st-bar i { height: 3px; border-radius: 2px; background: var(--line-strong); transition: background-color .4s var(--ease); }
+.form-steps[data-step="1"] .st-bar i:nth-child(1), .form-steps[data-step="2"] .st-bar i:nth-child(-n+2), .form-steps[data-step="3"] .st-bar i { background: var(--ink); }
+@media (min-width: 640px) { .st-top, .st-only { display: none !important; } }
+@media (max-width: 639px) {
+  .form-steps .st:not(.on), .form-steps .st-hide { display: none; }
+  .form-steps .st.on { animation: st-in .45s var(--ease) both; }
+  /* step 3 is named by the step line already */
+  .form-steps fieldset.st > .q-l { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  /* the request panel gives the form almost the whole screen width */
+  .cta { margin-top: 32px; padding: 24px 8px 8px; border-radius: 28px; gap: 22px; }
+  .cta-text { padding-inline: 12px; }
+  .cta .form, .request .form { padding: 22px 16px 18px; border-radius: 22px; }
+}
+@keyframes st-in { from { opacity: 0; translate: 0 8px; } }
+@media (prefers-reduced-motion: reduce) { .form-steps .st.on { animation: none; } }
+/* /request page: on phones the form comes first, the contacts card after it */
+.request { align-items: start; }
+.req-t { font-size: clamp(26px, 3vw, 36px); line-height: 1.1; }
+.request .contacts-card .bullets { margin-top: 18px; }
+.request .contacts-card .map-dl { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--line); }
+@media (max-width: 1023px) { .request > .form { order: -1; } }
+.form-full .form-note { text-align: center; }
+.done-mark { display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: var(--on-dark); font-size: 26px; font-weight: 600; }
+.done-mark .tick { background: transparent; }
+.done-mark-demo { background: #f5a524; color: var(--ink); }
