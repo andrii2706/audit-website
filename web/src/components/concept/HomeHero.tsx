@@ -3,6 +3,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { createScene, type Scene } from './globe';
 import { gsap, PALETTE_EVENT, PIN, ScrollTrigger, useGSAP } from './gsap';
+import './hero.css';
 
 type Props = { head: ReactNode; mediaTitle: ReactNode; mediaFoot: ReactNode; labelledBy: string };
 

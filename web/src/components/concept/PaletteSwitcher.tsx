@@ -1,7 +1,7 @@
 'use client';
 
 import { useLayoutEffect, useSyncExternalStore } from 'react';
-import { PALETTE_EVENT } from './gsap';
+import { PALETTE_EVENT } from './events';
 
 export const PALETTES = ['b', 'c'] as const;
 export type Palette = (typeof PALETTES)[number];

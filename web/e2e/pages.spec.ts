@@ -93,3 +93,27 @@ test('the chosen palette survives a language switch and a reload', async ({ page
   await expect(page.locator('html')).toHaveAttribute('data-palette', 'c');
   expect(errors).toEqual([]);
 });
+
+test('back to top jumps without playing the scroll scenes in reverse', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('/uk');
+  await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }));
+  await page.waitForTimeout(800);
+  const from = await page.evaluate(() => window.scrollY);
+  expect(from).toBeGreaterThan(2000);
+  await page.evaluate(() => {
+    const w = window as unknown as { __ys: number[] };
+    w.__ys = [];
+    window.addEventListener('scroll', () => w.__ys.push(Math.round(window.scrollY)), { passive: true });
+  });
+  await page.getByRole('button', { name: 'Нагору' }).click();
+  await page.waitForFunction(() => window.scrollY === 0);
+  // the hero is at its start at once (no catch-up of the scrubbed scene)
+  const p = await page.locator('[data-hero-stage]').evaluate((el) => Number(getComputedStyle(el).getPropertyValue('--p') || 0));
+  expect(p).toBeLessThan(0.02);
+  await page.waitForTimeout(600);
+  // no smooth ride through the page: only the start and the top, nothing in between
+  const ys = await page.evaluate(() => (window as unknown as { __ys: number[] }).__ys);
+  expect(ys.filter((y) => y > 0 && y < from - 5)).toEqual([]);
+  await expect(page.locator('body')).toHaveCSS('opacity', '1');
+});
