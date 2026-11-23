@@ -2,8 +2,10 @@
 
 import { useLayoutEffect, useSyncExternalStore } from 'react';
 import { PALETTE_EVENT } from './events';
+import './palette-original.css';
 
-export const PALETTES = ['b', 'c'] as const;
+/** B graphite (default), C warm, O the colours of the client's current site (palette-original.css). */
+export const PALETTES = ['b', 'c', 'o'] as const;
 export type Palette = (typeof PALETTES)[number];
 const KEY = 'bp-palette';
 
@@ -11,7 +13,7 @@ const KEY = 'bp-palette';
  * Inline script for <head>: applies the palette the visitor picked earlier before the first paint (no flash).
  * Kept tiny and self-contained; the CSP allows inline scripts (Next.js needs them anyway).
  */
-export const paletteBootScript = `try{var p=localStorage.getItem('${KEY}');if(p==='b'||p==='c')document.documentElement.setAttribute('data-palette',p)}catch(e){}`;
+export const paletteBootScript = `try{var p=localStorage.getItem('${KEY}');if(p==='b'||p==='c'||p==='o')document.documentElement.setAttribute('data-palette',p)}catch(e){}`;
 
 const noop = () => () => {};
 
@@ -30,7 +32,7 @@ export function PaletteBoot() {
   useLayoutEffect(() => {
     try {
       const p = localStorage.getItem(KEY);
-      if ((p === 'b' || p === 'c') && document.documentElement.getAttribute('data-palette') !== p) {
+      if (p && (PALETTES as readonly string[]).includes(p) && document.documentElement.getAttribute('data-palette') !== p) {
         document.documentElement.setAttribute('data-palette', p);
         window.dispatchEvent(new Event(PALETTE_EVENT));
       }
@@ -39,15 +41,18 @@ export function PaletteBoot() {
   return serverHtml ? <script id="palette-boot" suppressHydrationWarning dangerouslySetInnerHTML={{ __html: paletteBootScript }} /> : null;
 }
 
-/** Demo control (bottom left): switch between palette B (graphite) and C (warm) to show both to the client. */
-export default function PaletteSwitcher({ labels }: { labels: { palette: string; b: string; c: string } }) {
+/** Demo control (bottom left): switch between the palettes to show them to the client. */
+export default function PaletteSwitcher({ labels }: { labels: { palette: string; b: string; c: string; o?: string } }) {
   // The palette lives on <html data-palette>; read it from there (null on the server, so nothing is pressed until hydration).
   const current = useSyncExternalStore(
     (onChange) => {
       window.addEventListener(PALETTE_EVENT, onChange);
       return () => window.removeEventListener(PALETTE_EVENT, onChange);
     },
-    () => (document.documentElement.getAttribute('data-palette') === 'c' ? 'c' : 'b'),
+    () => {
+      const p = document.documentElement.getAttribute('data-palette');
+      return (PALETTES as readonly string[]).includes(p ?? '') ? (p as Palette) : 'b';
+    },
     () => null,
   );
   const pick = (p: Palette) => {
@@ -55,7 +60,7 @@ export default function PaletteSwitcher({ labels }: { labels: { palette: string;
     try { localStorage.setItem(KEY, p); } catch {}
     window.dispatchEvent(new Event(PALETTE_EVENT));
   };
-  const swatch = { b: '#1c2128', c: '#c2a878' };
+  const swatch = { b: '#1c2128', c: '#c2a878', o: '#0080fe' };
   return (
     <div className="pal" role="group" aria-label={labels.palette}>
       <span className="pal-l">{labels.palette}</span>
@@ -63,7 +68,7 @@ export default function PaletteSwitcher({ labels }: { labels: { palette: string;
         <button key={p} type="button" aria-pressed={current === p} onClick={() => pick(p)}>
           <i style={{ background: swatch[p] }} />
           {p.toUpperCase()}
-          <span className="pal-n"> · {labels[p]}</span>
+          {labels[p] && <span className="pal-n"> · {labels[p]}</span>}
         </button>
       ))}
     </div>

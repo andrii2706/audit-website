@@ -117,3 +117,18 @@ test('back to top jumps without playing the scroll scenes in reverse', async ({ 
   expect(ys.filter((y) => y > 0 && y < from - 5)).toEqual([]);
   await expect(page.locator('body')).toHaveCSS('opacity', '1');
 });
+
+test('palette O uses the colours of the client\'s current site', async ({ page }) => {
+  await page.goto('/uk/about');
+  const pal = page.locator('.pal');
+  test.skip(!(await pal.count()), 'palette switcher is off in this build');
+  await pal.getByRole('button', { name: /^O/ }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-palette', 'o');
+  const v = await page.evaluate(() => {
+    const cs = getComputedStyle(document.documentElement);
+    return ['--accent', '--ink', '--muted', '--bg'].map((k) => cs.getPropertyValue(k).trim());
+  });
+  expect(v.map((c) => (c === '#fff' ? '#ffffff' : c))).toEqual(['#0080fe', '#303030', '#656565', '#ffffff']);
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-palette', 'o');
+});

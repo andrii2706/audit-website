@@ -57,8 +57,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-/** Palette of the site: B (graphite, default) or C (warm). NEXT_PUBLIC_PALETTE_SWITCHER=0 hides the demo switcher. */
-const PALETTE = process.env.NEXT_PUBLIC_PALETTE === 'c' ? 'c' : 'b';
+/**
+ * Palette of the site: B (graphite, default), C (warm) or O (the colours of the client's current site).
+ * NEXT_PUBLIC_PALETTE_SWITCHER=0 hides the demo switcher.
+ */
+const PALETTE = ['c', 'o'].includes(process.env.NEXT_PUBLIC_PALETTE ?? '') ? process.env.NEXT_PUBLIC_PALETTE : 'b';
 const SHOW_SWITCHER = process.env.NEXT_PUBLIC_PALETTE_SWITCHER !== '0';
 
 export const viewport: Viewport = { themeColor: '#1c2128', width: 'device-width', initialScale: 1, viewportFit: 'cover' };
@@ -94,7 +97,7 @@ export default async function LocaleLayout({ children, params }: Props) {
         <SiteHeader locale={locale} dict={dict} global={global} />
         <main id="main" tabIndex={-1} className="outline-none">{children}</main>
         <SiteFooter locale={locale} dict={dict} global={global} categories={categories} ctaTitle={home?.ctaTitle} />
-        {SHOW_SWITCHER && <PaletteSwitcher labels={{ palette: dict.concept.palette, b: dict.concept.paletteB, c: dict.concept.paletteC }} />}
+        {SHOW_SWITCHER && <PaletteSwitcher labels={{ palette: dict.concept.palette, b: dict.concept.paletteB, c: dict.concept.paletteC, o: (dict.concept as { paletteO?: string }).paletteO }} />}
         <ScrollToTop label={dict.common.toTop} />
         {protection.enabled && (
           <ContentProtection copy={protection.blockCopy} menu={protection.blockContextMenu} images={protection.blockImageSaving} keys={protection.blockShortcuts} contacts={protection.allowContactCopy} sourceLabel={dict.common.copySource} />
