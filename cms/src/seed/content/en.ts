@@ -6,15 +6,15 @@ const en: SiteContent = {
   categories: {
     audit: {
       name: 'Audit services',
-      intro: 'Statutory and voluntary audits, reviews and assurance engagements — including for public-interest entities.',
+      intro: 'Our audit services include:',
     },
     consulting: {
       name: 'Consulting services',
-      intro: 'We help owners and management make the right management decisions, minimise risks and build effective accounting models. Our expertise is your confidence in the growth of your business.',
+      intro: 'Consulting services: strategic solutions for complex financial and tax challenges. We help owners and management make the right management decisions, minimise risks and build effective accounting models. Our expertise is your confidence in the growth of your business.\n\nAreas of our consulting support:',
     },
     legal: {
       name: 'Legal services',
-      intro: 'Legal support for businesses and non-profit organisations — from corporate matters and contracts to court representation.',
+      intro: 'Areas of legal support:',
     },
   },
 
@@ -28,31 +28,30 @@ const en: SiteContent = {
   services: {
     'obovyazkovyy-audyt': {
       title: 'Statutory audit',
-      excerpt: 'Audits of companies that are legally required to publish their financial statements together with an auditor’s report and file them with regulators.',
+      excerpt: 'We hold all the licences and qualifications required to audit companies that are legally obliged to publish their financial statements together with an auditor’s report and submit them to regulators and supervisory authorities.',
       badge: 'Including PIEs',
       tags: ['IFRS', 'Ukrainian GAAP', 'Consolidated statements', 'ESG'],
+      deliverablesTitle: 'We professionally perform:',
       deliverables: [
         'Audit of annual financial statements of large, medium and small companies (including extractive companies) prepared under IFRS or Ukrainian GAAP',
         'Audit of consolidated and combined financial statements of groups and holdings of any complexity',
         'Audits for the financial sector and issuers: securities issuers, professional stock-market participants and financial companies (except banks)',
         'Audit of sustainability (ESG) reporting in line with current European and international requirements',
       ],
-      body: [
-        p('We hold all the licences and qualifications required to audit companies that are legally obliged to publish their financial statements together with an auditor’s report and submit them to regulators and supervisory authorities.'),
-        p('The firm is included in sections 3 and 4 of the Register of Auditors and Audit Entities, which entitles it to perform statutory audits of financial statements, including those of public-interest entities.'),
-      ],
+      body: [],
     },
     'initsiatyvnyy-audyt': {
       title: 'Voluntary audit',
-      excerpt: 'An important tool to protect shareholders’ interests, raise financing and check the real state of a company or organisation.',
+      excerpt: 'Even if the law does not require you to publish financial statements, a voluntary audit is an important tool to protect shareholders’ interests, to raise financing and to check the real state of affairs of companies and organisations.',
       tags: ['For owners', 'For investors', 'For NGOs', 'Reorganisation'],
+      deliverablesTitle: 'Our voluntary audit services include:',
       deliverables: [
         'For owners and investors: audit of financial statements for internal control or for inclusion in the parent group’s consolidated statements',
         'For the public sector: audit of NGOs and charitable foundations, project audits of specific grants',
         'For reorganisation and liquidation: official confirmation of the liquidation or separation balance sheet',
         'For management: checking specific line items (revenue, expenses, fixed assets, receivables, etc.) against source documents and accounting standards',
       ],
-      body: [p('Even if the law does not require you to publish financial statements, a voluntary audit is an important tool to protect shareholders’ interests, to raise financing and to check the real state of affairs of companies and organisations.')],
+      body: [],
     },
     'ohliad-promizhnoi-zvitnosti': {
       title: 'Review of interim financial statements',
@@ -102,7 +101,9 @@ const en: SiteContent = {
     },
     'uzghodzheni-protsedury': {
       title: 'Agreed-upon procedures',
-      excerpt: 'Specific audit procedures performed under clearly defined terms of reference, with a report of factual findings.',
+      pageTitle: 'Agreed-upon audit procedures',
+      excerpt: 'If you need an analysis of specific accounting areas or preparation for an inspection or a transaction, we will perform specific audit procedures under clearly defined terms of reference and provide a report of factual findings.',
+      deliverablesTitle: 'The range of our agreed-upon procedures',
       deliverables: [
         'Tax audit: checking that taxes are fully accrued and paid and assessing accounting and tax records (including before a tax inspection)',
         'Pre-sale due diligence: a comprehensive review of accounting, financial and tax risks before buying or selling a company',
@@ -113,7 +114,7 @@ const en: SiteContent = {
         'Operational checks: recalculation, comparison and detailed testing of accounting data during asset counts or reconciliations with counterparties',
         'Financial analysis and reporting: analysis of the financial position of legal entities and preparation of compliance reports for Diia City residents',
       ],
-      body: [p('If you need an analysis of specific accounting areas or preparation for an inspection or a transaction, we will perform specific audit procedures under clearly defined terms of reference and provide a report of factual findings.')],
+      body: [],
     },
 
     'podatkove-planuvannia': {
@@ -311,20 +312,22 @@ const en: SiteContent = {
       { title: 'Results in plain language', text: 'We keep to deadlines, answer difficult questions and give clear recommendations.' },
     ],
     stats: [
-      { value: '1000+', label: 'satisfied audit and assurance clients' },
-      { value: '15+', label: 'years in the audit market' },
-      { value: '12+', label: 'industries we are experts in' },
-      { value: '95%', label: 'of clients come back to us' },
+      { value: '+1000', label: 'satisfied audit and assurance clients' },
+      { value: '+15', label: 'years in the audit market' },
+      { value: '+12', label: 'industries we are experts in' },
+      { value: '95%', label: 'of satisfied clients come back' },
     ],
-    whyTitle: 'Why private and public clients, investors and lenders choose us',
+    statsText: 'The quality of our audit services was confirmed by Order 36-к following an external review by the Quality Inspection of the Audit Public Oversight Body\n\nEvery day the quality of our services is confirmed by satisfied clients, 95% of whom come back.\n\nOur commitment to clients, to the profession, to ethical principles and to a transparent and sustainable way of doing business has become our goal: providing high-quality audit services.',
+    whyTitle: 'Why choose us?',
+    whyText: 'Business Partners is your reliable guide to audit, tax and management decisions. We help Ukrainian businesses, international organisations and investors find a way out of the most complex situations, delivering the highest quality of services at a reasonable price.\n\nClients come to us when they need to ensure transparency of and trust in their financial statements, convert them, raise financing, protect the business legally, or scale up or reorganise the company.\n\nWhy private and public clients, investors and lenders choose us:',
     reasons: [
-      { title: '15+ years of experience', text: 'Deep expertise and time-tested solutions.' },
-      { title: 'Impeccable reputation', text: 'Clients recognise us as an honest, principled partner and a provider of high-quality services.' },
-      { title: 'Speed and flexibility', text: 'We respond quickly to market challenges and meet our clients’ needs fast.' },
-      { title: 'Reasonable pricing', text: 'Strict compliance with international standards and high audit quality at a fair price.' },
-      { title: 'Public interest', text: 'We perform statutory audits and other mandatory engagements for public-interest entities.' },
-      { title: 'Confirmed quality', text: 'The quality of our audit services was confirmed by Order No. 36-кя of 22.06.2026 of the Audit Public Oversight Body following an external review.' },
+      { title: '15+ years of experience', text: 'Deep expertise and time-tested solutions' },
+      { title: 'Public interest', text: 'We perform statutory audits and other mandatory engagements for public-interest entities (PIEs).' },
       { title: 'Optimal cost', text: 'We guarantee high-quality services, deadlines met and professional communication without overpaying.' },
+      { title: 'Impeccable reputation', text: 'Clients recognise us as an honest, principled partner and a provider of high-quality services.' },
+      { title: 'Speed and flexibility', text: 'We know how to respond quickly to market challenges and meet our clients’ needs fast.' },
+      { title: 'Reasonable pricing', text: 'We guarantee strict compliance with international standards and high audit quality at a fair price.' },
+      { title: 'We serve public-interest entities.' },
     ],
     industriesTitle: 'Industries we work in',
     industries: [
@@ -337,10 +340,9 @@ const en: SiteContent = {
       'Renewable energy',
       'Healthcare',
       'Professional securities market participants',
-      'Wholesale and retail trade',
     ],
     teamTitle: 'A highly qualified team',
-    teamSubtitle: 'Years of experience that guarantee the quality of our services.',
+    teamSubtitle: 'with many years of experience that guarantees the indisputable quality of our services.',
     estimateTitle: 'Need an audit? Have a question?',
     estimateText: 'We are always in touch. Send us your request and we will get back to you.',
     estimateBullets: ['Transparent pricing', 'Strict deadlines', 'Confidentiality and ethics'],

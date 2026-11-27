@@ -1,0 +1,11 @@
+/* Paragraph blocks from CMS text fields (TextParas.tsx); imported by the component. */
+@layer components {
+  .paras { display: flex; flex-direction: column; gap: 14px; }
+  .paras p { margin: 0; }
+  /* Under the numbers on the home page. */
+  .paras.nums-text { margin-top: 40px; max-width: 880px; font-size: 18px; line-height: 1.55; color: var(--muted); }
+  /* Under the «why us» label, inside the dark block. */
+  .paras.why-text { margin: 20px 0 36px; max-width: 900px; font-size: 18px; line-height: 1.55; color: var(--on-dark-soft, rgba(255, 255, 255, .72)); }
+  .paras.why-text p:last-child { color: var(--on-dark); font-weight: 500; }
+  @media (min-width: 1024px) { .paras.nums-text, .paras.why-text { font-size: 20px; } }
+}

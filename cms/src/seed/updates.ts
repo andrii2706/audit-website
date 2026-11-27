@@ -7,6 +7,7 @@ import uk from './content/uk';
 import en from './content/en';
 import { seoFor } from './seo';
 import { allServices } from './services-order';
+import * as legacy from './legacy';
 
 /**
  * One-time content changes for databases that already have content (the seed only fills an empty one).
@@ -19,6 +20,10 @@ const SVC = 'api::service.service' as any;
 const TEAM = 'api::team-member.team-member' as any;
 const HOME = 'api::homepage.homepage' as any;
 const CAT = 'api::service-category.service-category' as any;
+const ABOUT = 'api::about-page.about-page' as any;
+const CAREER = 'api::career-page.career-page' as any;
+const GLOBAL = 'api::global.global' as any;
+const ARTICLE = 'api::article.article' as any;
 const STORE_KEY = 'content-updates';
 
 type Strapi = Core.Strapi;
@@ -145,11 +150,11 @@ async function briefComplete(strapi: Strapi): Promise<string[]> {
       const reasons: { title: string; text: string }[] = (home.reasons ?? []).map((r: any) => ({ title: r.title, text: r.text }));
       const has = (t: string) => reasons.some((r) => r.title?.trim() === t);
       const next = [...reasons];
-      if (!has(first.title)) next.unshift({ title: first.title, text: first.text });
+      if (!has(first.title)) next.unshift({ title: first.title, text: first.text ?? '' });
       // After the last reason from the brief, before the one carried over from the old site (English).
       if (!has(optimal.title)) {
         const old = next.findIndex((r) => /англійськ|English/i.test(r.title));
-        next.splice(old === -1 ? next.length : old, 0, { title: optimal.title, text: optimal.text });
+        next.splice(old === -1 ? next.length : old, 0, { title: optimal.title, text: optimal.text ?? '' });
       }
       if (next.length !== reasons.length) {
         await save(strapi, HOME, home.documentId, locale, { reasons: next });
@@ -211,11 +216,91 @@ async function heroVideo(strapi: Strapi): Promise<string[]> {
   }
 }
 
+/**
+ * Client, 27.11.2026: «всі тексти мають бути дослівно перенесені в сайт». The brief's texts are now in the seed word
+ * for word; this writes them into databases seeded earlier (a shortened version is replaced). It touches only the
+ * fields that come from the brief: services (title, excerpt, list and its heading, description), category intros, the
+ * home page's hero text, numbers, «why us», industries, team heading and request text, the About and Career pages,
+ * the working hours and the three blog titles. Other fields, uploads and the leads stay as they are.
+ */
+async function briefVerbatim(strapi: Strapi): Promise<string[]> {
+  const notes: string[] = [];
+  const items = (xs: { title: string; text?: string }[]) => xs.map(({ title, text }) => ({ title, text: text ?? null }));
+  const bullets = (xs: string[]) => xs.map((text) => ({ text }));
+  const one = (uid: string, locale: string, filters?: object) => strapi.documents(uid as any).findFirst({ locale, ...(filters ? { filters } : {}) } as any);
+  for (const locale of LOCALES) {
+    const t = CONTENT[locale];
+    const L = legacy.LEGACY[locale];
+    let n = 0;
+    for (const [slug, tr] of Object.entries(t.services)) {
+      const doc = await one(SVC, locale, { slug });
+      if (!doc) continue;
+      await save(strapi, SVC, doc.documentId, locale, {
+        title: tr.title,
+        excerpt: tr.excerpt,
+        pageTitle: tr.pageTitle ?? null,
+        deliverablesTitle: tr.deliverablesTitle ?? null,
+        deliverables: bullets(tr.deliverables ?? []),
+        description: [...(tr.body ?? [structure.p(tr.excerpt)]), ...(L.serviceExtras[slug] ?? [])],
+      });
+      n++;
+    }
+    for (const c of structure.categories) {
+      const doc = await one(CAT, locale, { slug: c.slug });
+      if (doc) await save(strapi, CAT, doc.documentId, locale, { intro: t.categories[c.key].intro });
+    }
+    const h = t.homepage;
+    const home = await one(HOME, locale);
+    if (home) {
+      await save(strapi, HOME, home.documentId, locale, {
+        heroSubtitle: h.heroSubtitle,
+        stats: h.stats.map(({ value, label }) => ({ value, label })),
+        statsText: h.statsText ?? null,
+        whyTitle: h.whyTitle,
+        whyText: h.whyText ?? null,
+        reasons: items([...h.reasons, L.homeReason]),
+        industries: bullets(h.industries),
+        teamTitle: h.teamTitle,
+        teamSubtitle: h.teamSubtitle,
+        estimateText: h.estimateText,
+      });
+    }
+    const ab = t.about;
+    const about = await one(ABOUT, locale);
+    if (about) {
+      await save(strapi, ABOUT, about.documentId, locale, {
+        intro: [...ab.intro, ...L.introExtra],
+        reasons: items(ab.reasons),
+        mission: ab.mission,
+        values: items(ab.values),
+        principlesIntro: ab.principlesIntro,
+        principles: items(ab.principles),
+        history: ab.history,
+        requests: bullets(ab.requests),
+        registry: ab.registry,
+        quality: ab.quality,
+      });
+    }
+    const cr = t.career;
+    const career = await one(CAREER, locale);
+    if (career) await save(strapi, CAREER, career.documentId, locale, { heroIntro: cr.heroIntro, about: cr.about, faqs: items(cr.faqs) });
+    const global = await one(GLOBAL, locale);
+    if (global) await save(strapi, GLOBAL, global.documentId, locale, { workingHours: t.global.workingHours, workingHoursNote: t.global.workingHoursNote });
+    for (const a of structure.articles) {
+      const doc = await one(ARTICLE, locale, { slug: a.slug });
+      if (doc) await save(strapi, ARTICLE, doc.documentId, locale, { title: t.articles[a.slug].title });
+    }
+    notes.push(`${locale}: ${n} services, categories, home, about, career, hours, blog titles`);
+  }
+  return notes;
+}
+
 export const CONTENT_UPDATES: ContentUpdate[] = [
   { id: '2026-11-27-audit-focus', run: auditFocus },
   { id: '2026-11-27-brief-complete', run: briefComplete },
   { id: '2026-11-27-no-bios', run: noBiographies },
   { id: '2026-11-27-hero-video', run: heroVideo },
+  { id: '2026-11-27-brief-verbatim', run: briefVerbatim },
 ];
 
 /** Runs every update this database hasn't had yet (after the seed, so a fresh database is marked as up to date too). */
