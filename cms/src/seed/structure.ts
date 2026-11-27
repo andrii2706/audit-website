@@ -26,19 +26,22 @@ export const categories = [
 
 export type CategoryKey = (typeof categories)[number]['key'];
 
-/** Services in display order. homeOrder 1 = the big tile, 2–5 small tiles, 6–7 wide tiles. */
+/** Services in display order. homeOrder 1 = the big tile, 2–5 small tiles, 6–7 wide tiles — audit only (client, 27.11.2026). */
 export const services: { slug: string; cat: CategoryKey; homeOrder?: number; steps?: boolean }[] = [
   { slug: 'obovyazkovyy-audyt', cat: 'audit', homeOrder: 1, steps: true },
   { slug: 'initsiatyvnyy-audyt', cat: 'audit', homeOrder: 2, steps: true },
   { slug: 'ohliad-promizhnoi-zvitnosti', cat: 'audit', steps: true },
-  { slug: 'nadannia-vpevnenosti', cat: 'audit', homeOrder: 3, steps: true },
+  { slug: 'nadannia-vpevnenosti', cat: 'audit', homeOrder: 5, steps: true },
   { slug: 'audyt-neprybutkovykh-orhanizatsii', cat: 'audit', steps: true },
   { slug: 'due-diligence', cat: 'audit', homeOrder: 4, steps: true },
-  { slug: 'perevirka-zvitu-diia-city', cat: 'audit', homeOrder: 5, steps: true },
+  { slug: 'perevirka-zvitu-diia-city', cat: 'audit', homeOrder: 3, steps: true },
   { slug: 'perevirka-zvitu-defence-city', cat: 'audit', steps: true },
   { slug: 'taksonomiia-xbrl', cat: 'audit' },
   { slug: 'uzghodzheni-protsedury', cat: 'audit', homeOrder: 6, steps: true },
-  { slug: 'podatkove-planuvannia', cat: 'consulting', homeOrder: 7 },
+  // Two of the agreed procedures in the brief (p. 3–4) the client wants as services of their own (27.11.2026).
+  { slug: 'peredprodazhnyi-audyt', cat: 'audit', homeOrder: 7, steps: true },
+  { slug: 'pidhotovka-do-e-audytu', cat: 'audit', steps: true },
+  { slug: 'podatkove-planuvannia', cat: 'consulting' },
   { slug: 'podatkovyi-konsaltynh', cat: 'consulting' },
   { slug: 'metodolohiia-obliku-msfz', cat: 'consulting' },
   { slug: 'reorhanizatsiia-likvidatsiia', cat: 'consulting' },

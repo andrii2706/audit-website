@@ -7,6 +7,7 @@ import type { LeadInput } from './strapi';
  */
 
 export const CHANNELS = ['telegram', 'viber', 'whatsapp', 'call', 'email'] as const;
+export const CLIENT_TYPES = ['legal', 'individual'] as const;
 export type FieldErrorKey = 'errName' | 'errPhone' | 'errEmail' | 'errContact';
 export type FieldErrors = Partial<Record<'name' | 'phone' | 'email' | 'contact', FieldErrorKey>>;
 
@@ -59,6 +60,7 @@ export function parseLead(form: Getter, now = Date.now()): ParsedLead {
   const phone = cleanLine(form.get('phone'), 40);
   const email = cleanLine(form.get('email'), 150);
   const channel = cleanLine(form.get('channel'), 20);
+  const clientType = cleanLine(form.get('clientType'), 20);
 
   const fieldErrors: FieldErrors = {};
   if (name.length < 2) fieldErrors.name = 'errName';
@@ -82,7 +84,7 @@ export function parseLead(form: Getter, now = Date.now()): ParsedLead {
       phone: phone || undefined,
       email: email || undefined,
       service: cleanLine(form.get('service'), 200) || undefined,
-      revenue: cleanLine(form.get('revenue'), 50) || undefined,
+      clientType: (CLIENT_TYPES as readonly string[]).includes(clientType) ? (clientType as LeadInput['clientType']) : undefined,
       channel: (CHANNELS as readonly string[]).includes(channel) ? (channel as LeadInput['channel']) : 'telegram',
       comment: cleanText(form.get('comment'), 2000) || undefined,
       sourcePage: cleanLine(form.get('sourcePage'), 200) || undefined,

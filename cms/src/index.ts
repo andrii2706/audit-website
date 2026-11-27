@@ -1,4 +1,5 @@
 import type { Core } from '@strapi/strapi';
+import { applyContentUpdates } from './seed/updates';
 import { ensureEditorPermissions, ensureAdminLabels, ensureLeadListView, ensureOfficeLocation, migrateLeadStage, ensureSecurityBaseline, ensureLocales, ensurePublicPermissions, ensureWebToken, importLegacyMedia, LOCALES, reseedIfRequested, seedIfEmpty, seedLegacyReports } from './seed';
 import { ensureNewsSamples } from './seed/news';
 
@@ -70,6 +71,9 @@ export default {
       await seedLegacyReports(strapi);
       await ensureNewsSamples(strapi, LOCALES);
     }
+    // One-time content changes for databases that were filled before (client requests, seed/updates.ts).
+    // A failed update is logged and retried on the next start; it never keeps the CMS from starting.
+    await applyContentUpdates(strapi).catch((err: Error) => strapi.log.error(`[content] update failed, will retry on the next start: ${err.message}`));
     await importLegacyMedia(strapi);
     // Reseeds and the data fixes above write to the database directly (no webhook), so refresh the site once after start.
     // Quiet: the website is often not running yet when the CMS starts.

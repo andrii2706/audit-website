@@ -57,7 +57,7 @@ describe('parseLead', () => {
     expect(r).toEqual({
       kind: 'ok',
       lead: {
-        name: 'Олена Коваль', phone: '+380 67 370 58 46', email: undefined, service: 'Аудиторські послуги', revenue: undefined,
+        name: 'Олена Коваль', phone: '+380 67 370 58 46', email: undefined, service: 'Аудиторські послуги', clientType: undefined,
         channel: 'viber', comment: 'ТОВ «Приклад»\n\nАудит 2026', sourcePage: undefined, locale_code: 'uk',
       },
     });
@@ -65,5 +65,11 @@ describe('parseLead', () => {
   it('falls back to Telegram for an unknown channel and ignores an unknown locale', () => {
     const r = parseLead(form({ ...valid, channel: 'carrier-pigeon', locale: 'ru' }), NOW);
     expect(r.kind === 'ok' && [r.lead.channel, r.lead.locale_code]).toEqual(['telegram', undefined]);
+  });
+  it('keeps a known "who is asking" answer and drops anything else', () => {
+    const ok = parseLead(form({ ...valid, clientType: 'individual' }), NOW);
+    expect(ok.kind === 'ok' && ok.lead.clientType).toBe('individual');
+    const odd = parseLead(form({ ...valid, clientType: 'robot' }), NOW);
+    expect(odd.kind === 'ok' && odd.lead.clientType).toBeUndefined();
   });
 });

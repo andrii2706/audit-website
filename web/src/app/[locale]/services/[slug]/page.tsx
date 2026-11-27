@@ -2,11 +2,13 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { JsonLd } from '@/components/bits';
 import ConceptForm from '@/components/concept/ConceptForm';
+import DeliverableCards from '@/components/concept/DeliverableCards';
 import { Label, PageHead, Prose, SvcCard, Tick, num } from '@/components/concept/parts';
 import { isLocale, locales } from '@/i18n/config';
 import { t } from '@/i18n/format';
 import { getDictionary } from '@/i18n/get-dictionary';
 import { trail } from '@/lib/breadcrumbs';
+import { deliverableCards } from '@/lib/deliverables';
 import { formatPhone, telHref } from '@/lib/format';
 import { buildMetadata, serviceLd } from '@/lib/seo';
 import { getAllServices, getGlobal, getHomepage, getServiceBySlug } from '@/lib/strapi';
@@ -43,6 +45,8 @@ export default async function ServicePage({ params }: Props) {
 
   // Without its own steps a service shows the general process from the home page.
   const steps = s.steps?.length ? s.steps : home?.processSteps ?? [];
+  // Items written as «Title: text» (as in the client's brief) are shown as cards, other lists stay a plain list.
+  const cards = deliverableCards((s.deliverables ?? []).map((x) => x.text));
   const related = all.filter((x) => x.category?.slug === s.category?.slug && x.slug !== s.slug).slice(0, 3);
   const facts = [
     { label: d.price, value: s.priceFrom || d.priceDefault },
@@ -77,9 +81,13 @@ export default async function ServicePage({ params }: Props) {
           {!!s.deliverables?.length && (
             <section className="sblock">
               <h2 className="display h3">{d.deliverables}</h2>
-              <ul className="bullets bullets-2">
-                {s.deliverables.map((x) => <li key={x.id}><Tick />{x.text}</li>)}
-              </ul>
+              {cards ? (
+                <DeliverableCards items={cards} locale={locale} />
+              ) : (
+                <ul className="bullets bullets-2">
+                  {s.deliverables.map((x) => <li key={x.id}><Tick />{x.text}</li>)}
+                </ul>
+              )}
             </section>
           )}
           {!!s.description?.length && (
@@ -133,7 +141,7 @@ export default async function ServicePage({ params }: Props) {
         </section>
       )}
 
-      <JsonLd data={serviceLd(locale, { title: s.title, excerpt: s.excerpt, slug: s.slug, category: s.category?.name })} />
+      <JsonLd data={serviceLd(locale, { title: s.title, excerpt: s.excerpt, slug: s.slug, category: s.category?.name, items: s.deliverables?.map((x) => x.text) })} />
     </>
   );
 }

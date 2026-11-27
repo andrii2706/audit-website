@@ -16,6 +16,7 @@ import { isLocale, locales, type Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
 import { buildMetadata, organizationLd, SITE_URL, websiteLd } from '@/lib/seo';
 import { getCategories, getGlobal, getHomepage } from '@/lib/strapi';
+import { ThemeBoot } from '@/components/concept/ThemeToggle';
 
 export const dynamicParams = false;
 export function generateStaticParams() {
@@ -84,6 +85,8 @@ export default async function LocaleLayout({ children, params }: Props) {
     >
       {/* suppressHydrationWarning: browser extensions (Grammarly, password managers) inject attributes into <body> before React hydrates. Affects only this element’s own attributes. */}
       <body className="min-h-dvh" suppressHydrationWarning>
+        {/* Light / dark theme (the visitor's choice or the device setting), applied before the first paint. */}
+        <ThemeBoot />
         {/* Images fade in over their skeleton (FadeImage). Without JavaScript nothing would reveal them, so show them right away. */}
         <noscript>
           <style>{'img[data-fade]{opacity:1!important}'}</style>

@@ -152,6 +152,8 @@ export type Homepage = {
   heroTitleAccent?: string | null;
   heroTitleEnd?: string | null;
   heroSubtitle?: string | null;
+  /** Video for the hero window (the client's film about the plants); without it the window shows the canvas globe. */
+  heroVideo?: Media;
   quickServices?: Pick<Service, 'documentId' | 'title' | 'slug'>[];
   deadlineTitle?: string | null;
   deadlineDate?: string | null;
@@ -333,6 +335,7 @@ export const getHomepage = (locale: Locale) =>
     'populate[reasons]': true,
     'populate[industries]': true,
     'populate[estimateBullets]': true,
+    'populate[heroVideo]': true,
   });
 
 export const getAboutPage = (locale: Locale) =>
@@ -496,7 +499,8 @@ export type LeadInput = {
   phone?: string;
   email?: string;
   service?: string;
-  revenue?: string;
+  /** Who is asking: a company or a private person (estimate form). */
+  clientType?: 'legal' | 'individual';
   channel?: 'telegram' | 'viber' | 'whatsapp' | 'call' | 'email';
   comment?: string;
   sourcePage?: string;

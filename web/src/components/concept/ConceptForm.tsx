@@ -13,7 +13,7 @@ import './concept-form.css';
 type Props = {
   locale: Locale;
   dict: Dictionary['form'];
-  /** "estimate": service + revenue questions (home, audiences); "compact": contacts and service pages (+ comment). */
+  /** "estimate": service, who is asking and a short question (home, audiences, /request); "compact": contacts and service pages (+ comment). */
   variant?: 'estimate' | 'compact';
   /** Answers to "Which service?" (estimate). */
   serviceOptions?: string[];
@@ -28,6 +28,28 @@ type Props = {
 
 const initial: LeadState = { ok: false };
 /** Step texts used until the dictionaries have them (scripts/apply-form-update.mjs adds them), so the form never breaks. */
+/** Texts of the estimate questions, used until the dictionaries have them (scripts/apply-form-2611.mjs adds them). */
+const ASK_TEXT: Record<Locale, { clientQ: string; clientTypes: string[]; questionQ: string; optional: string; questionPlaceholder: string; whereQ: string }> = {
+  uk: {
+    clientQ: '2. Хто звертається?',
+    clientTypes: ['Юридична особа', 'Фізична особа'],
+    questionQ: '3. Коротко про ваше питання',
+    optional: '(необов’язково)',
+    questionPlaceholder: 'Наприклад: обов’язковий аудит звітності за 2026 рік',
+    whereQ: '4. Куди відповісти?',
+  },
+  en: {
+    clientQ: '2. Who is asking?',
+    clientTypes: ['Company', 'Individual'],
+    questionQ: '3. Your question in short',
+    optional: '(optional)',
+    questionPlaceholder: 'For example: statutory audit of the 2026 financial statements',
+    whereQ: '4. Where should we reply?',
+  },
+};
+/** Values sent for the two "who is asking" answers, in the order of clientTypes. */
+const CLIENT_VALUES = ['legal', 'individual'] as const;
+
 const STEP_TEXT: Record<Locale, { stepOf: string; steps: string[]; next: string; back: string }> = {
   uk: { stepOf: 'Крок {n} з {total}', steps: ['Ваш запит', 'Контакти', 'Куди відповісти'], next: 'Далі', back: 'Назад' },
   en: { stepOf: 'Step {n} of {total}', steps: ['Your request', 'Contacts', 'Where to reply'], next: 'Next', back: 'Back' },
@@ -48,12 +70,13 @@ const UpRight = () => (
   </svg>
 );
 
-/** One question of the form: a legend and a segmented choice (2 columns for services, 3 for revenue). */
+/** One question of the form: a legend and a segmented choice (2 columns). */
 function Choice({ legend, options, value, onChange, cols }: { legend: string; options: string[]; value: string; onChange: (v: string) => void; cols: 2 | 3 }) {
   return (
     <fieldset className="q">
       <legend className="q-l">{legend}</legend>
-      <div className={cx('seg', cols === 3 && 'seg-3')}>
+      {/* Two short answers stay side by side even on narrow phones (as in the approved design). */}
+      <div className={cx('seg', cols === 3 && 'seg-3', options.length === 2 && 'seg-pair')}>
         {options.map((o) => (
           <button key={o} type="button" aria-pressed={value === o} onClick={() => onChange(o)}>{o}</button>
         ))}
@@ -63,7 +86,7 @@ function Choice({ legend, options, value, onChange, cols }: { legend: string; op
 }
 
 /**
- * Request form of the editorial design, with everything the previous site form had: which service and the revenue
+ * Request form of the editorial design: which service, who is asking (company or private person) and a short question
  * (estimate), name, phone and/or e-mail (one of them is enough), a comment (compact) and where to answer:
  * Telegram, Viber, WhatsApp, a call or e-mail. Validation, honeypot, minimum fill time and rate limits live on the
  * server (lib/lead.ts via the submitLead action), so the field names stay the same as before.
@@ -74,7 +97,7 @@ function Choice({ legend, options, value, onChange, cols }: { legend: string; op
 export default function ConceptForm({ locale, dict, variant = 'compact', serviceOptions = [], service, title, sourcePage, submitLabel, className }: Props) {
   const [state, action, pending] = useActionState(submitLead, initial);
   const [svc, setSvc] = useState(service ?? serviceOptions[0] ?? '');
-  const [revenue, setRevenue] = useState(dict.revenue[1]);
+  const [clientType, setClientType] = useState<(typeof CLIENT_VALUES)[number]>('legal');
   const [channel, setChannel] = useState('telegram');
   const [step, setStep] = useState(1);
   const [local, setLocal] = useState<{ name?: boolean; contact?: boolean }>({});
@@ -115,6 +138,17 @@ export default function ConceptForm({ locale, dict, variant = 'compact', service
   // Read loosely: a branch whose dictionaries don't have the step texts yet still builds and renders.
   const d = dict as unknown as { stepOf?: string; steps?: string[]; next?: string; back?: string };
   const fb = STEP_TEXT[locale] ?? STEP_TEXT.uk;
+  // Read loosely as well: the new estimate questions fall back to built-in texts.
+  const da = dict as unknown as Partial<(typeof ASK_TEXT)['uk']>;
+  const fa = ASK_TEXT[locale] ?? ASK_TEXT.uk;
+  const ask = {
+    clientQ: da.clientQ ?? fa.clientQ,
+    clientTypes: da.clientTypes?.length === 2 ? da.clientTypes : fa.clientTypes,
+    questionQ: da.questionQ ?? fa.questionQ,
+    optional: da.optional ?? fa.optional,
+    questionPlaceholder: da.questionPlaceholder ?? fa.questionPlaceholder,
+    whereQ: da.whereQ ?? fa.whereQ,
+  };
   const st = { stepOf: d.stepOf ?? fb.stepOf, steps: d.steps?.length === 3 ? d.steps : fb.steps, next: d.next ?? fb.next, back: d.back ?? fb.back };
   const steps = estimate;
   const next = () => {
@@ -175,7 +209,7 @@ export default function ConceptForm({ locale, dict, variant = 'compact', service
         </div>
       )}
       <input type="hidden" name="service" value={svc} />
-      <input type="hidden" name="revenue" value={estimate ? revenue : ''} />
+      <input type="hidden" name="clientType" value={estimate ? clientType : ''} />
       <input type="hidden" name="channel" value={channel} />
       <input type="hidden" name="sourcePage" value={sourcePage} />
       <input type="hidden" name="locale" value={locale} />
@@ -188,7 +222,17 @@ export default function ConceptForm({ locale, dict, variant = 'compact', service
       {estimate && (
         <div className={cx('st-1', on(1))}>
           {serviceOptions.length > 0 && <Choice legend={dict.q1} options={serviceOptions} value={svc} onChange={setSvc} cols={2} />}
-          <Choice legend={dict.q2} options={dict.revenue} value={revenue} onChange={setRevenue} cols={3} />
+          <Choice
+            legend={ask.clientQ}
+            options={ask.clientTypes}
+            value={ask.clientTypes[CLIENT_VALUES.indexOf(clientType)]}
+            onChange={(label) => setClientType(CLIENT_VALUES[Math.max(0, ask.clientTypes.indexOf(label))])}
+            cols={2}
+          />
+          <label className="f-question">
+            <span>{ask.questionQ} <span className="f-opt">{ask.optional}</span></span>
+            <textarea name="comment" rows={2} maxLength={2000} placeholder={ask.questionPlaceholder} />
+          </label>
         </div>
       )}
 
@@ -219,7 +263,7 @@ export default function ConceptForm({ locale, dict, variant = 'compact', service
       </div>
 
       <fieldset className={cx('q', steps && on(3))}>
-        <legend className="q-l">{estimate ? dict.q3 : dict.where}</legend>
+        <legend className="q-l">{estimate ? ask.whereQ : dict.where}</legend>
         <div className="ch">
           {channels.map((c) => (
             <button key={c.id} type="button" aria-pressed={channel === c.id} onClick={() => setChannel(c.id)} title={c.label}>

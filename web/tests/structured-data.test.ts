@@ -26,6 +26,10 @@ describe('JSON-LD', () => {
   });
   it('describes services, articles and news with the company as publisher', () => {
     expect(serviceLd('uk', { title: 'Аудит', excerpt: 'Опис', slug: 'audyt', category: 'Аудит' })).toMatchObject({ '@type': 'Service', url: 'https://bp-audit.com.ua/uk/services/audyt', serviceType: 'Аудит' });
+    const ld = serviceLd('uk', { title: 'Надання впевненості', excerpt: 'Опис', slug: 'nv', items: ['Підтвердження для регуляторів: висновки'] });
+    expect(ld.areaServed).toEqual([{ '@type': 'City', name: 'Lviv' }, { '@type': 'Country', name: 'Ukraine' }]);
+    expect(ld.hasOfferCatalog?.itemListElement).toEqual([{ '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Підтвердження для регуляторів: висновки' } }]);
+    expect(serviceLd('uk', { title: 'A', excerpt: 'B', slug: 'a' }).hasOfferCatalog).toBeUndefined();
     const a = articleLd('en', { title: 'T', slug: 's', publishedAt: '2026-01-01' });
     expect(a).toMatchObject({ url: 'https://bp-audit.com.ua/en/blog/s', dateModified: '2026-01-01', image: 'https://bp-audit.com.ua/en/opengraph-image' });
     const n = newsLd('uk', { title: 'N', slug: 'n', date: '2026-02-01', image: 'https://cms/n.jpg' });

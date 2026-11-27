@@ -7,6 +7,7 @@ import type { Dictionary } from "@/i18n/get-dictionary";
 import type { Global } from "@/lib/strapi";
 import HeaderShell, { ConceptNav } from "./HeaderShell";
 import { UpRight } from "./parts";
+import ThemeToggle from './ThemeToggle';
 
 export function conceptNav(locale: Locale, d: Dictionary) {
   return [
@@ -44,6 +45,8 @@ export default function SiteHeader({
           </Link>
           <ConceptNav items={nav} label={dict.nav.mainMenu} />
           <div className="bar-end">
+
+            <ThemeToggle locale={locale} />
             <div className="max-md:hidden">
               <LanguageSwitcher
                 locale={locale}

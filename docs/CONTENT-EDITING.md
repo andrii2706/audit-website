@@ -52,6 +52,18 @@ Entries have **Draft** and **Published** states. Only published content appears 
 
 Delete the two templates once you have your own news. They won't come back.
 
+## Home page video
+
+The window on the home page's first screen shows the video set in Strapi, otherwise the animated globe. The site ships with a stock video (people signing an agreement, Pexels licence: free for commercial use), which the CMS attaches by itself on its first start when the field is empty. Replace it with the client's own footage the same way.
+
+1. **Content Manager → Головна сторінка → «Головний екран: відео»** → upload an **MP4** (H.264). Keep it short (10–30 s, looped), **without sound** (it always plays muted), ideally up to ~15 MB and 1920 px wide. The same video is used for both languages.
+2. Click **Save**. The video plays only while the window is on screen; visitors who turn off animations in their system see its first frame.
+3. To go back to the globe, remove the file from the field and save.
+
+## Service «what you get» lists
+
+On a service page, the «Що ви отримуєте» list turns into numbered cards when **every** item is written as `Title: text` (e.g. «Підтвердження для регуляторів (АМКУ, НКЦПФР та НБУ): офіційні висновки…»). With an odd number of items the last card is wide and dark; short names in brackets at the end of its title (АМКУ, НКЦПФР, НБУ) are shown as a list beside the text. If any item has no «: », the page shows an ordinary bulleted list.
+
 ## Transparency reports
 
 The law requires the reports for the last 7 calendar years on the site, and a corrected report must not replace the original.

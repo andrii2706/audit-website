@@ -25,6 +25,13 @@
     "service": {
       "type": "string"
     },
+    "clientType": {
+      "type": "enumeration",
+      "enum": [
+        "legal",
+        "individual"
+      ]
+    },
     "revenue": {
       "type": "string"
     },

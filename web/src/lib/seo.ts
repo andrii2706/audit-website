@@ -93,6 +93,12 @@ function geoFromQuery(q?: string | null) {
   return m ? { '@type': 'GeoCoordinates', latitude: Number(m[1]), longitude: Number(m[2]) } : undefined;
 }
 
+/** Where the firm works: its city first (local searches such as «аудит Львів»), then the whole country. */
+const AREA_SERVED = [
+  { '@type': 'City', name: 'Lviv' },
+  { '@type': 'Country', name: 'Ukraine' },
+];
+
 export function organizationLd(locale: Locale, g: Global | null) {
   if (!g) return null;
   return {
@@ -114,7 +120,7 @@ export function organizationLd(locale: Locale, g: Global | null) {
     // Mon–Fri 9:00–18:30 (TZ); Saturday by appointment is not a regular opening and is left out.
     openingHoursSpecification: [{ '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '09:00', closes: '18:30' }],
     foundingDate: '2011',
-    areaServed: { '@type': 'Country', name: 'Ukraine' },
+    areaServed: AREA_SERVED,
     sameAs: g.socials?.map((s) => s.url),
     contactPoint: [g.phone, g.phoneSecondary].filter(Boolean).map((tel) => ({
       '@type': 'ContactPoint', telephone: tel, email: g.email ?? undefined, contactType: 'customer service', availableLanguage: ['uk', 'en'],
@@ -142,17 +148,32 @@ export function breadcrumbLd(items: { name: string; url: string }[]) {
   };
 }
 
-export function serviceLd(locale: Locale, s: { title: string; excerpt: string; slug: string; category?: string | null }) {
+/**
+ * A service page. «What you get» items become an offer catalog, so search engines see the concrete checks offered
+ * (e.g. «Підтвердження для регуляторів (АМКУ, НКЦПФР та НБУ)») and not only the page title.
+ */
+export function serviceLd(
+  locale: Locale,
+  s: { title: string; excerpt: string; slug: string; category?: string | null; items?: string[] },
+) {
+  const url = pageUrl(locale, `/services/${s.slug}`);
   return {
     '@context': 'https://schema.org',
     '@type': 'Service',
     name: s.title,
     description: s.excerpt,
     serviceType: s.category ?? undefined,
-    url: pageUrl(locale, `/services/${s.slug}`),
+    url,
     inLanguage: locale,
     provider: { '@id': `${SITE_URL}/#organization` },
-    areaServed: { '@type': 'Country', name: 'Ukraine' },
+    areaServed: AREA_SERVED,
+    hasOfferCatalog: s.items?.length
+      ? {
+          '@type': 'OfferCatalog',
+          name: s.title,
+          itemListElement: s.items.map((name) => ({ '@type': 'Offer', itemOffered: { '@type': 'Service', name } })),
+        }
+      : undefined,
   };
 }
 

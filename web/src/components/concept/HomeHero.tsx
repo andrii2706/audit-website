@@ -5,38 +5,51 @@ import { createScene, type Scene } from './globe';
 import { gsap, PALETTE_EVENT, PIN, ScrollTrigger, useGSAP } from './gsap';
 import './hero.css';
 
-type Props = { head: ReactNode; mediaTitle: ReactNode; mediaFoot: ReactNode; labelledBy: string };
+type Props = { head: ReactNode; mediaTitle: ReactNode; mediaFoot: ReactNode; labelledBy: string; videoSrc?: string | null };
+
+/** What plays in the hero window: the canvas globe or the client's video. */
+type Player = Pick<Scene, 'play' | 'pause'> & Partial<Pick<Scene, 'recolour' | 'destroy'>>;
 
 /**
  * Home hero (as on fintexinc.com): the headline sits over a small rounded window into a moving picture. While the
  * visitor scrolls, the section stays pinned, the window opens to the whole screen (`--p` 0 → 1 drives its clip-path
- * in concept.css), the headline fades and its white copy rises over the picture. The picture is the canvas globe
- * (globe.ts) until the client has video: put a `<video className="media-video">` in `.media` and drop the canvas.
+ * in concept.css), the headline fades and its white copy rises over the picture. The picture is the video uploaded in
+ * the CMS (Homepage → heroVideo) or, without one, the canvas globe (globe.ts). Either plays only while it is visible.
  * Short windows and reduced motion: the headline, then the picture as an ordinary rounded block.
  */
-export default function HomeHero({ head, mediaTitle, mediaFoot, labelledBy }: Props) {
+export default function HomeHero({ head, mediaTitle, mediaFoot, labelledBy, videoSrc }: Props) {
   const root = useRef<HTMLElement>(null);
-  const scene = useRef<Scene | null>(null);
+  const scene = useRef<Player | null>(null);
   const state = useRef({ visible: false, opened: true });
   const sync = () => (state.current.visible && state.current.opened ? scene.current?.play() : scene.current?.pause());
 
   useEffect(() => {
     const el = root.current!;
-    const canvas = el.querySelector<HTMLCanvasElement>('[data-media-canvas]')!;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    scene.current = createScene(canvas, reduce);
-    scene.current.frame();
+    const video = el.querySelector<HTMLVideoElement>('[data-media-video]');
+    const target: Element = video ?? el.querySelector<HTMLCanvasElement>('[data-media-canvas]')!;
+    if (video) {
+      // Reduced motion: the first frame stays as a still picture.
+      scene.current = {
+        play: () => { if (!reduce) video.play().catch(() => {}); },
+        pause: () => video.pause(),
+      };
+    } else {
+      const globe = createScene(target as HTMLCanvasElement, reduce);
+      globe.frame();
+      scene.current = globe;
+    }
     const io = new IntersectionObserver(([en]) => { state.current.visible = en.isIntersecting; sync(); }, { threshold: 0.05 });
-    io.observe(canvas);
-    const recolour = () => scene.current?.recolour();
+    io.observe(target);
+    const recolour = () => scene.current?.recolour?.();
     window.addEventListener(PALETTE_EVENT, recolour);
     return () => {
       io.disconnect();
       window.removeEventListener(PALETTE_EVENT, recolour);
-      scene.current?.destroy();
+      scene.current?.destroy?.();
       scene.current = null;
     };
-  }, []);
+  }, [videoSrc]);
 
   useGSAP(
     () => {
@@ -90,7 +103,11 @@ export default function HomeHero({ head, mediaTitle, mediaFoot, labelledBy }: Pr
       <div className="hero-head" data-hero-head>{head}</div>
       <div className="hero-stage" data-hero-stage>
         <div className="media" data-media>
-          <canvas className="media-canvas" data-media-canvas aria-hidden="true" />
+          {videoSrc ? (
+            <video className="media-video" data-media-video src={videoSrc} muted loop playsInline preload="metadata" aria-hidden="true" />
+          ) : (
+            <canvas className="media-canvas" data-media-canvas aria-hidden="true" />
+          )}
           <div className="media-shade" aria-hidden="true" />
           <div className="wrap media-in">
             <p className="display media-title" aria-hidden="true">{mediaTitle}</p>

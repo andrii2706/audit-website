@@ -7,6 +7,17 @@
 type Titles = Record<string, string>;
 
 const uk: Titles = {
+  // Audit services: the words people search for (service + city), client request 27.11.2026.
+  'obovyazkovyy-audyt': 'Обов’язковий аудит фінансової звітності у Львові',
+  'initsiatyvnyy-audyt': 'Ініціативний аудит фінансової звітності у Львові',
+  'perevirka-zvitu-diia-city': 'Аудит звіту резидента Дія Сіті',
+  'perevirka-zvitu-defence-city': 'Аудит звіту резидента Дефенс Сіті',
+  'nadannia-vpevnenosti': 'Надання впевненості: Дія Сіті, Дефенс Сіті, регулятори',
+  'due-diligence': 'Фінансовий і податковий Due Diligence',
+  'peredprodazhnyi-audyt': 'Передпродажний аудит компанії (Due Diligence)',
+  'pidhotovka-do-e-audytu': 'Підготовка до е-аудиту SAF-T UA',
+  'uzghodzheni-protsedury': 'Узгоджені аудиторські процедури',
+  'ohliad-promizhnoi-zvitnosti': 'Огляд проміжної фінансової звітності',
   'audyt-neprybutkovykh-orhanizatsii': 'Аудит неприбуткових організацій і грантових проєктів',
   'torhova-marka-nerezydenta-podatkovi-ryzyky': 'Торгова марка нерезидента без оплати: податкові ризики',
   'bezoplatni-pakety-ryzyk-pdv': 'Безоплатні пакети покупцям: ризик донарахування ПДВ',
@@ -14,6 +25,16 @@ const uk: Titles = {
 };
 
 const en: Titles = {
+  'obovyazkovyy-audyt': 'Statutory audit of financial statements in Lviv',
+  'initsiatyvnyy-audyt': 'Voluntary audit of financial statements in Lviv',
+  'perevirka-zvitu-diia-city': 'Audit of a Diia City resident’s report',
+  'perevirka-zvitu-defence-city': 'Audit of a Defence City resident’s report',
+  'nadannia-vpevnenosti': 'Assurance: Diia City, Defence City, regulators',
+  'due-diligence': 'Financial and tax due diligence',
+  'peredprodazhnyi-audyt': 'Pre-sale audit of a company (due diligence)',
+  'pidhotovka-do-e-audytu': 'Preparing for e-audit (SAF-T UA)',
+  'uzghodzheni-protsedury': 'Agreed-upon audit procedures',
+  'ohliad-promizhnoi-zvitnosti': 'Review of interim financial statements',
   'audyt-dlia-nktspfr': 'Statutory audit for the NSSMC',
   'audyt-neprybutkovykh-orhanizatsii': 'Audit of non-profits and grant project reports',
   'do-uvahy-rezydentiv-diia-city': 'Diia City compliance report and its audit',

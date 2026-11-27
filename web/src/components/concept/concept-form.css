@@ -22,12 +22,16 @@
   .seg button { min-height: 46px; padding: 8px 10px; border: 0; border-radius: 12px; background: transparent; font: 500 14px/1.25 var(--font); color: var(--muted); text-align: center; overflow-wrap: break-word; cursor: pointer; transition: background-color .3s, color .3s; }
   .seg button:hover { color: var(--ink); background: var(--card); }
   .seg button[aria-pressed="true"] { background: var(--ink); color: var(--on-dark); }
+  /* short question (estimate form, step 1) */
+  .form .f-question { display: flex; flex-direction: column; gap: 8px; }
+  .form .f-question textarea { min-height: 76px; }
+  .f-opt { font-weight: 400; color: var(--muted); }
   /* fields: one column, two (phone | e-mail) when the card is wide enough */
   .f-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .form .f-grid label input { margin-bottom: 0; }
   .f-hint { margin-top: -4px; font-size: 13px; color: var(--muted); }
   .f-hint.form-err { color: #b42318; }
-  @container (max-width: 359px) { .seg:not(.seg-3) { grid-template-columns: minmax(0, 1fr); } .seg:not(.seg-3) button { text-align: left; padding-inline: 14px; } }
+  @container (max-width: 359px) { .seg:not(.seg-3, .seg-pair) { grid-template-columns: minmax(0, 1fr); } .seg:not(.seg-3, .seg-pair) button { text-align: left; padding-inline: 14px; } }
   @container (min-width: 440px) { .f-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .f-wide { grid-column: 1 / -1; } }
   /* where to answer: icon + name buttons, two per row on narrow cards, a wrapping row of chips when wide */
   .ch { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }

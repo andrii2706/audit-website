@@ -61,3 +61,14 @@ test('the request page: three steps on phones, the whole form on wide screens', 
   await form.getByRole('button', { name: 'Назад' }).click();
   await expect(name).toHaveValue('Олена');
 });
+
+test('the request form asks who is asking and for a short question, not for revenue', async ({ page }) => {
+  await page.goto('/uk/request');
+  const form = page.locator('form.form-steps');
+  await expect(form.getByText(f.clientQ)).toBeVisible();
+  await form.getByRole('button', { name: f.clientTypes[1] }).click();
+  await expect(form.getByRole('button', { name: f.clientTypes[1] })).toHaveAttribute('aria-pressed', 'true');
+  await expect(form.locator('input[name="clientType"]')).toHaveValue('individual');
+  await expect(form.locator('textarea[name="comment"]')).toBeVisible();
+  await expect(form.getByText(f.q2)).toHaveCount(0);
+});

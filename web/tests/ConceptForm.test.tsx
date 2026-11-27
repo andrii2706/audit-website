@@ -25,7 +25,8 @@ describe('<ConceptForm>', () => {
   it('renders the questions, fields, five reply channels and a hidden bot trap', () => {
     renderForm();
     expect(screen.getByText(dict.q1)).toBeTruthy();
-    expect(screen.getByText(dict.q2)).toBeTruthy();
+    expect(screen.getByText('2. Хто звертається?')).toBeTruthy();
+    expect(screen.getByRole('textbox', { name: /Коротко про ваше питання/ })).toBeTruthy();
     expect(screen.getByRole('textbox', { name: dict.name })).toBeTruthy();
     expect(screen.getAllByRole('button', { pressed: false }).length).toBeGreaterThan(5);
     const trap = document.querySelector<HTMLInputElement>('input[name="company_site"]')!;
@@ -37,16 +38,22 @@ describe('<ConceptForm>', () => {
     const started = Number(document.querySelector<HTMLInputElement>('input[name="startedAt"]')!.value);
     expect(Math.abs(Date.now() - started)).toBeLessThan(5000);
   });
-  it('sends the chosen service, revenue and channel with the fields', async () => {
+  it('sends the chosen service, who is asking, the short question and the channel with the fields', async () => {
     renderForm();
     fireEvent.click(screen.getByRole('button', { name: 'Due diligence' }));
-    fireEvent.click(screen.getByRole('button', { name: dict.revenue[2] }));
+    expect(screen.getByRole('button', { name: 'Юридична особа' }).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(screen.getByRole('button', { name: 'Фізична особа' }));
+    fireEvent.change(screen.getByRole('textbox', { name: /Коротко про ваше питання/ }), { target: { value: 'Аудит за 2026 рік' } });
     fireEvent.click(screen.getByRole('button', { name: 'Viber' }));
-    fireEvent.change(screen.getByRole('textbox', { name: dict.name }), { target: { value: 'Олена' } });
+    fireEvent.change(document.querySelector<HTMLInputElement>('input[name="name"]')!, { target: { value: 'Олена' } });
     expect(screen.getByRole('button', { name: 'Viber' }).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByText('4. Куди відповісти?')).toBeTruthy();
     await submit();
     const f = lastForm();
-    expect([f.get('service'), f.get('revenue'), f.get('channel'), f.get('name'), f.get('locale')]).toEqual(['Due diligence', dict.revenue[2], 'viber', 'Олена', 'uk']);
+    expect([f.get('service'), f.get('clientType'), f.get('comment'), f.get('channel'), f.get('name'), f.get('locale')]).toEqual([
+      'Due diligence', 'individual', 'Аудит за 2026 рік', 'viber', 'Олена', 'uk',
+    ]);
+    expect(f.get('revenue')).toBeNull();
   });
   it('shows field errors returned by the server', async () => {
     submitLead.mockResolvedValue({ ok: false, fieldErrors: { name: 'errName', contact: 'errContact' } });
@@ -77,9 +84,10 @@ describe('<ConceptForm>', () => {
     await submit();
     expect(screen.getByRole('status').textContent).toContain(dict.demoTitle);
   });
-  it('compact variant (service page) has no revenue question', () => {
+  it('compact variant (service page) has no "who is asking" question', () => {
     renderForm('compact');
-    expect(screen.queryByText(dict.q2)).toBeNull();
+    expect(screen.queryByText('2. Хто звертається?')).toBeNull();
+    expect(document.querySelector('input[name="clientType"]')!.getAttribute('value')).toBe('');
     expect(screen.getByText(dict.where)).toBeTruthy();
   });
   describe('steps (phones)', () => {

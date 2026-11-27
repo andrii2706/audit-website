@@ -11,7 +11,8 @@ const pages: [string, string][] = [
   ['/service/audyt', '/services#audyt'],
   ['/service/audyt-zvitu-pro-vidpovidnist-rezydenta-diia-siti', '/services/perevirka-zvitu-diia-city'],
   ['/service/yurydychni-posluhy', '/services/yurydychnyi-suprovid-biznesu'],
-  ['/service/bukhhalterske-obsluhovuvannia', '/services/bukhhalterske-obsluhovuvannia'],
+  // «Бухгалтерське обслуговування» is no longer offered (client, 27.11.2026): its old address leads to the services.
+  ['/service/bukhhalterske-obsluhovuvannia', '/services'],
   ['/service/pytannia-opodatkuvannia', '/services/podatkovyi-konsaltynh'],
   ['/service/konsaltynh', '/services/biznes-konsaltynh'],
   ['/service/rozrobka-biznes-planiv', '/services/rozrobka-biznes-planiv'],

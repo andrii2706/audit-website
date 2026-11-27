@@ -7,6 +7,7 @@ import uk from './content/uk';
 import en from './content/en';
 import * as legacy from './legacy';
 import { seoFor } from './seo';
+import { allServices } from './services-order';
 import { ADMIN_LABELS, PREVIOUS_LABELS } from './admin-labels';
 
 /** Site content the website reads (published entries only). */
@@ -68,9 +69,9 @@ export async function ensureLeadListView(strapi: Core.Strapi) {
   const store = strapi.store({ type: 'plugin', name: 'content_manager' });
   const key = 'configuration_content_types::api::lead.lead';
   const conf = (await store.get({ key })) as any;
-  if (!conf || (conf.settings?.bpLeadView ?? 0) >= 3) return;
-  conf.settings = { ...conf.settings, defaultSortBy: 'createdAt', defaultSortOrder: 'DESC', pageSize: 20, bpLeadView: 3 };
-  conf.layouts = { ...conf.layouts, list: ['name', 'phone', 'email', 'service', 'stage', 'createdAt'] };
+  if (!conf || (conf.settings?.bpLeadView ?? 0) >= 4) return;
+  conf.settings = { ...conf.settings, defaultSortBy: 'createdAt', defaultSortOrder: 'DESC', pageSize: 20, bpLeadView: 4 };
+  conf.layouts = { ...conf.layouts, list: ['name', 'phone', 'email', 'service', 'clientType', 'stage', 'createdAt'] };
   await store.set({ key, value: conf });
 }
 
@@ -378,7 +379,8 @@ export async function seedIfEmpty(strapi: Core.Strapi) {
         ...m,
         // Auditor register numbers and the lawyer's certificate come from the old site.
         credential: reg ? [m.credential, L.registryLabel(reg)].filter(Boolean).join(' · ') : m.credential,
-        bio: k === 2 ? `${m.bio} ${L.kovalBio}` : m.bio,
+        // No biographies on the site (client, 27.11.2026).
+        bio: null,
         order: k + 1,
       });
       if (first) ids.team[k] = d.documentId;
@@ -456,17 +458,6 @@ export async function seedIfEmpty(strapi: Core.Strapi) {
   }
 
   strapi.log.info(`[seed] Ready: ${allServices().length} services, ${structure.teamCount} team members × ${LOCALES.length} languages.`);
-}
-
-/** Services from the brief plus the old-site services, each inserted after the last one of its category. */
-function allServices() {
-  const list: { slug: string; cat: structure.CategoryKey; homeOrder?: number; steps?: boolean }[] = [...structure.services];
-  for (const extra of legacy.newServices) {
-    let at = -1;
-    list.forEach((s, i) => { if (s.cat === extra.cat) at = i; });
-    list.splice(at + 1, 0, extra);
-  }
-  return list;
 }
 
 /**

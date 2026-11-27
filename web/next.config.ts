@@ -1,3 +1,4 @@
+import path from 'node:path';
 import type { NextConfig } from 'next';
 import { legacyRedirects } from './legacy-redirects';
 
@@ -30,7 +31,8 @@ const CSP = [
   "font-src 'self' data:",
   `connect-src 'self'${dev ? ' ws: wss:' : ''}`,
   'frame-src https://www.google.com https://maps.google.com',
-  "media-src 'self'",
+  // The hero video is uploaded to the CMS.
+  `media-src 'self' ${[...new Set([strapi.origin, strapiPublic.origin])].join(' ')}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -67,6 +69,12 @@ const nextConfig: NextConfig = {
   // Old bp-audit.com.ua (Joomla) URLs → new pages. Static export can't redirect, so the demo skips them.
   ...(demo ? {} : { redirects: async () => legacyRedirects, headers: async () => [{ source: '/:path*', headers: SECURITY_HEADERS }] }),
   // Fonts read from disk by the Open Graph image routes must ship with the standalone build.
+  // The project root is this web/ folder, always. Without it Next.js guesses the root from lockfiles and, when another
+  // package-lock.json sits higher up (e.g. C:\Users\<name>\package-lock.json on Windows), takes that folder instead:
+  // the dev server then watches the whole tree, cms/ included, and every database write of a running Strapi
+  // (cms/.tmp/data.db, cms/dist) makes it rebuild and reload the open pages again and again.
+  turbopack: { root: path.resolve(__dirname) },
+  outputFileTracingRoot: path.resolve(__dirname),
   outputFileTracingIncludes: { '/**': ['./src/assets/fonts/**'] },
   images: {
     // Static hosting has no image optimizer.

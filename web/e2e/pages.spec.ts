@@ -132,3 +132,52 @@ test('palette O uses the colours of the client\'s current site', async ({ page }
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-palette', 'o');
 });
+
+test('a team card on the home page opens that person on the team page', async ({ page }) => {
+  await page.goto('/uk');
+  const card = page.locator('#team a.person-link').first();
+  await card.scrollIntoViewIfNeeded();
+  const name = (await card.locator('h3').textContent())!.trim();
+  await card.click();
+  await expect(page).toHaveURL(/\/uk\/team#m-[\w-]+$/);
+  const target = page.locator('.team-page .person[data-hit]');
+  await expect(target).toHaveCount(1);
+  await expect(target.locator('h3')).toHaveText(name);
+  await expect(target).toBeInViewport();
+  // its biography is open (when the member has one)
+  const bio = target.locator('details.bio');
+  if (await bio.count()) await expect(bio).toHaveAttribute('open', '');
+  // a typed or reloaded address does the same
+  await page.reload();
+  await expect(page.locator('.team-page .person[data-hit] h3')).toHaveText(name);
+  await expect(page.locator('.team-page .person[data-hit]')).toBeInViewport();
+});
+
+test('«Надання впевненості» shows the brief’s three checks, the regulators in the last card', async ({ page }) => {
+  await page.goto('/uk/services/nadannia-vpevnenosti');
+  const cards = page.locator('.dcards > li');
+  await expect(cards).toHaveCount(3);
+  await expect(cards.nth(0)).toContainText('Дія Сіті');
+  await expect(cards.nth(1)).toContainText('Дефенс Сіті');
+  const last = cards.nth(2);
+  await expect(last).toHaveClass(/dcard-wide/);
+  for (const r of ['АМКУ', 'НКЦПФР', 'НБУ']) await expect(last.locator('.dcard-tags b', { hasText: r })).toBeVisible();
+});
+
+test('dark theme: follows the device, the header button switches it and the choice survives a reload', async ({ browser }) => {
+  const ctx = await browser.newContext({ colorScheme: 'dark' });
+  const page = await ctx.newPage();
+  await page.goto('/uk');
+  const html = page.locator('html');
+  await expect(html).toHaveAttribute('data-theme', 'dark');
+  // The page itself is dark, not only the attribute.
+  const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  const [r, g, b] = bg.match(/\d+/g)!.map(Number);
+  expect(r + g + b).toBeLessThan(150);
+  await page.getByRole('button', { name: 'Увімкнути світлу тему' }).click();
+  await expect(html).toHaveAttribute('data-theme', 'light');
+  await page.reload();
+  await expect(html).toHaveAttribute('data-theme', 'light');
+  await expect(page.getByRole('button', { name: 'Увімкнути темну тему' })).toBeVisible();
+  await ctx.close();
+});

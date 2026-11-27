@@ -3,7 +3,7 @@
 import { headers } from 'next/headers';
 import { isLocale, type Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
-import { sendLeadEmails } from '@/lib/mail';
+import { CLIENT_TYPE_UK, sendLeadEmails } from '@/lib/mail';
 import { cleanLine, parseLead, type FieldErrors } from '@/lib/lead';
 import { clientIp, leadGlobalLimiter, leadLimiter } from '@/lib/rate-limit';
 import { createLead, getGlobal, type LeadInput } from '@/lib/strapi';
@@ -58,7 +58,7 @@ async function notifyTelegram(lead: LeadInput) {
     lead.phone && `Телефон: ${lead.phone}`,
     lead.email && `E-mail: ${lead.email}`,
     lead.service && `Послуга: ${lead.service}`,
-    lead.revenue && `Виручка: ${lead.revenue}`,
+    lead.clientType && `Хто звертається: ${CLIENT_TYPE_UK[lead.clientType]}`,
     lead.channel && `Відповісти в: ${lead.channel}`,
     lead.comment && `Коментар: ${lead.comment}`,
     lead.locale_code && `Мова: ${lead.locale_code}`,

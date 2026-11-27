@@ -43,6 +43,9 @@ function layout(title: string, inner: string) {
 </table></td></tr></table></body></html>`;
 }
 
+/** Labels of the estimate form's "who is asking" answer, for the team's notifications. */
+export const CLIENT_TYPE_UK: Record<'legal' | 'individual', string> = { legal: 'Юридична особа', individual: 'Фізична особа' };
+
 const CHANNEL_UK: Record<string, string> = { telegram: 'Telegram', viber: 'Viber', whatsapp: 'WhatsApp', call: 'Дзвінок', email: 'E-mail' };
 
 /** Notification to the company (in Ukrainian — the team's language). Reply-To = the client's e-mail. */
@@ -52,7 +55,7 @@ async function sendCompanyMail(lead: LeadInput, to: string, from: string) {
     ['Телефон', lead.phone ? formatPhone(lead.phone) : undefined],
     ['E-mail', lead.email],
     ['Послуга', lead.service],
-    ['Виручка', lead.revenue],
+    ['Хто звертається', lead.clientType ? CLIENT_TYPE_UK[lead.clientType] : undefined],
     ['Куди відповісти', lead.channel ? CHANNEL_UK[lead.channel] ?? lead.channel : undefined],
     ['Коментар', lead.comment],
     ['Мова сайту', lead.locale_code?.toUpperCase()],

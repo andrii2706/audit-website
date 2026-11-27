@@ -74,6 +74,7 @@ export default async function HomePage({ params }: Props) {
   return (
     <>
       <HomeHero
+        videoSrc={mediaUrl(home?.heroVideo ?? null)}
         labelledBy="hero-title"
         head={
           <>
