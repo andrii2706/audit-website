@@ -1,0 +1,122 @@
+/*
+ * Dark theme (approved design 27.11): <html data-theme="dark">, set by ThemeBoot / ThemeToggle (ThemeToggle.tsx,
+ * which imports this file). Every palette gets a dark variant; the light theme is the palettes as they are.
+ *
+ * The light design uses --ink both for text and for dark blocks (buttons, footer, "why us", map card). In the dark
+ * theme --ink is the light text colour, so those blocks are moved onto their own dark surfaces here:
+ *   --surface-dark   footer, dark cards, map card, post covers
+ *   --surface-raise  hover state of the service / audience / tag cards
+ *   --surface-wide   the wide «what you get» card (regulators)
+ *   --fill           filled accents that carry white (ticks, "all services" tile, done mark)
+ *   --on-cta         text on the main button
+ * Pressed controls that were "dark on light" (selected form options, dark buttons) become "light on dark".
+ *
+ * Inside Tailwind's `components` layer like concept.css; every rule starts with :root[data-theme="dark"], so it beats
+ * the light rules whatever the file order. The few rules for Tailwind utilities (old components) are outside the
+ * layer at the end, because utilities sit in a later layer.
+ */
+@layer components {
+  :root[data-theme="dark"],
+  :root[data-theme="dark"][data-palette="b"] {
+    --bg: #111418; --card: #1a1f26; --ink: #e9edf1; --ink-2: #c5ccd4; --muted: #9aa4ae; --line: #29303a; --line-strong: #38414c;
+    --accent: #6bb0dc; --accent-ink: #8cc3e6; --accent-soft: #16293a; --lime: #7cc8e6;
+    --cta: #e9edf1; --cta-hover: #ffffff; --on-cta: #111418;
+    --surface-dark: #0a0c0f; --surface-raise: #232931; --surface-wide: #0f1c27; --fill: #276e9c;
+    color-scheme: dark;
+  }
+  :root[data-theme="dark"][data-palette="c"] {
+    --bg: #15130f; --card: #1e1b16; --ink: #efe9de; --ink-2: #d3cbbd; --muted: #a8a092; --line: #322d25; --line-strong: #433c31;
+    --accent: #8fb0d6; --accent-ink: #a9c3e2; --accent-soft: #1f2a36; --lime: #c2a878;
+    --cta: #2b4c6f; --cta-hover: #35597f; --on-cta: #ffffff;
+    --surface-dark: #0d0c09; --surface-raise: #29251e; --surface-wide: #1d1a26; --fill: #2b4c6f;
+    color-scheme: dark;
+  }
+  /* «Оригінал»: the client's #0080FE / #4CB6DC / #3C8EC8 stay; the main button keeps #006AD1 with white (5.3:1). */
+  :root[data-theme="dark"][data-palette="o"] {
+    --bg: #121417; --card: #1b1f24; --ink: #eceef1; --ink-2: #c8cdd3; --muted: #9ba2aa; --line: #2a3038; --line-strong: #39414b;
+    --accent: #4da3ff; --accent-ink: #7ab9ff; --accent-soft: #132a42; --lime: #4cb6dc;
+    --cta: #006ad1; --cta-hover: #0058ad; --on-cta: #ffffff;
+    --surface-dark: #0b0d10; --surface-raise: #252a31; --surface-wide: #0e1f33; --fill: #006ad1;
+    color-scheme: dark;
+  }
+
+  /* Header and the demo palette switcher: translucent page colour instead of white. */
+  :root[data-theme="dark"] .header { background: color-mix(in srgb, var(--bg) 92%, transparent); }
+  :root[data-theme="dark"] .pal { background: color-mix(in srgb, var(--card) 96%, transparent); }
+
+  /* Main button and filled accents. */
+  :root[data-theme="dark"] .btn-accent { color: var(--on-cta); }
+  :root[data-theme="dark"][data-palette] .svc-all { background: var(--fill); border-color: var(--fill); color: #fff; }
+  :root[data-theme="dark"][data-palette] .svc-all:hover { background: color-mix(in srgb, var(--fill) 85%, #fff); }
+  :root[data-theme="dark"] .tick,
+  :root[data-theme="dark"] .done-mark { background: var(--fill); }
+  :root[data-theme="dark"] .done-mark .tick { background: transparent; }
+  /* Text on the light-blue (lime) fills stays dark. */
+  :root[data-theme="dark"] .btn-lime,
+  :root[data-theme="dark"] .badge-lime { color: var(--surface-dark); }
+
+  /* "Dark on light" controls become "light on dark". */
+  :root[data-theme="dark"] .btn-dark,
+  :root[data-theme="dark"] .pal button[aria-pressed="true"],
+  :root[data-theme="dark"] .cue:hover .cue-circle,
+  :root[data-theme="dark"] .seg button[aria-pressed="true"],
+  :root[data-theme="dark"] .ch button[aria-pressed="true"] { color: var(--bg); }
+  :root[data-theme="dark"] .btn-dark:hover { background: #ffffff; }
+
+  /* Cards that turned dark on hover now rise to a lighter surface; their text stays light. */
+  :root[data-theme="dark"] .chip:hover,
+  :root[data-theme="dark"] .svc:hover,
+  :root[data-theme="dark"] .aud:hover,
+  :root[data-theme="dark"] .tag:hover { background: var(--surface-raise); border-color: var(--line-strong); color: var(--ink); }
+  :root[data-theme="dark"] .svc:hover { box-shadow: 0 32px 64px -30px rgba(0, 0, 0, 0.75); }
+
+  /* Dark blocks keep their own dark surface. */
+  :root[data-theme="dark"] .card.dark,
+  :root[data-theme="dark"] .why-in,
+  :root[data-theme="dark"] .mapcard,
+  :root[data-theme="dark"] .post-cover,
+  :root[data-theme="dark"] .post-hero { background: var(--surface-dark); border: 1px solid var(--line); }
+  :root[data-theme="dark"] .card.dark { border-color: var(--line); }
+  :root[data-theme="dark"] .footer { background: var(--surface-dark); border-top: 1px solid var(--line); }
+  :root[data-theme="dark"] .map-tag { background: var(--surface-dark); }
+  :root[data-theme="dark"] .media { border: 1px solid var(--line); }
+  :root[data-theme="dark"] .dcards .dcard-wide { background: var(--surface-wide); border-color: color-mix(in srgb, var(--lime) 22%, var(--surface-wide)); }
+  :root[data-theme="dark"] .dcards .dcard-wide .dcard-tags li { border-color: color-mix(in srgb, var(--lime) 30%, var(--surface-wide)); }
+
+  /* Office map: the Google map is shown dark (inverted), still greyed until hover like in the light theme. */
+  :root[data-theme="dark"] .map-art { background: #1f242b; }
+  :root[data-theme="dark"] .map-art iframe { filter: invert(0.9) hue-rotate(180deg) grayscale(0.85) contrast(1.05); }
+  :root[data-theme="dark"] .mapcard:hover .map-art iframe,
+  :root[data-theme="dark"] .map-art iframe:focus { filter: invert(0.9) hue-rotate(180deg); }
+
+  /* Client logos and document scans are made for white: they lie on light plates. */
+  :root[data-theme="dark"] .logo-tile:has(img),
+  :root[data-theme="dark"] .doc-sheet:has(img) { background: #f5f7fa; border-color: transparent; }
+
+  /* Form messages. */
+  :root[data-theme="dark"] .form-err,
+  :root[data-theme="dark"] .f-hint.form-err { color: #f97066; }
+  :root[data-theme="dark"] .form-alert { background: #3a1714; color: #fda29b; }
+
+  /* Theme button in the header (ThemeToggle). Until hydration both icons exist; the theme on <html> picks one. */
+  .theme-btn { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 44px; height: 44px; padding: 0; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--card); color: var(--ink); cursor: pointer; transition: border-color .3s, background-color .3s, scale .2s; }
+  .theme-btn:hover { border-color: var(--ink); }
+  .theme-btn:active { scale: .95; }
+  .theme-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .theme-btn .theme-sun { display: none; }
+  :root[data-theme="dark"] .theme-btn .theme-sun { display: block; }
+  :root[data-theme="dark"] .theme-btn .theme-moon { display: none; }
+}
+
+/* Tailwind utilities of the older components (mobile menu, back-to-top button, skeletons, rich text). Outside the
+   layer so they win over the utilities. `bg-ink` there always means "dark surface with white text". */
+:root[data-theme="dark"] .bg-ink { background-color: var(--surface-dark); }
+:root[data-theme="dark"] [role="dialog"].bg-ink { box-shadow: 0 -100vh 0 0 var(--surface-dark); }
+:root[data-theme="dark"] .hover\:bg-ink-2:hover { background-color: var(--surface-raise); }
+/* The back-to-top button would vanish on the dark page: light, like the other floating controls. */
+:root[data-theme="dark"] button.fixed.bg-ink { background-color: var(--ink); color: var(--bg); }
+:root[data-theme="dark"] button.fixed.bg-ink:hover { background-color: var(--accent); }
+:root[data-theme="dark"] .skeleton { background-image: linear-gradient(90deg, var(--color-placeholder) 25%, color-mix(in srgb, var(--line-strong) 70%, var(--bg)) 50%, var(--color-placeholder) 75%); }
+:root[data-theme="dark"] .prose-content { color: var(--ink-2); }
+/* Text on light-blue (lime) chips and badges stays dark. */
+:root[data-theme="dark"] .bg-lime.text-ink { color: var(--surface-dark); }

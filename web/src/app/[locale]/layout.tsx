@@ -3,9 +3,10 @@ import { notFound } from 'next/navigation';
 import '@fontsource-variable/onest';
 import '@fontsource/jetbrains-mono/500.css';
 import '../globals.css';
-import Footer from '@/components/Footer';
-import Header, { TopBar } from '@/components/Header';
-import MobileActionBar from '@/components/MobileActionBar';
+import '../concept.css';
+import SiteFooter from '@/components/concept/SiteFooter';
+import SiteHeader from '@/components/concept/SiteHeader';
+import PaletteSwitcher, { PaletteBoot } from '@/components/concept/PaletteSwitcher';
 import ScrollToTop from '@/components/ScrollToTop';
 import ContentProtection from '@/components/ContentProtection';
 import { protectionTokens, resolveProtection } from '@/lib/protection';
@@ -15,6 +16,7 @@ import { isLocale, locales, type Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
 import { buildMetadata, organizationLd, SITE_URL, websiteLd } from '@/lib/seo';
 import { getCategories, getGlobal, getHomepage } from '@/lib/strapi';
+import { ThemeBoot } from '@/components/concept/ThemeToggle';
 
 export const dynamicParams = false;
 export function generateStaticParams() {
@@ -56,7 +58,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export const viewport: Viewport = { themeColor: '#0B1220', width: 'device-width', initialScale: 1, viewportFit: 'cover' };
+/**
+ * Palette of the site: B (graphite, default), C (warm) or O (the colours of the client's current site).
+ * NEXT_PUBLIC_PALETTE_SWITCHER=0 hides the demo switcher.
+ */
+const PALETTE = ['c', 'o'].includes(process.env.NEXT_PUBLIC_PALETTE ?? '') ? process.env.NEXT_PUBLIC_PALETTE : 'b';
+const SHOW_SWITCHER = process.env.NEXT_PUBLIC_PALETTE_SWITCHER !== '0';
+
+export const viewport: Viewport = { themeColor: '#1c2128', width: 'device-width', initialScale: 1, viewportFit: 'cover' };
 
 export default async function LocaleLayout({ children, params }: Props) {
   const { locale: raw } = await params;
@@ -69,29 +78,33 @@ export default async function LocaleLayout({ children, params }: Props) {
     <html
       lang={locale}
       data-scroll-behavior="smooth"
+      data-palette={PALETTE}
       data-protect={protectionTokens(protection) || undefined}
       style={protection.blockPrint ? ({ '--print-note': JSON.stringify(dict.common.printBlocked) } as React.CSSProperties) : undefined}
       suppressHydrationWarning
     >
       {/* suppressHydrationWarning: browser extensions (Grammarly, password managers) inject attributes into <body> before React hydrates. Affects only this element’s own attributes. */}
       <body className="min-h-dvh" suppressHydrationWarning>
+        {/* Light / dark theme (the visitor's choice or the device setting), applied before the first paint. */}
+        <ThemeBoot />
         {/* Images fade in over their skeleton (FadeImage). Without JavaScript nothing would reveal them, so show them right away. */}
         <noscript>
           <style>{'img[data-fade]{opacity:1!important}'}</style>
         </noscript>
+        {/* The visitor's palette choice from the demo switcher, applied before the first paint. */}
+        {SHOW_SWITCHER && <PaletteBoot />}
         <NavProgress label={dict.common.loading} />
         <a href="#main" className="sr-only z-50 rounded-full bg-ink px-4 py-2 text-white focus:not-sr-only focus:fixed focus:top-3 focus:left-3">
           {dict.nav.skip}
         </a>
-        <TopBar locale={locale} dict={dict} global={global} />
-        <Header locale={locale} dict={dict} global={global} />
+        <SiteHeader locale={locale} dict={dict} global={global} />
         <main id="main" tabIndex={-1} className="outline-none">{children}</main>
-        <Footer locale={locale} dict={dict} global={global} categories={categories} ctaTitle={home?.ctaTitle} />
+        <SiteFooter locale={locale} dict={dict} global={global} categories={categories} ctaTitle={home?.ctaTitle} />
+        {SHOW_SWITCHER && <PaletteSwitcher labels={{ palette: dict.concept.palette, b: dict.concept.paletteB, c: dict.concept.paletteC, o: (dict.concept as { paletteO?: string }).paletteO }} />}
         <ScrollToTop label={dict.common.toTop} />
         {protection.enabled && (
-          <ContentProtection copy={protection.blockCopy} menu={protection.blockContextMenu} images={protection.blockImageSaving} keys={protection.blockShortcuts} contacts={protection.allowContactCopy} />
+          <ContentProtection copy={protection.blockCopy} menu={protection.blockContextMenu} images={protection.blockImageSaving} keys={protection.blockShortcuts} contacts={protection.allowContactCopy} sourceLabel={dict.common.copySource} />
         )}
-        <MobileActionBar locale={locale} phone={global?.phone} telegramUrl={global?.telegramUrl} labels={{ call: dict.nav.call, consultation: dict.nav.consultation }} />
         <JsonLd data={organizationLd(locale, global)} />
         <JsonLd data={websiteLd(locale, global?.siteName ?? dict.meta.siteName)} />
       </body>

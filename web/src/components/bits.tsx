@@ -149,8 +149,8 @@ export function PersonCard({ m, withBio = false, labels }: { m: TeamMember; with
   const photo = mediaUrl(m.photo ?? null);
   return (
     <article className="flex flex-col gap-3.5 rounded-card border border-line bg-card p-2.5 pb-5">
-      <div className={cx('relative flex aspect-[4/3.6] items-center justify-center overflow-hidden rounded-[20px] bg-placeholder text-5xl font-semibold tracking-tight text-muted-2', photo && 'skeleton')}>
-        {photo ? <FadeImage src={photo} alt={m.name} fill sizes="(max-width: 640px) 100vw, 300px" className="object-cover" /> : <span aria-hidden="true">{initials(m.name)}</span>}
+      <div className={cx('relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-[20px] bg-placeholder text-5xl font-semibold tracking-tight text-muted-2 sm:aspect-[4/3.6]', photo && 'skeleton')}>
+        {photo ? <FadeImage src={photo} alt={m.name} fill sizes="(max-width: 640px) 100vw, 300px" className="object-cover object-[50%_25%]" /> : <span aria-hidden="true">{initials(m.name)}</span>}
       </div>
       <div className="flex flex-col gap-1.5 px-3">
         <span className="text-lg font-semibold">{m.name}</span>

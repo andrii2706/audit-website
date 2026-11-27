@@ -1,0 +1,31 @@
+/*
+ * "What you get" cards of a service page (DeliverableCards.tsx, approved design 27.11). Imported by the component, so
+ * it ships with it. The wrapper is a size container, so the two columns follow the main column's width, not the window.
+ */
+@layer components {
+  .dcards-wrap { container-type: inline-size; }
+  .dcards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .dcards .dcard { padding: 26px; border-radius: 26px; background: var(--card); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 20px; }
+  .dcard-body { display: flex; flex-direction: column; gap: 12px; }
+  .dcard-n { font-size: 13px; color: var(--muted); }
+  .dcards .dcard-title { margin: 0; font-size: 22px; line-height: 1.2; font-weight: 400; letter-spacing: -0.01em; }
+  .dcards .dcard-text { margin: 0; font-size: 16px; line-height: 1.5; color: var(--ink-2); }
+
+  .dcards .dcard-wide { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .dcards .dcard-wide .dcard-n { color: rgba(255, 255, 255, 0.6); }
+  .dcards .dcard-wide .dcard-title { font-size: 28px; font-weight: 300; letter-spacing: -0.02em; }
+  .dcards .dcard-wide .dcard-text { color: rgba(255, 255, 255, 0.82); }
+  .dcard-tags { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .dcard-tags li { padding: 14px 18px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.18); display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+  .dcard-tags b { font-size: 18px; font-weight: 500; color: var(--lime, #4cb6dc); }
+  .dcard-tags span { font-size: 14px; color: rgba(255, 255, 255, 0.78); text-align: right; }
+  /* Tags on a light card (not the last of an odd number) use the ordinary colours. */
+  .dcards .dcard:not(.dcard-wide) .dcard-tags li { border-color: var(--line); }
+  .dcards .dcard:not(.dcard-wide) .dcard-tags b { color: var(--accent-ink, var(--ink)); }
+  .dcards .dcard:not(.dcard-wide) .dcard-tags span { color: var(--muted); }
+
+  @container (min-width: 620px) {
+    .dcards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .dcards .dcard-wide { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 36px; align-items: end; padding: 32px; }
+  }
+}

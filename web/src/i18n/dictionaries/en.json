@@ -75,6 +75,7 @@
     "documents": "Documents"
   },
   "common": {
+    "copySource": "Source",
     "allServices": "All services ({n})",
     "allPosts": "All insights",
     "details": "Learn more →",
@@ -118,6 +119,7 @@
     "errPhone": "Please enter your phone number",
     "errEmail": "Please check your e-mail",
     "errGeneric": "We couldn't send your request. Please try again or call us.",
+    "errTooMany": "Too many requests from your connection. Please try again in a few minutes or call us.",
     "honeypot": "Company website",
     "email": "E-mail",
     "emailPlaceholder": "name@company.com",
@@ -126,7 +128,16 @@
     "channelEmail": "E-mail",
     "orEmail": "or write to",
     "demoNote": "This is a test copy of the site without a server, so the form only checks the fields: no e-mail is sent and nothing is saved in the CMS. On the live site the request is stored in Strapi, the company gets an e-mail and the client gets a confirmation.",
-    "demoTitle": "Demo: the request was not sent"
+    "demoTitle": "Demo: the request was not sent",
+    "clientQ": "2. Who is asking?",
+    "clientTypes": [
+      "Company",
+      "Individual"
+    ],
+    "questionQ": "3. Your question in short",
+    "optional": "(optional)",
+    "questionPlaceholder": "For example: statutory audit of the 2026 financial statements",
+    "whereQ": "4. Where should we reply?"
   },
   "service": {
     "price": "Price",
@@ -213,7 +224,8 @@
     "address": "Address",
     "phones": "Phones",
     "hours": "Working hours",
-    "map": "Open in Google Maps"
+    "map": "Open in Google Maps",
+    "rights": "All rights reserved."
   },
   "notFound": {
     "title": "This page doesn't exist",
@@ -228,5 +240,31 @@
     "contact": "If it is urgent, call us: {phone}.",
     "signature": "Kind regards,\nthe {site} team",
     "auto": "This is an automatic message — you can reply to it."
+  },
+  "concept": {
+    "palette": "Palette",
+    "paletteB": "Graphite",
+    "paletteC": "Warm",
+    "scroll": "Scroll",
+    "howWeWork": "How we work",
+    "mediaFoot": "Lviv · since 2011 · ISA · IFRS",
+    "numbers": "In numbers",
+    "why": "Why us",
+    "office": "Office",
+    "clients": "Clients",
+    "stepOf": "Step {n} / {total}",
+    "wholeTeam": "Whole team ({n})",
+    "allArticles": "All articles",
+    "moreArticles": "More articles",
+    "contact": "Phone or e-mail",
+    "contactPlaceholder": "+38 (0__) ___ __ __ or e-mail",
+    "successText": "An auditor will contact you during working hours.",
+    "ctaFallback": "How can we help?",
+    "readyTitle": "We are ready to help",
+    "readyText": "Send a request and an auditor will contact you during working hours.",
+    "principles": "Principles",
+    "requests": "Requests",
+    "firmWork": "Working with us",
+    "menu": "Menu"
   }
 }

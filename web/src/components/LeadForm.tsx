@@ -1,13 +1,14 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import { submitLead, type LeadState } from '@/app/actions';
 import type { Locale } from '@/i18n/config';
 import type { Dictionary } from '@/i18n/get-dictionary';
 import { t } from '@/i18n/format';
 import { cx } from '@/lib/format';
 import Spinner from './Spinner';
-import { btn, chip, field } from './ui';
+import { ChatDots, ChatRound, Mail, Phone, Telegram } from './Icons';
+import { btn, field } from './ui';
 
 type Props = {
   locale: Locale;
@@ -23,17 +24,25 @@ type Props = {
 
 const initial: LeadState = { ok: false };
 
+// Standalone recipe (not built on `chip`): icon-only square-ish buttons on phones, icon + label pills from sm.
+const channelBtn =
+  'inline-flex h-12 min-w-0 cursor-pointer items-center justify-center gap-2 rounded-full border border-line bg-card text-[15px] font-medium text-ink transition-[border-color,translate,scale,background-color,color,box-shadow] duration-300 ease-(--ease-out-expo) hover:-translate-y-0.5 hover:border-ink hover:shadow-[0_8px_20px_-12px_rgba(11,18,32,0.35)] active:scale-[0.97] active:duration-100 aria-pressed:border-ink aria-pressed:bg-ink aria-pressed:text-white aria-pressed:[&_svg]:stroke-current sm:h-11 sm:shrink-0 sm:pr-4 sm:pl-3.5';
+
 export default function LeadForm({ locale, dict, variant = 'estimate', serviceOptions = [], service, sourcePage, className }: Props) {
   const [state, action, pending] = useActionState(submitLead, initial);
   const [svc, setSvc] = useState(service ?? serviceOptions[0] ?? '');
   const [revenue, setRevenue] = useState(dict.revenue[1]);
   const [channel, setChannel] = useState('telegram');
+  const startedRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (startedRef.current) startedRef.current.value = String(Date.now());
+  }, []);
   const channels = [
-    { id: 'telegram', label: 'Telegram' },
-    { id: 'viber', label: 'Viber' },
-    { id: 'whatsapp', label: 'WhatsApp' },
-    { id: 'call', label: dict.call },
-    { id: 'email', label: dict.channelEmail },
+    { id: 'telegram', label: 'Telegram', icon: <Telegram size={20} /> },
+    { id: 'viber', label: 'Viber', icon: <ChatDots size={20} /> },
+    { id: 'whatsapp', label: 'WhatsApp', icon: <ChatRound size={20} /> },
+    { id: 'call', label: dict.call, icon: <Phone size={19} /> },
+    { id: 'email', label: dict.channelEmail, icon: <Mail size={20} /> },
   ];
   const isEstimate = variant === 'estimate';
   const shell = cx('flex min-w-0 flex-col gap-5 sm:gap-6', isEstimate && 'rounded-card bg-card p-5 sm:p-8', className);
@@ -73,6 +82,8 @@ export default function LeadForm({ locale, dict, variant = 'estimate', serviceOp
       <input type="hidden" name="channel" value={channel} />
       <input type="hidden" name="sourcePage" value={sourcePage} />
       <input type="hidden" name="locale" value={locale} />
+      {/* Filled after hydration: the server treats forms sent within a couple of seconds as bots (lib/lead.ts). */}
+      <input ref={startedRef} type="hidden" name="startedAt" defaultValue="" />
       <div aria-hidden="true" className="absolute -left-[9999px] size-px overflow-hidden">
         <label>{dict.honeypot}<input type="text" name="company_site" tabIndex={-1} autoComplete="off" /></label>
       </div>
@@ -80,9 +91,18 @@ export default function LeadForm({ locale, dict, variant = 'estimate', serviceOp
       {isEstimate && serviceOptions.length > 0 && (
         <fieldset className="min-w-0">
           <legend className="mb-2.5 text-sm font-semibold">{dict.q1}</legend>
-          <div className="flex flex-wrap gap-2">
+          {/* Same segmented panel as the revenue question below: an even 2-column grid (an odd last option spans both). */}
+          <div className="grid grid-cols-2 gap-1.5 rounded-2xl bg-bg p-1.5 [&>*:last-child:nth-child(odd)]:col-span-2">
             {serviceOptions.map((o) => (
-              <button key={o} type="button" className={chip} aria-pressed={svc === o} onClick={() => setSvc(o)}>{o}</button>
+              <button
+                key={o}
+                type="button"
+                aria-pressed={svc === o}
+                onClick={() => setSvc(o)}
+                className="flex min-h-12 min-w-0 cursor-pointer items-center justify-center rounded-xl px-2.5 py-2 text-center text-[13px] leading-tight font-semibold break-words text-ink/75 transition hover:text-ink aria-pressed:bg-white aria-pressed:text-ink aria-pressed:shadow-sm xs:text-sm"
+              >
+                {o}
+              </button>
             ))}
           </div>
         </fieldset>
@@ -98,7 +118,7 @@ export default function LeadForm({ locale, dict, variant = 'estimate', serviceOp
                 type="button"
                 aria-pressed={revenue === r}
                 onClick={() => setRevenue(r)}
-                className="h-11 cursor-pointer rounded-xl px-1 text-[13px] font-semibold transition aria-pressed:bg-white aria-pressed:shadow-sm xs:text-sm"
+                className="h-12 cursor-pointer rounded-xl px-1 text-[13px] font-semibold text-ink/75 transition hover:text-ink aria-pressed:bg-white aria-pressed:text-ink aria-pressed:shadow-sm xs:text-sm"
               >
                 {r}
               </button>
@@ -137,14 +157,22 @@ export default function LeadForm({ locale, dict, variant = 'estimate', serviceOp
 
       <fieldset className="min-w-0">
         <legend className="mb-2.5 text-sm font-semibold">{isEstimate ? dict.q3 : dict.where}</legend>
-        <div className="flex flex-wrap gap-2">
+        {/* Phones: five icon buttons in one row (names stay for screen readers, the chosen one is named below).
+            From sm: icon + name chips. */}
+        <div className="grid grid-cols-5 gap-2 sm:flex sm:flex-wrap">
           {channels.map((c) => (
-            <button key={c.id} type="button" className={chip} aria-pressed={channel === c.id} onClick={() => setChannel(c.id)}>{c.label}</button>
+            <button key={c.id} type="button" className={channelBtn} aria-pressed={channel === c.id} onClick={() => setChannel(c.id)} title={c.label}>
+              {c.icon}
+              <span className="max-sm:sr-only">{c.label}</span>
+            </button>
           ))}
         </div>
+        <p aria-hidden="true" className="mt-2 text-[13px] text-muted sm:hidden">{channels.find((c) => c.id === channel)?.label}</p>
       </fieldset>
 
-      {state.error && <div role="alert" className="animate-shake rounded-xl bg-danger-soft px-3.5 py-3 text-sm text-danger">{dict.errGeneric}</div>}
+      {(state.error || state.rateLimited) && (
+        <div role="alert" className="animate-shake rounded-xl bg-danger-soft px-3.5 py-3 text-sm text-danger">{state.rateLimited ? dict.errTooMany : dict.errGeneric}</div>
+      )}
 
       <button type="submit" disabled={pending} aria-busy={pending} className={cx(btn.accent, 'w-full disabled:cursor-wait disabled:opacity-90')}>
         {pending ? <><Spinner /> {dict.sending}</> : isEstimate ? dict.submit : dict.submitCompact}

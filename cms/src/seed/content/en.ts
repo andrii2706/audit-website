@@ -10,7 +10,7 @@ const en: SiteContent = {
     },
     consulting: {
       name: 'Consulting services',
-      intro: 'Strategic solutions for complex financial and tax challenges: we help you make the right management decisions and minimise risks.',
+      intro: 'We help owners and management make the right management decisions, minimise risks and build effective accounting models. Our expertise is your confidence in the growth of your business.',
     },
     legal: {
       name: 'Legal services',
@@ -60,13 +60,21 @@ const en: SiteContent = {
     },
     'nadannia-vpevnenosti': {
       title: 'Assurance engagements',
-      excerpt: 'Independent assurance engagements for Diia City and Defence City residents and auditor’s reports for regulators.',
+      excerpt: 'A separate area of our expertise: independent assurance engagements.',
       deliverables: [
-        'Diia City residents: verifying the reliability of initial and annual compliance reports',
-        'Defence City residents: verifying the reliability of reports of defence-industry companies',
-        'For regulators (AMCU, NSSMC and the NBU): official auditor’s reports confirming the property or financial position of individuals and legal entities and the legitimate origin of funds',
+        'Audit services for Diia City residents: verifying the reliability of initial and annual compliance reports',
+        'Audit services for Defence City residents: verifying the reliability of reports of defence-industry companies',
+        'Confirmation for regulators (AMCU, NSSMC and NBU): official auditor’s reports confirming the property/financial position of individuals and legal entities and the legitimate origin of funds',
       ],
-      body: [p('A separate area of our expertise is independent assurance engagements.')],
+      body: [],
+    },
+    'peredprodazhnyi-audyt': {
+      title: 'Pre-sale audit (due diligence)',
+      excerpt: 'A comprehensive review of the accounting, financial and tax risks before a company is bought or sold.',
+    },
+    'pidhotovka-do-e-audytu': {
+      title: 'Preparing for e-audit (SAF-T UA)',
+      excerpt: 'Technical and methodological support in preparing the standard audit file required by the State Tax Service.',
     },
     'audyt-neprybutkovykh-orhanizatsii': {
       title: 'Audit of non-profit organisations, including grant project reports',
@@ -176,49 +184,42 @@ const en: SiteContent = {
       role: 'Managing Partner',
       credential: 'Certified auditor · CAP · ACCA DipIFR',
       experience: '25+ years of experience',
-      bio: 'Certified auditor, CAP and ACCA DipIFR, with more than 25 years of experience across food production, wholesale and retail, construction and real-estate management, and services. Leads engagement teams auditing public-interest entities, non-resident companies, healthcare, consolidated group financial statements, and engagements on state grants and grants from foreign governments and international organisations. Works with young people to promote the auditing profession: open lectures and student internships at the firm.',
     },
     {
       name: 'Volodymyr Stelmakh',
       role: 'Deputy Director for Audit Methodology',
       credential: 'With the firm since 2012',
       experience: '20+ years of experience',
-      bio: 'More than 20 years in the profession and with Business Partners since 2012. Main industries: real-estate management, processing industry, professional stock-market participants and wholesale trade. A strong mentor and manager who trains and develops new staff, junior auditors and assistants.',
     },
     {
       name: 'Andrii Koval',
       role: 'Deputy Director for Legal Affairs and Financial Monitoring',
       credential: 'Attorney at law',
       experience: '40+ years of experience',
-      bio: 'More than 40 years of experience, 35 of them in senior positions. Listed in the Unified Register of Attorneys of Ukraine. Has worked at Business Partners since its foundation. Heads the legal practice, performs legal audits and is responsible for financial monitoring at the firm. An expert in commercial disputes and corporate law who advises on the formation, reorganisation and termination of companies and NGOs.',
     },
     {
       name: 'Liubov Shevchuk',
       role: 'Auditor',
       credential: 'Certified auditor · ACCA DipIFR',
       experience: '30+ years of experience',
-      bio: 'Certified auditor holding the ACCA DipIFR, with more than 30 years of experience, mostly as chief accountant, expert and auditor. Key client industries: extractive industry, wholesale and retail, processing industry and financial services.',
     },
     {
       name: 'Volodymyr Shyhanov',
       role: 'Auditor',
       credential: 'Certified auditor · CAP',
       experience: '25+ years of experience',
-      bio: 'Certified auditor, CAP, with more than 25 years of experience, including as chief accountant, inspector and auditor. Key client industries: NGOs and charities, IT and construction.',
     },
     {
       name: 'Nadiia Myronchuk',
       role: 'Auditor',
       credential: 'Certified auditor · CAP',
       experience: '20+ years of experience',
-      bio: 'Certified auditor, CAP, who passed the auditor qualification exam at the first attempt. More than 20 years in the profession. Key client industries: light and heavy industry, tolling arrangements and IT. Has in-depth expertise in analysing the comparability of financial indicators and testing the cost of products, works and services, as well as taxes and levies.',
     },
     {
       name: 'Olena Ustinova',
       role: 'Auditor',
       credential: 'Certified auditor · ACCA DipIFR',
       experience: '20+ years of experience',
-      bio: 'Certified auditor holding the ACCA DipIFR who passed the auditor qualification exam. More than 20 years in the profession. Key client industries: insurance and financial companies, construction, IT and extractive industry. Has in-depth expertise in applying IFRS, converting financial statements, testing revenue and expenses of extractive companies and the comparability of financial and non-financial indicators.',
     },
   ],
 
@@ -300,7 +301,7 @@ const en: SiteContent = {
     deadlineTitle: 'Review of initial and annual Diia City resident reports',
     trustTitle: 'Audits of public-interest entities',
     trustText: 'Section 4 of the Register of Auditors and Audit Entities',
-    servicesTitle: 'Audit, consulting and legal support',
+    servicesTitle: 'Audit services',
     audienceTitle: 'Who we work with',
     processTitle: 'How we work',
     processSteps: [
@@ -317,11 +318,13 @@ const en: SiteContent = {
     ],
     whyTitle: 'Why private and public clients, investors and lenders choose us',
     reasons: [
+      { title: '15+ years of experience', text: 'Deep expertise and time-tested solutions.' },
       { title: 'Impeccable reputation', text: 'Clients recognise us as an honest, principled partner and a provider of high-quality services.' },
       { title: 'Speed and flexibility', text: 'We respond quickly to market challenges and meet our clients’ needs fast.' },
       { title: 'Reasonable pricing', text: 'Strict compliance with international standards and high audit quality at a fair price.' },
       { title: 'Public interest', text: 'We perform statutory audits and other mandatory engagements for public-interest entities.' },
       { title: 'Confirmed quality', text: 'The quality of our audit services was confirmed by Order No. 36-кя of 22.06.2026 of the Audit Public Oversight Body following an external review.' },
+      { title: 'Optimal cost', text: 'We guarantee high-quality services, deadlines met and professional communication without overpaying.' },
     ],
     industriesTitle: 'Industries we work in',
     industries: [

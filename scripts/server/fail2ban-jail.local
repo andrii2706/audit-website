@@ -1,0 +1,16 @@
+# Installed by scripts/server/setup.sh as /etc/fail2ban/jail.d/bp-audit.local
+[DEFAULT]
+bantime  = 1h
+findtime = 10m
+maxretry = 5
+
+# Repeated failed SSH logins → the address is blocked for an hour.
+[sshd]
+enabled = true
+
+# Addresses that keep hitting the nginx rate limits (admin login, form spam, API floods) → blocked for an hour.
+[nginx-limit-req]
+enabled  = true
+port     = http,https
+logpath  = /var/log/nginx/error.log
+maxretry = 10

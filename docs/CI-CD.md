@@ -32,7 +32,7 @@ Then `PAGES_DEMO=1` switches `next.config.ts` to `output: 'export'` with the Pag
 
 | Event | What happens |
 | --- | --- |
-| Pull request to `main` / `staging` | **check** only: install, lint, build, type-check |
+| Pull request to `main` / `staging` | **check** only: install, lint, unit tests, build, type-check |
 | Push to `staging` | check → deploy to the **staging** environment |
 | Push to `main` | check → deploy to the **production** environment (or **staging**, see below) |
 | Actions → *CI / Deploy* → *Run workflow* | choose `staging` / `production` by hand, or `auto` (rules above) |
@@ -55,6 +55,10 @@ Tested end-to-end: a first deploy on an empty server, a redeploy over a live sit
 ---
 
 ## 1. First-time server setup (once per server)
+
+**Shortcut:** `scripts/server/setup.sh` does all of this section (plus nginx rate limits, fail2ban, automatic
+security updates, backups and the GitHub deploy key) in one run — see [HOSTING-UAHOSTING.md](HOSTING-UAHOSTING.md).
+The manual steps below are what it automates.
 
 Ubuntu 24.04, 4 GB RAM recommended. Run as root, then work as the `deploy` user.
 
@@ -92,6 +96,7 @@ node -e "console.log(require('crypto').randomBytes(24).toString('base64'))"
 HOST=127.0.0.1
 PORT=1337
 PUBLIC_URL=https://cms.bp-audit.com.ua
+SITE_URL=https://bp-audit.com.ua
 APP_KEYS="<4 random values, comma-separated>"
 API_TOKEN_SALT=<random>
 ADMIN_JWT_SECRET=<random>
@@ -109,7 +114,8 @@ DATABASE_FILENAME=.tmp/data.db
 
 ```ini
 STRAPI_URL=http://127.0.0.1:1337
-STRAPI_WEB_TOKEN=               # leave empty: the first deploy fills it in automatically
+STRAPI_PUBLIC_URL=https://cms.bp-audit.com.ua   # links to PDFs/images in visitors' browsers
+STRAPI_WEB_TOKEN=               # leave empty: the first deploy fills it in automatically (reads content, creates leads)
 REVALIDATE_SECRET=<same as cms.env>
 SITE_URL=https://bp-audit.com.ua
 NO_INDEX=
@@ -200,7 +206,7 @@ ssh-keyscan -H <server-ip>                            # output → SSH_KNOWN_HOS
 Recommended for `production`:
 - **Required reviewers.** Every production deploy waits for your click.
 - **Deployment branches:** `main` only.
-- A branch protection rule on `main` that requires the *Lint, build, type-check* check.
+- A branch protection rule on `main` that requires the *Lint, test, build, type-check* check.
 
 ## 4. Everyday flow
 

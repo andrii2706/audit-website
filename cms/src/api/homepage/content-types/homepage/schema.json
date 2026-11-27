@@ -59,6 +59,18 @@
         }
       }
     },
+    "heroVideo": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "videos"
+      ],
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    },
     "quickServices": {
       "type": "relation",
       "relation": "oneToMany",

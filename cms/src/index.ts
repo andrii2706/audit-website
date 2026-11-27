@@ -1,5 +1,6 @@
 import type { Core } from '@strapi/strapi';
-import { ensureEditorPermissions, ensureLeadListView, ensureOfficeLocation, ensureLocales, ensurePublicPermissions, ensureWebToken, importLegacyMedia, LOCALES, reseedIfRequested, seedIfEmpty, seedLegacyReports } from './seed';
+import { applyContentUpdates } from './seed/updates';
+import { ensureEditorPermissions, ensureAdminLabels, ensureLeadListView, ensureOfficeLocation, migrateLeadStage, ensureSecurityBaseline, ensureLocales, ensurePublicPermissions, ensureWebToken, importLegacyMedia, LOCALES, reseedIfRequested, seedIfEmpty, seedLegacyReports } from './seed';
 import { ensureNewsSamples } from './seed/news';
 
 /** Content types whose changes must refresh the website. */
@@ -56,9 +57,12 @@ export default {
     });
     await ensureLocales(strapi);
     await ensurePublicPermissions(strapi);
+    await ensureSecurityBaseline(strapi);
     await ensureWebToken(strapi);
     await ensureEditorPermissions(strapi);
+    await migrateLeadStage(strapi);
     await ensureLeadListView(strapi);
+    await ensureAdminLabels(strapi);
     await ensureOfficeLocation(strapi);
     // `npm run reseed` empties the site content first, so the seed below fills it again.
     const reseeded = await reseedIfRequested(strapi);
@@ -67,6 +71,9 @@ export default {
       await seedLegacyReports(strapi);
       await ensureNewsSamples(strapi, LOCALES);
     }
+    // One-time content changes for databases that were filled before (client requests, seed/updates.ts).
+    // A failed update is logged and retried on the next start; it never keeps the CMS from starting.
+    await applyContentUpdates(strapi).catch((err: Error) => strapi.log.error(`[content] update failed, will retry on the next start: ${err.message}`));
     await importLegacyMedia(strapi);
     // Reseeds and the data fixes above write to the database directly (no webhook), so refresh the site once after start.
     // Quiet: the website is often not running yet when the CMS starts.

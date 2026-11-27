@@ -1,10 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { JUMP_EVENT } from './concept/events';
 
 /**
- * "Back to top" button: appears after scrolling down a screen and a half, scrolls smoothly
- * (instantly under prefers-reduced-motion). Sits above the mobile action bar on phones.
+ * "Back to top" button: appears after scrolling down a screen and a half. It does not scroll the whole page back up —
+ * that would play every scroll scene on the way (the hero video, the story steps, the lit-up words) in reverse.
+ * Instead the page fades out for a moment, jumps to the top and fades back in; scroll scenes take their starting state
+ * at once (JUMP_EVENT, gsap.ts). Under prefers-reduced-motion it just jumps. Sits above the mobile action bar on phones.
  */
 export default function ScrollToTop({ label }: { label: string }) {
   const [visible, setVisible] = useState(false);
@@ -23,10 +26,22 @@ export default function ScrollToTop({ label }: { label: string }) {
     };
   }, []);
 
-  const toTop = () => {
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
-    document.getElementById('main')?.focus({ preventScroll: true });
+  const toTop = async () => {
+    const jump = () => {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      window.dispatchEvent(new Event(JUMP_EVENT));
+      document.getElementById('main')?.focus({ preventScroll: true });
+    };
+    const body = document.body;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || typeof body.animate !== 'function') {
+      jump();
+      return;
+    }
+    const out = body.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180, easing: 'ease-in', fill: 'forwards' });
+    await out.finished.catch(() => {});
+    jump();
+    body.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 320, easing: 'ease-out' });
+    out.cancel();
   };
 
   return (

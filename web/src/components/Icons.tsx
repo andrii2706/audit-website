@@ -17,6 +17,14 @@ export const Phone = ({ size = 18 }: P) => (
 export const Telegram = ({ size = 18, color = '#229ED9' }: P) => (
   <svg {...base(size)} stroke={color}><path d="M22 3L2 11l7 2 2 7 4-5 5 4z" /><path d="M9 13l13-10" /></svg>
 );
+/** Generic chat bubble (round) used for WhatsApp in the contact-channel picker; tinted, not the brand logo. */
+export const ChatRound = ({ size = 18, color = '#25D366' }: P) => (
+  <svg {...base(size)} stroke={color}><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.6L3 21l1.9-5.6A8.5 8.5 0 1 1 21 11.5z" /></svg>
+);
+/** Generic chat bubble with dots used for Viber in the contact-channel picker; tinted, not the brand logo. */
+export const ChatDots = ({ size = 18, color = '#7360F2' }: P) => (
+  <svg {...base(size)} stroke={color}><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-9l-5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" /><path d="M8 11h.01M12 11h.01M16 11h.01" strokeWidth={3} /></svg>
+);
 export const Shield = ({ size = 28, color = '#1A36D6' }: P) => (
   <svg {...base(size)} stroke={color}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="M9 12l2 2 4-4" /></svg>
 );

@@ -1,0 +1,13 @@
+/*
+ * Home hero (HomeHero.tsx): the state before JavaScript and the canvas are ready. Imported by the component; one class
+ * more specific than concept.css, so file order doesn't matter.
+ */
+@layer components {
+  @media (min-height: 500px) and (prefers-reduced-motion: no-preference) {
+    /* The white title over the picture shows only once the window has opened while scrolling (GSAP fades it in).
+       Hidden in CSS too, so it doesn't flash, cut off, in the small window before GSAP has started. */
+    .hero .media-title { opacity: 0; visibility: hidden; }
+  }
+  /* Until the canvas has drawn its first frame: the scene's own backdrop (same colours, globe.ts) instead of a black box. */
+  .hero .media { background: radial-gradient(circle farthest-corner at 50% 60%, var(--cv-1) 0%, var(--cv-2) 45%, var(--cv-3) 100%); }
+}

@@ -36,10 +36,11 @@ npm run build && npm run start
 cd web && npm install      # STRAPI_WEB_TOKEN is filled by the CMS on first start (dev)
 npm run dev          # http://localhost:3000
 npm run typecheck && npm run lint
+npm test             # vitest unit tests (also `npm test` in cms/)
 npm run build && npm start   # standalone server via scripts/start-standalone.mjs
 ```
 
-Always run `npm run typecheck`, `npm run lint` and `npm run build` in `web/` after changes. The build needs Strapi running to prerender pages (without it, pages render empty and are revalidated later).
+Always run `npm run typecheck`, `npm run lint`, `npm test` and `npm run build` in `web/` (and `npm test` in `cms/`) after changes. The build needs Strapi running to prerender pages (without it, pages render empty and are revalidated later).
 
 ## Next.js 16 specifics — read before writing code
 
@@ -49,6 +50,7 @@ This is **Next.js 16**; APIs differ from older versions you may know. Bundled do
 - Middleware is called **`proxy.ts`** (`web/src/proxy.ts`): redirects locale-less URLs using the `NEXT_LOCALE` cookie, then `Accept-Language`.
 - `revalidateTag(tag, { expire: 0 })` takes a second argument.
 - `app/[locale]/layout.tsx` is the **root layout**; the home page is `app/[locale]/(home)/page.tsx` (route group, URL unchanged) (renders `<html lang>`); there is no `app/layout.tsx`.
+- `turbopack.root` and `outputFileTracingRoot` are pinned to `web/` in `next.config.ts`: otherwise a stray `package-lock.json` higher up (e.g. in the Windows user folder) becomes the inferred root, the dev server watches `cms/` too and reloads the open pages on every Strapi database write.
 - `output: 'standalone'`; `agentRules: false` in `next.config.ts` stops Next from generating `AGENTS.md` — this file replaces it. Do not re-create AGENTS.md.
 
 ## Conventions
@@ -66,6 +68,18 @@ This is **Next.js 16**; APIs differ from older versions you may know. Bundled do
 - `<html>` and `<body>` carry `suppressHydrationWarning` because browser extensions (Grammarly etc.) inject attributes there.
 - Headings get `break-words hyphens-auto`: long Ukrainian words (e.g. «Висококваліфікована») overflow 320px screens otherwise.
 - Ancestors with `backdrop-filter`/`transform` trap `position: fixed` — render overlays through `createPortal(…, document.body)` (see `MobileMenu.tsx`).
+
+### Editorial design (fintexinc.com-style concept)
+- The public pages use the editorial design of the concept mockup: `web/src/app/concept.css` (plain CSS inside Tailwind's `components` layer, imported in the root layout after `globals.css`) + components in `web/src/components/concept/` (`SiteHeader`, `SiteFooter`, `HomeHero`, `Story`, `ScrollWords`, `Glyph`, `ConceptForm`, `ContactSection`, `ArticleView`, `parts.tsx`: `Label`, `PageHead`, `SvcCard`, `PostCard`, `PersonCard`, `FaqList`, `MapCard`, `Prose`).
+- Class names that Tailwind also generates are renamed in concept.css: `sblock`, `ulink`, `c-mt` / `c-mt-s` / `c-mt-lg`, `fine`, `c-right`, `c-center`. Don't add a concept class with a Tailwind utility's name.
+- **Palettes:** B (graphite, base `:root`), C (warm, `:root[data-palette="c"]`) and O (the client's current site: #0080FE, #303030, #4A4A4A, #656565, #A3A3A3, white + logo #4CB6DC / #3C8EC8; `components/concept/palette-original.css`, imported by `PaletteSwitcher.tsx`). `<html data-palette>` comes from `NEXT_PUBLIC_PALETTE` (default `b`); the demo `PaletteSwitcher` (hidden with `NEXT_PUBLIC_PALETTE_SWITCHER=0`) stores the choice in localStorage and an inline `beforeInteractive` script applies it before the first paint. The Tailwind colour tokens in `globals.css` point at the palette variables (`--color-ink: var(--ink)`…), so utilities follow the palette too. New colours: add a variable to both palettes.
+- **Light / dark theme:** `<html data-theme="light|dark">`. `ThemeBoot` (first in `<body>` of the root layout) runs an inline script before the first paint: the visitor's choice from localStorage `bp-theme`, else the device setting (`prefers-color-scheme`), which it keeps following until the visitor picks one. `ThemeToggle` (moon / sun button at the start of the header's `.bar-end`, also on phones) switches and stores it. Dark colours of all three palettes and the dark-only overrides live in `components/concept/theme-dark.css` (imported by `ThemeToggle.tsx`): in the dark theme `--ink` is the light text colour, so blocks that used `--ink` as a dark background (footer, «why us», map card, dark cards, the wide deliverable card) use `--surface-dark` / `--surface-wide`, hover cards `--surface-raise`, white-on-colour fills `--fill`, the main button `--on-cta`; pressed controls turn light-on-dark. A new component that puts `--ink` behind text needs a dark-theme rule there. Tailwind `bg-ink` in older components = dark surface (rule outside the layer).
+- **Motion:** GSAP + ScrollTrigger from npm (`components/concept/gsap.ts`, registered once; no CDN, CSP unchanged). Pinned scenes (`HomeHero`, `Story`) run under `PIN` = any width with a window ≥ 500px tall and motion allowed; otherwise the same markup flows normally. `Story` pins only when the whole block fits under the header. The hero picture is the video uploaded in Strapi (Homepage `heroVideo`, not localized; CSP `media-src` allows the CMS origins; the shipped default `cms/seed-assets/hero-signing.mp4`, Pexels licence, is attached by the content update `2026-11-27-hero-video` when the field is empty) or, without one, a canvas globe (`globe.ts`, colours from `--cv-*`); either plays only while visible.
+- Rich text in the editorial pages: `<Prose content={…} />` (renders `Blocks` with `bare`, styled by `.prose`).
+- Forms: `ConceptForm` (compact: name + one "phone or e-mail" field; full (`estimate`, home `#contact`, service pages, `/request`): service area, **client type** (`clientType` = legal / individual, replaced the revenue question on 27.11.2026; `revenue` stays in the Lead schema for old leads), an optional short question (`comment`), phone and/or e-mail, where to answer; three steps on phones). Everything goes to the same `submitLead` action and `lib/lead.ts` validation. Form texts missing from a dictionary fall back to built-in uk/en texts in the component.
+- Request block (`ContactSection`, home `#contact`, audiences): `CtaArt` draws concentric arcs in the empty lower-left corner (design 27.11, variant C; `cta-art.css`, from 1024px, accent colour in the light theme, lime in the dark one).
+- Service pages: «what you get» items written as «Title: text» become cards (`lib/deliverables.ts` + `DeliverableCards.tsx`), otherwise a bullet list.
+- The previous UI components (`Header`, `Footer`, `sections.tsx`, most of `bits.tsx`, `LeadForm`, `MapEmbed`, `AudienceTabs`, `MobileActionBar`, `NavLinks`, `ScrollHeader`) are no longer used by pages; `LeadForm`, `MapEmbed`, `Blocks`, `ContentProtection` keep their unit tests. Route skeletons (`loading.tsx`) still use the Tailwind layout (colours follow the palette).
 
 ### Motion & loading states
 - **Curves:** use the tokens in `globals.css` (`--ease-out-expo` everywhere, `--ease-spring` for pops). Tailwind: `ease-(--ease-out-expo)`.
@@ -111,6 +125,7 @@ This is **Next.js 16**; APIs differ from older versions you may know. Bundled do
 
 ### Data / CMS
 - Content types: `cms/src/api/*/content-types/*/schema.json`; shared components: `cms/src/components/shared`.
+- **Content changes for existing databases** (the seed only fills an empty DB): add an entry to `CONTENT_UPDATES` in `cms/src/seed/updates.ts`. Each runs once per database (done ids in the core store `bp` / `content-updates`), after the seed; a failing update is logged and retried on the next start. Change the seed files too, so new databases get the same content.
 - Seed: `cms/src/seed/structure.ts` (slugs, categories, ordering, contacts — language-independent) + `cms/src/seed/content/{uk,en}.ts` (texts from the client brief, typed by `content/types.ts`). Seeding runs only on an empty DB (`SEED_ON_EMPTY`); `RESEED_CONTENT=true` (`npm run reseed`) deletes the seeded types first. Strapi limits: `seo.metaTitle` ≤ 70, `metaDescription` ≤ 170 characters.
 - Pages backed by single types: home (`homepage`), about (`about-page`), career (`career-page`, plus `vacancy` collection; the quality-system text `about-page.quality` is shown on the career page at `#quality`). Reports page: `transparency-report` (year, title, file, `isCorrection`, `publishedOn`) — corrected versions are separate entries, originals stay published.
 - Content from the client's **old site** (bp-audit.com.ua, Joomla): structure in `cms/src/seed/legacy.ts`, texts copied **word for word** in `cms/src/seed/old-site/{uk,en}.ts` (written as simple Markdown, converted by `seed/md.ts`; same text as the Claude Doc «Тексти старого сайту bp-audit.com.ua») — extra services (incl. «Консалтинг» = `biznes-konsaltynh`), old publications (publishedAt kept at 2018-10-02), client logos, certificate/recommendation scans (`api::document-image.document-image`, About page galleries — only entries with an image are shown), transparency reports 2019–2025 incl. corrected versions and balance sheets (`docType`), requisites (EDRPOU 37741155, register No. 4463), quality policy. Files are referenced by `sourceUrl`; `npm run import-media` (cms) downloads them into the media library (needs internet; `IMPORT_MEDIA_BASE` overrides the origin). Reports are seeded once, only when none exist.
@@ -120,21 +135,40 @@ This is **Next.js 16**; APIs differ from older versions you may know. Bundled do
 - Logo: `components/BrandMark.tsx` (inline SVG, also used by favicons and OG images) is a temporary redraw; replace it with the client's vector original.
 - Strapi writes trigger `POST /api/revalidate` on the web app (`cms/src/index.ts` → `web/src/app/api/revalidate/route.ts`), secured by `REVALIDATE_SECRET`. Direct database writes (reseed, `ensure*` fixes) don't pass that middleware, so the CMS also pings it once after every start. In `next dev` CMS requests are not cached at all (`revalidate: 0`); in production they are cached for `REVALIDATE_SECONDS` (1 h) — and that cache survives restarts in `.next/cache`.
 - Leads: server action `web/src/app/actions.ts`. The client must give a phone **or** an e-mail. The lead goes to:
-  - Strapi `Lead`, via the create-only API token;
+  - Strapi `Lead`, via the website API token (it may create leads but never read them);
   - e-mail via `lib/mail.ts` (nodemailer, SMTP env): a notification to the company (Reply-To = client) and a localized confirmation to the client;
   - optionally Telegram.
 
-  It counts as delivered if Strapi **or** e-mail succeeded. The Public role can read content but never leads.
-- Content protection: Strapi `global.protection` (component `shared.content-protection`, all on by default, missing = all on) → `lib/protection.ts`. `<html data-protect="copy menu images print keys contacts">` drives CSS (globals.css: `user-select`, image drag, print notice) and `components/ContentProtection.tsx` (copy/cut/contextmenu/dragstart/shortcut listeners; form fields, `[data-allow-copy]` and tel/mailto links stay copyable). `robots.ts` adds AI crawlers (`AI_CRAWLERS`) when `blockAiCrawlers`; layout adds `noai` + `tdm-reservation` meta. Security headers (frame-ancestors, nosniff, tdm-reservation) in `next.config.ts` (not in the Pages demo).
-- CMS bootstrap also: `ensureEditorPermissions` (Editor role gets Content Manager access to every `api::` type, adding only missing permissions) and `ensureLeadListView` (Заявка list newest first, useful columns; applied once).
+  It counts as delivered if Strapi **or** e-mail succeeded. The validation errors come before the minimum-fill-time check, so an instant empty submit shows errors, never a fake "thank you".
+- **Closed content API:** the Public role has no read access (`ensurePublicPermissions` removes it on every start unless `PUBLIC_CONTENT_API=true`) and nginx returns 403 for `/api/` on the CMS host. `lib/strapi.ts` sends `Authorization: Bearer STRAPI_WEB_TOKEN` on every read; the token «web-site» = `WEB_TOKEN_PERMISSIONS` (find/findOne of site types + `lead.create`), synced on every start by `ensureWebToken`. When you add a content type the site reads, add it to `SITE_READ` in `cms/src/seed/index.ts`. `STRAPI_URL` = internal address (data), `STRAPI_PUBLIC_URL` = address in visitors' browsers (`mediaUrl`).
+- Content protection: Strapi `global.protection` (component `shared.content-protection`, all on by default, missing = all on) → `lib/protection.ts`. `<html data-protect="copy menu images print keys contacts">` drives CSS (globals.css: `user-select`, image drag, print notice) and `components/ContentProtection.tsx` (copy/cut/contextmenu/dragstart/shortcut listeners; form fields, `[data-allow-copy]` and tel/mailto links stay copyable). `robots.ts` adds AI crawlers (`AI_CRAWLERS`) when `blockAiCrawlers`; layout adds `noai` + `tdm-reservation` meta; `proxy.ts` answers 403 to AI crawlers, scraping tools and empty User-Agents (`lib/bots.ts`; only GET from non-local IPs, i.e. through nginx; setting cached 5 min; `BLOCK_BOTS=false` disables). With copying allowed, `ContentProtection` appends «Джерело: URL» to long copies. Certificate/letter scans go through `/api/document/[id]` (watermark by `lib/watermark.ts`, sharp; `documentImageUrl()`; toggle `watermarkDocuments`); the Pages demo uses the originals. Security headers (CSP, frame-ancestors, HSTS on https, COOP, nosniff, Permissions-Policy, tdm-reservation) in `next.config.ts` (not in the Pages demo).
+- CMS bootstrap also: `ensureEditorPermissions` (Editor role gets Content Manager access to every `api::` type, adding only missing permissions), `ensureLeadListView` (Заявка list newest first, useful columns incl. `stage`; applied once per version marker `bpLeadView`) and `ensureAdminLabels` (Ukrainian field labels + help texts from `seed/admin-labels.ts`; only replaces raw field names or labels listed in `PREVIOUS_LABELS`, so admin edits stay). Every new schema field needs an entry in `ADMIN_LABELS` (a test enforces it). The admin UI offers Ukrainian (`src/admin/app.tsx`).
+- Lead processing state is `stage` (new / in_progress / done / spam). Never name a field `status`: Strapi 5 reserves it (draft/published) and the admin can't show it. Rename migrations live in `cms/database/migrations/` (run before the schema sync).
 - `npm run check-mail` (web) tests SMTP and sends a test e-mail. The Pages demo form shows «Демо-версія: заявку не надіслано» (no server there).
 - Strapi drops `?status=draft` on anonymous API requests (`cms/src/index.ts`), so unpublished content never leaks.
 - **Do not invent client facts** (registry numbers, prices, people, reviews). Unknown values stay as visible placeholders the client fills in Strapi.
 
+## Tests
+
+- **Unit + component** (Vitest): `web/tests/*.test.ts` (Node) and `*.test.tsx` (`// @vitest-environment jsdom`, Testing Library); alias `@` → `src`, `server-only` aliased to a stub; `STRAPI_URL=http://cms.test` in tests. `npm run test:coverage` enforces 90 % lines / 85 % branches on `src/lib`, `proxy.ts`, API routes and the tested components (CI runs it). `cms/tests/*.test.ts` (excluded from the Strapi tsconfig/build) with fake `strapi` objects.
+- **End-to-end** (Playwright 1.63, pinned to the preinstalled browser build): `web/e2e/*.spec.ts`, desktop + Pixel 7, against a running production build + CMS (`E2E_BASE_URL`, `E2E_CMS_URL`). CI job `e2e` starts both from scratch; deploys wait for it. Bot tests send `x-real-ip` to look like an outside visitor.
+- Covered: lead parsing/validation (`lib/lead.ts`), rate limiter + client IP (`lib/rate-limit.ts`), secret compare, SEO helpers, phone/format helpers, content protection settings, dictionary parity (uk = en keys and placeholders; plural objects may differ), legacy redirects (unique, targets exist in the seed), locale detection + bot blocking in `proxy.ts`, `lib/bots.ts`, watermark, data layer (`lib/strapi.ts` with mocked fetch), server action `submitLead`, API routes, components (`ContentProtection`, `Blocks`, `LeadForm`, `MapEmbed`); CMS: `md()`, seed integrity (slugs, both languages, team, reports, SEO title ≤ 70), middleware/admin security config, `ensureSecurityBaseline`, public permissions + website token, `ensureOfficeLocation`, admin labels, migrations, nginx/setup.sh guards.
+- New pure helpers get a test; keep server-only code (`'use server'` files) thin and move logic into testable modules.
+
+## Security
+
+Full list with file locations: `docs/SECURITY.md`. When changing related code keep these invariants:
+- `web/next.config.ts` CSP: add an origin only when a feature needs it (images from the CMS, frames from Google Maps). No third-party scripts.
+- Lead form: honeypot + `startedAt` minimum fill time + `leadLimiter`/`leadGlobalLimiter`; all field cleaning in `lib/lead.ts`. The demo (`web/demo/actions.ts`) reuses `parseLead`.
+- `/api/revalidate`: `secretMatches()` + blocked in nginx.
+- CMS: `ensureSecurityBaseline` (no public sign-up, no public lead permissions) and `ensurePublicPermissions` (content API closed) run on every start; no `strapi::poweredBy`; CORS from `PUBLIC_URL` + `SITE_URL` (or `CORS_ORIGINS`); admin login rate limit in `config/admin.ts`.
+- Server: `scripts/server/` (setup.sh, nginx templates with rate limits incl. page GETs, `/api/` closed on the CMS host, hotlink protection, `X-Real-IP`, fail2ban, backup). `valid_referers` must not repeat a name already in `server_names` (nginx refuses to start). The app trusts `X-Real-IP`/last `X-Forwarded-For` hop for rate limiting, so nginx must stay in front.
+- CMS dependencies: Strapi 5.61.0 with `overrides` for `nodemailer` and `zod@^4` (security fixes). Re-run `npm audit --omit=dev` after upgrades.
+
 ## CI/CD
 
 - `.github/workflows/deploy.yml`:
-  - every PR runs lint + build + type-check;
+  - every PR runs lint + unit/component tests with coverage + build + type-check, then the Playwright e2e job;
   - a push to `staging` / `main` rsyncs the code to the VPS and runs `scripts/server-deploy.sh`.
 - `scripts/server-deploy.sh` builds in `releases/<id>`, health-checks, rolls back on failure, and links secrets/data from `shared/`.
 - What is uploaded is controlled by `.deployignore`. Setup: `docs/CI-CD.md`.

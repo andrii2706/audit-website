@@ -8,7 +8,7 @@ export type SiteContent = {
   steps: { title: string; text: string }[];
   services: Record<string, { title: string; excerpt: string; badge?: string; tags?: string[]; deliverables?: string[]; body?: Block[] }>;
   audiences: { label: string; title: string; description: string }[];
-  team: { name: string; role: string; credential: string; experience: string; bio: string }[];
+  team: { name: string; role: string; credential: string; experience: string; bio?: string }[];
   faqs: { q: string; a: string }[];
   articles: Record<string, { title: string; kind: string; excerpt: string; content: Block[] }>;
   global: {

@@ -1,0 +1,8 @@
+/* Logo strip controlled by LogoMarquee.tsx (drag / swipe / trackpad / ←→). One class more specific than concept.css. */
+@layer components {
+  .marquee.is-live { cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+  .marquee.is-live .marquee-track { animation: none; will-change: transform; }
+  .marquee.is-dragging { cursor: grabbing; }
+  .marquee.is-live img { -webkit-user-drag: none; pointer-events: none; }
+  .marquee:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 20px; }
+}

@@ -15,7 +15,6 @@ export const LEGACY_SITE = 'https://bp-audit.com.ua';
 /** Services that exist on the old site but not in the brief. Inserted after the last service of their category. */
 export const newServices: { slug: string; cat: CategoryKey }[] = [
   { slug: 'audyt-dlia-nktspfr', cat: 'audit' },
-  { slug: 'bukhhalterske-obsluhovuvannia', cat: 'consulting' },
   { slug: 'rozrobka-biznes-planiv', cat: 'consulting' },
   { slug: 'kompleksnyi-analiz-diialnosti', cat: 'consulting' },
   { slug: 'biznes-konsaltynh', cat: 'consulting' },

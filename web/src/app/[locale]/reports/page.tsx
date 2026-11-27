@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { JsonLd, PageHero } from '@/components/bits';
-import { Download, FileText } from '@/components/Icons';
-import { badge, container } from '@/components/ui';
+import Glyph from '@/components/concept/Glyph';
+import { Arrow, PageHead } from '@/components/concept/parts';
 import { isLocale } from '@/i18n/config';
 import { t } from '@/i18n/format';
 import { getDictionary } from '@/i18n/get-dictionary';
-import { cx, formatDate } from '@/lib/format';
-import { breadcrumbLd, buildMetadata, pageUrl } from '@/lib/seo';
+import { trail } from '@/lib/breadcrumbs';
+import { formatDate } from '@/lib/format';
+import { buildMetadata } from '@/lib/seo';
 import { getTransparencyReports, mediaUrl, type TransparencyReport } from '@/lib/strapi';
 
 export const revalidate = 3600;
@@ -37,58 +37,44 @@ export default async function ReportsPage({ params }: Props) {
 
   return (
     <>
-      <PageHero
-        crumbLabel={dict.nav.breadcrumbs}
-        crumbs={[{ name: dict.nav.home, href: `/${locale}` }, { name: dict.nav.reports }]}
-        title={p.reportsTitle}
-        intro={p.reportsIntro}
-      />
-      <section className={`${container} pb-16 sm:pb-24`}>
-        {years.size === 0 ? (
-          <div data-reveal className="flex items-center gap-4 rounded-card border border-dashed border-line-strong bg-card p-6 text-muted sm:p-8">
-            <FileText />
-            <p className="text-base sm:text-lg">{p.reportsEmpty}</p>
-          </div>
-        ) : (
-          <ol data-stagger className="flex flex-col gap-3">
-            {[...years].map(([year, items]) => (
-              <li key={year} className="grid gap-4 rounded-card border border-line bg-card p-5 sm:grid-cols-[140px_minmax(0,1fr)] sm:items-start sm:gap-6 sm:p-6">
-                <b className="font-mono text-[34px] leading-none font-semibold tracking-tight sm:pt-3 sm:text-[40px]">{year}</b>
-                <ul className="flex flex-col gap-2.5">
+      <PageHead locale={locale} crumbs={trail(dict, 'reports')} crumbsLabel={dict.nav.breadcrumbs} title={p.reportsTitle} intro={p.reportsIntro} />
+      <section className="section section-tight">
+        <div className="wrap">
+          {years.size === 0 ? (
+            <div className="empty">
+              <Glyph i={6} className="empty-glyph" />
+              <p>{p.reportsEmpty}</p>
+            </div>
+          ) : (
+            [...years].map(([year, items]) => (
+              <div key={year} className="year">
+                <h2 className="display year-n">{year}</h2>
+                <ul className="reps">
                   {items.map((r) => {
                     const url = mediaUrl(r.file ?? null);
-                    const meta = [r.publishedOn && t(p.reportsPublished, { date: formatDate(r.publishedOn, locale) }), r.file?.ext?.replace('.', '').toUpperCase(), fileSize(r.file?.size)].filter(Boolean).join(' · ');
+                    const meta = [r.publishedOn && t(p.reportsPublished, { date: formatDate(r.publishedOn, locale) }), fileSize(r.file?.size)].filter(Boolean).join(' · ');
+                    const tag = r.docType === 'balance' ? p.reportsBalance : r.isCorrection ? p.reportsCorrection : p.reportsOriginal;
                     return (
-                      <li key={r.documentId} className={cx('flex flex-wrap items-center gap-x-5 gap-y-3 rounded-tile p-4 sm:p-5', r.isCorrection ? 'border border-line' : 'bg-bg')}>
-                        <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-accent-ink"><FileText size={20} /></span>
-                        <div className="flex min-w-0 flex-[1_1_240px] flex-col gap-1.5">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-semibold">{r.title || t(p.reportsYear, { year })}</span>
-                            {r.docType === 'balance' ? (
-                              <span className={badge.accent}>{p.reportsBalance}</span>
-                            ) : (
-                              <span className={r.isCorrection ? badge.lime : badge.accent}>{r.isCorrection ? p.reportsCorrection : p.reportsOriginal}</span>
-                            )}
-                          </div>
-                          {(meta || r.note) && <span className="text-sm text-muted">{[meta, r.note].filter(Boolean).join(' — ')}</span>}
+                      <li key={r.documentId} className="rep">
+                        <span className="rep-ic" aria-hidden="true">{r.file?.ext?.replace('.', '').toUpperCase() || 'PDF'}</span>
+                        <div>
+                          <p className="rep-t">{r.title || t(p.reportsYear, { year })} <span className={`badge${r.isCorrection ? ' badge-lime' : r.docType === 'balance' ? ' badge-soft' : ''}`}>{tag}</span></p>
+                          {(meta || r.note) && <p className="muted small-t">{[meta, r.note].filter(Boolean).join(' — ')}</p>}
                         </div>
                         {url ? (
-                          <a href={url} target="_blank" rel="noopener noreferrer" download className="inline-flex h-11 shrink-0 cursor-pointer items-center gap-2 rounded-full border border-ink px-4 text-[15px] font-semibold transition-colors hover:bg-ink hover:text-white">
-                            <Download /> {p.reportsDownload}
-                          </a>
+                          <a className="btn btn-ghost" href={url} target="_blank" rel="noopener noreferrer" download>{p.reportsDownload} <Arrow /></a>
                         ) : (
-                          <span className="text-sm text-muted">{p.reportsNoFile}</span>
+                          <span className="muted small-t">{p.reportsNoFile}</span>
                         )}
                       </li>
                     );
                   })}
                 </ul>
-              </li>
-            ))}
-          </ol>
-        )}
+              </div>
+            ))
+          )}
+        </div>
       </section>
-      <JsonLd data={breadcrumbLd([{ name: dict.nav.home, url: pageUrl(locale) }, { name: dict.nav.reports, url: pageUrl(locale, '/reports') }])} />
     </>
   );
 }

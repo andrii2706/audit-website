@@ -1,11 +1,14 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { JsonLd, NewsCard, PageHero } from '@/components/bits';
-import { container } from '@/components/ui';
+import { JsonLd } from '@/components/bits';
+import Glyph from '@/components/concept/Glyph';
+import { PageHead, PostCard } from '@/components/concept/parts';
 import { isLocale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
-import { breadcrumbLd, buildMetadata, pageUrl } from '@/lib/seo';
-import { getNews } from '@/lib/strapi';
+import { trail } from '@/lib/breadcrumbs';
+import { formatDate } from '@/lib/format';
+import { buildMetadata, pageUrl } from '@/lib/seo';
+import { getNews, mediaUrl } from '@/lib/strapi';
 
 export const revalidate = 3600;
 type Props = { params: Promise<{ locale: string }> };
@@ -23,39 +26,40 @@ export default async function NewsPage({ params }: Props) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const [dict, news] = await Promise.all([getDictionary(locale), getNews(locale)]);
-  const [first, ...rest] = news;
-  const labels = { pinned: dict.pages.newsPinned, more: dict.common.details };
 
   return (
     <>
-      <PageHero
-        crumbLabel={dict.nav.breadcrumbs}
-        crumbs={[{ name: dict.nav.home, href: `/${locale}` }, { name: dict.nav.news }]}
-        title={dict.pages.newsTitle}
-        intro={dict.pages.newsIntro}
-      >
-        <a href={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/${locale}/news/rss.xml`} className="mt-5 inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-muted hover:text-accent">
-          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="19" r="2.2" /><path d="M3 10.5v3a7.5 7.5 0 0 1 7.5 7.5h3A10.5 10.5 0 0 0 3 10.5Zm0-6v3A13.5 13.5 0 0 1 16.5 21h3A16.5 16.5 0 0 0 3 4.5Z" /></svg>
-          {dict.pages.newsRss}
-        </a>
-      </PageHero>
+      <PageHead locale={locale} crumbs={trail(dict, 'news')} crumbsLabel={dict.nav.breadcrumbs} title={dict.pages.newsTitle} intro={dict.pages.newsIntro}>
+        <p className="c-mt-s">
+          <a className="mono muted" href={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/${locale}/news/rss.xml`}>RSS · {dict.pages.newsRss}</a>
+        </p>
+      </PageHead>
+      <section className="section section-tight">
+        <div className="wrap">
+          {news.length ? (
+            <ul className="posts">
+              {news.map((n, i) => (
+                <PostCard
+                  key={n.documentId}
+                  href={`/${locale}/news/${n.slug}`}
+                  i={i}
+                  kicker={n.pinned ? dict.pages.newsPinned : n.tag}
+                  meta={[formatDate(n.date, locale), n.pinned && n.tag].filter(Boolean).join(' · ')}
+                  title={n.title}
+                  excerpt={n.excerpt}
+                  cover={mediaUrl(n.cover ?? null)}
+                />
+              ))}
+            </ul>
+          ) : (
+            <div className="empty">
+              <Glyph i={6} className="empty-glyph" />
+              <p>{dict.pages.newsEmpty}</p>
+            </div>
+          )}
+        </div>
+      </section>
 
-      <div className={`${container} flex flex-col gap-3 pb-16 sm:pb-24`}>
-        {first ? (
-          <>
-            <NewsCard locale={locale} n={first} labels={labels} featured />
-            {rest.length > 0 && (
-              <div data-stagger className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {rest.map((n) => <NewsCard key={n.documentId} locale={locale} n={n} labels={labels} />)}
-              </div>
-            )}
-          </>
-        ) : (
-          <p className="rounded-card border border-dashed border-line-strong bg-card px-6 py-12 text-center text-lg text-muted">{dict.pages.newsEmpty}</p>
-        )}
-      </div>
-
-      <JsonLd data={breadcrumbLd([{ name: dict.nav.home, url: pageUrl(locale) }, { name: dict.nav.news, url: pageUrl(locale, '/news') }])} />
       {news.length > 0 && (
         <JsonLd
           data={{

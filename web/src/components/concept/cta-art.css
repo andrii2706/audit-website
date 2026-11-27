@@ -1,0 +1,13 @@
+/*
+ * Line art of the request block (CtaArt.tsx, approved design 27.11, variant C). Imported by the component, so it
+ * ships with it. Same cascade layer as concept.css; the rules that change `.cta` are one class more specific.
+ */
+@layer components {
+  .cta:has(> .cta-art) { position: relative; overflow: hidden; isolation: isolate; }
+  .cta:has(> .cta-art) > :not(.cta-art) { position: relative; z-index: 1; }
+  .cta .cta-art { position: absolute; left: 0; bottom: 0; z-index: 0; width: min(560px, 46%); height: auto; color: var(--accent); opacity: .3; pointer-events: none; }
+  .cta .cta-art path, .cta .cta-art line { vector-effect: non-scaling-stroke; }
+  :root[data-theme="dark"] .cta .cta-art { color: var(--lime); opacity: .5; }
+  /* Below 1024px the form takes the full width: no empty corner to fill. */
+  @media (max-width: 1023px) { .cta .cta-art { display: none; } }
+}

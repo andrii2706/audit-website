@@ -18,12 +18,30 @@ type Node = {
   children?: Node[];
 };
 
+/**
+ * Links typed by editors: only http(s), mailto, tel, site-relative paths and #anchors are kept.
+ * Anything else (javascript:, data:, vbscript: …) is dropped, so a compromised editor account can't plant scripts.
+ */
+export function safeHref(url: string | undefined): string | undefined {
+  const u = (url ?? '').trim();
+  // Browsers ignore tabs, newlines and control characters inside a scheme ("java\nscript:"), so check without them.
+  const plain = u.replace(/[\u0000-\u0020\u007f-\u009f]/g, '');
+  if (!plain) return undefined;
+  if (/^(https?:|mailto:|tel:)/i.test(plain)) return u;
+  if (/^[\\/]{2}/.test(plain)) return undefined;
+  if (/^(\/|#|\?)/.test(plain)) return u;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(plain)) return undefined;
+  return u;
+}
+
 function renderInline(nodes: Node[] = []): ReactNode[] {
   return nodes.map((n, i) => {
     if (n.type === 'link') {
-      const external = n.url?.startsWith('http');
+      const href = safeHref(n.url);
+      if (!href) return <span key={i}>{renderInline(n.children)}</span>;
+      const external = /^https?:/i.test(href);
       return (
-        <a key={i} href={n.url} className="cursor-pointer" {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
+        <a key={i} href={href} className="cursor-pointer" {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
           {renderInline(n.children)}
         </a>
       );
@@ -67,7 +85,9 @@ function renderBlock(n: Node, i: number): ReactNode {
   }
 }
 
-export default function Blocks({ content }: { content?: BlocksData }) {
+/** `bare`: render the blocks without the `prose-content` wrapper (the caller styles them, e.g. concept `.prose`). */
+export default function Blocks({ content, bare = false }: { content?: BlocksData; bare?: boolean }) {
   if (!content?.length) return null;
-  return <div className="prose-content">{(content as Node[]).map(renderBlock)}</div>;
+  const nodes = (content as Node[]).map(renderBlock);
+  return bare ? <>{nodes}</> : <div className="prose-content">{nodes}</div>;
 }

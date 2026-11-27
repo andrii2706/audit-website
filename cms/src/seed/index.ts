@@ -7,8 +7,11 @@ import uk from './content/uk';
 import en from './content/en';
 import * as legacy from './legacy';
 import { seoFor } from './seo';
+import { allServices } from './services-order';
+import { ADMIN_LABELS, PREVIOUS_LABELS } from './admin-labels';
 
-const PUBLIC_READ: Record<string, string[]> = {
+/** Site content the website reads (published entries only). */
+const SITE_READ: Record<string, string[]> = {
   'api::service-category.service-category': ['find', 'findOne'],
   'api::service.service': ['find', 'findOne'],
   'api::audience.audience': ['find', 'findOne'],
@@ -26,7 +29,6 @@ const PUBLIC_READ: Record<string, string[]> = {
   'api::homepage.homepage': ['find'],
 };
 
-/** Grants the Public role read access to site content (leads are never readable). */
 /** Office points this project shipped before (wrong brief longitude, then the company's Maps place). */
 const OLD_MAP_QUERIES = ['49.8525392,24.02329', '49.8525358,24.0258649', '49.8521722,24.0259265'];
 
@@ -44,6 +46,22 @@ export async function ensureOfficeLocation(strapi: Core.Strapi) {
 }
 
 /**
+ * The lead field `status` was renamed to `stage` (Strapi 5 reserves `status`). The values are carried over by
+ * database/migrations/2026.11.08T00.00.00.lead-status-to-stage.js before the schema sync; this only covers a
+ * database that still has the old column, and gives leads without a stage the default «new».
+ */
+export async function migrateLeadStage(strapi: Core.Strapi) {
+  const knex = strapi.db.connection;
+  const table = 'leads';
+  if (!(await knex.schema.hasTable(table)) || !(await knex.schema.hasColumn(table, 'stage'))) return;
+  if (await knex.schema.hasColumn(table, 'status')) {
+    const copied = await knex(table).whereNull('stage').whereNotNull('status').update({ stage: knex.ref('status') });
+    if (copied) strapi.log.info(`[leads] Copied ${copied} lead status value(s) to «stage»`);
+  }
+  await knex(table).whereNull('stage').update({ stage: 'new' });
+}
+
+/**
  * «Заявки» list in the admin: newest first, with the columns a manager needs. Applied once (marker in the settings),
  * so later changes made in the admin («View settings») are kept.
  */
@@ -51,10 +69,53 @@ export async function ensureLeadListView(strapi: Core.Strapi) {
   const store = strapi.store({ type: 'plugin', name: 'content_manager' });
   const key = 'configuration_content_types::api::lead.lead';
   const conf = (await store.get({ key })) as any;
-  if (!conf || (conf.settings?.bpLeadView ?? 0) >= 2) return;
-  conf.settings = { ...conf.settings, defaultSortBy: 'createdAt', defaultSortOrder: 'DESC', pageSize: 20, bpLeadView: 2 };
-  conf.layouts = { ...conf.layouts, list: ['name', 'phone', 'email', 'service', 'createdAt'] };
+  if (!conf || (conf.settings?.bpLeadView ?? 0) >= 4) return;
+  conf.settings = { ...conf.settings, defaultSortBy: 'createdAt', defaultSortOrder: 'DESC', pageSize: 20, bpLeadView: 4 };
+  conf.layouts = { ...conf.layouts, list: ['name', 'phone', 'email', 'service', 'clientType', 'stage', 'createdAt'] };
   await store.set({ key, value: conf });
+}
+
+/**
+ * Ukrainian labels + help texts in the Content Manager (seed/admin-labels.ts). Only labels that are still the raw
+ * field name (or a label shipped by an earlier version, PREVIOUS_LABELS) are changed, so anything an admin renamed via
+ * «Configure the view» stays as it is.
+ */
+export async function ensureAdminLabels(strapi: Core.Strapi) {
+  const store = strapi.store({ type: 'plugin', name: 'content_manager' });
+  const uids = [
+    ...Object.keys(strapi.contentTypes).filter((u) => u.startsWith('api::')).map((u) => `configuration_content_types::${u}`),
+    ...Object.keys(strapi.components).map((u) => `configuration_components::${u}`),
+  ];
+  let changed = 0;
+  for (const key of uids) {
+    const conf = (await store.get({ key })) as { metadatas?: Record<string, { edit?: Record<string, unknown>; list?: Record<string, unknown> }> } | null;
+    if (!conf?.metadatas) continue;
+    let dirty = false;
+    for (const [field, meta] of Object.entries(conf.metadatas)) {
+      const entry = ADMIN_LABELS[field];
+      if (!entry) continue;
+      const [label, help] = Array.isArray(entry) ? entry : [entry, ''];
+      // Ours to (re)write: the raw field name, empty, or a value an earlier version of this project shipped.
+      const ours = (v: unknown) => v === field || v === '' || v === undefined || (PREVIOUS_LABELS[field] ?? []).includes(v as string);
+      if (meta.edit && ours(meta.edit.label) && meta.edit.label !== label) {
+        meta.edit.label = label;
+        dirty = true;
+      }
+      if (meta.edit && help && ours(meta.edit.description) && meta.edit.description !== help) {
+        meta.edit.description = help;
+        dirty = true;
+      }
+      if (meta.list && ours(meta.list.label) && meta.list.label !== label) {
+        meta.list.label = label;
+        dirty = true;
+      }
+    }
+    if (dirty) {
+      await store.set({ key, value: conf });
+      changed++;
+    }
+  }
+  if (changed) strapi.log.info(`[admin] Ukrainian field labels applied to ${changed} content types/components`);
 }
 
 /** Field paths the admin permission system expects: plain attributes plus "component.field" for components. */
@@ -104,37 +165,87 @@ export async function ensureEditorPermissions(strapi: Core.Strapi) {
   if (added) strapi.log.info(`[seed] Editor role: ${added} Content Manager permissions added`);
 }
 
+/** Everything the website's API token may do: read the published site content and create leads (never read them). */
+export const WEB_TOKEN_PERMISSIONS = [
+  ...Object.entries(SITE_READ).flatMap(([uid, actions]) => actions.map((a) => `${uid}.${a}`)),
+  'api::lead.lead.create',
+];
+
+/**
+ * The CMS content API is closed to anonymous visitors by default: the website reads it server-side with its API token,
+ * so nobody can download the whole site as clean JSON from cms.…/api/…. `PUBLIC_CONTENT_API=true` (cms.env) reopens
+ * read access for the Public role, e.g. for a site build without a token.
+ */
+export const contentApiIsPublic = () => process.env.PUBLIC_CONTENT_API === 'true';
+
+/** Grants (PUBLIC_CONTENT_API=true) or removes (default) the Public role's read access to site content. */
 export async function ensurePublicPermissions(strapi: Core.Strapi) {
   const role = await strapi.db.query('plugin::users-permissions.role').findOne({ where: { type: 'public' } });
   if (!role) return;
-  const existing = await strapi.db
-    .query('plugin::users-permissions.permission')
-    .findMany({ where: { role: role.id } });
+  const perms = strapi.db.query('plugin::users-permissions.permission');
+  if (!contentApiIsPublic()) {
+    const removed = await perms.deleteMany({
+      where: { role: role.id, $or: [{ action: { $startsWith: 'api::' } }, { action: { $startsWith: 'plugin::upload.content-api.' } }] },
+    });
+    if (removed?.count) strapi.log.info(`[security] Public content API closed: ${removed.count} permission(s) removed (the website reads with its token)`);
+    return;
+  }
+  const existing = await perms.findMany({ where: { role: role.id } });
   const have = new Set(existing.map((p: { action: string }) => p.action));
-  for (const [uid, actions] of Object.entries(PUBLIC_READ)) {
+  for (const [uid, actions] of Object.entries(SITE_READ)) {
     for (const a of actions) {
       const action = `${uid}.${a}`;
-      if (!have.has(action)) {
-        await strapi.db.query('plugin::users-permissions.permission').create({ data: { action, role: role.id } });
-      }
+      if (!have.has(action)) await perms.create({ data: { action, role: role.id } });
     }
   }
+}
+
+/**
+ * Security baseline, applied on every start (idempotent):
+ * - nobody can sign up through the public API (POST /api/auth/local/register): the site has no visitor accounts;
+ * - leads are never readable or writable by the Public / Authenticated roles (the website's token may only create them,
+ *   admins see them in the admin), even if someone ticks those boxes in Settings by mistake.
+ */
+export async function ensureSecurityBaseline(strapi: Core.Strapi) {
+  const store = strapi.store({ type: 'plugin', name: 'users-permissions' });
+  const advanced = ((await store.get({ key: 'advanced' })) as Record<string, unknown> | null) ?? {};
+  if (advanced.allow_register !== false) {
+    await store.set({ key: 'advanced', value: { ...advanced, allow_register: false } });
+    strapi.log.info('[security] Public sign-up (users-permissions register) disabled');
+  }
+  const roles = await strapi.db.query('plugin::users-permissions.role').findMany({ where: { type: { $in: ['public', 'authenticated'] } } });
+  if (!roles.length) return;
+  const removed = await strapi.db.query('plugin::users-permissions.permission').deleteMany({
+    where: { role: { id: { $in: roles.map((r: { id: number }) => r.id) } }, action: { $startsWith: 'api::lead.' } },
+  });
+  if (removed?.count) strapi.log.warn(`[security] Removed ${removed.count} public lead permission(s)`);
 }
 
 /**
  * Creates the "web-site" API token that Next.js uses to create leads.
  * Strapi shows the key only once, so it is written to .tmp/web-token.txt (never committed).
  */
+const WEB_TOKEN_DESCRIPTION = 'Next.js (server side): read published site content, create leads from website forms';
+
 export async function ensureWebToken(strapi: Core.Strapi) {
   const tokenService = strapi.service('admin::api-token') as any;
-  const exists = await tokenService.exists({ name: 'web-site' });
-  if (exists) return;
+  const existing = await strapi.db.query('admin::api-token').findOne({ where: { name: 'web-site' }, populate: ['permissions'] });
+  if (existing) {
+    // Tokens created by earlier versions could only create leads; give them read access to the site content.
+    const have = new Set((existing.permissions ?? []).map((p: { action: string }) => p.action));
+    const extra = (existing.permissions ?? []).filter((p: { action: string }) => !WEB_TOKEN_PERMISSIONS.includes(p.action));
+    if (WEB_TOKEN_PERMISSIONS.some((a) => !have.has(a)) || extra.length) {
+      await tokenService.update(existing.id, { type: 'custom', permissions: WEB_TOKEN_PERMISSIONS, description: WEB_TOKEN_DESCRIPTION });
+      strapi.log.info('[security] Website API token: permissions updated (read site content, create leads)');
+    }
+    return;
+  }
   const token = await tokenService.create({
     name: 'web-site',
-    description: 'Next.js: create leads from website forms',
+    description: WEB_TOKEN_DESCRIPTION,
     type: 'custom',
     lifespan: null,
-    permissions: ['api::lead.lead.create'],
+    permissions: WEB_TOKEN_PERMISSIONS,
   });
   const dir = path.join(process.cwd(), '.tmp');
   fs.mkdirSync(dir, { recursive: true });
@@ -268,7 +379,8 @@ export async function seedIfEmpty(strapi: Core.Strapi) {
         ...m,
         // Auditor register numbers and the lawyer's certificate come from the old site.
         credential: reg ? [m.credential, L.registryLabel(reg)].filter(Boolean).join(' · ') : m.credential,
-        bio: k === 2 ? `${m.bio} ${L.kovalBio}` : m.bio,
+        // No biographies on the site (client, 27.11.2026).
+        bio: null,
         order: k + 1,
       });
       if (first) ids.team[k] = d.documentId;
@@ -346,17 +458,6 @@ export async function seedIfEmpty(strapi: Core.Strapi) {
   }
 
   strapi.log.info(`[seed] Ready: ${allServices().length} services, ${structure.teamCount} team members × ${LOCALES.length} languages.`);
-}
-
-/** Services from the brief plus the old-site services, each inserted after the last one of its category. */
-function allServices() {
-  const list: { slug: string; cat: structure.CategoryKey; homeOrder?: number; steps?: boolean }[] = [...structure.services];
-  for (const extra of legacy.newServices) {
-    let at = -1;
-    list.forEach((s, i) => { if (s.cat === extra.cat) at = i; });
-    list.splice(at + 1, 0, extra);
-  }
-  return list;
 }
 
 /**

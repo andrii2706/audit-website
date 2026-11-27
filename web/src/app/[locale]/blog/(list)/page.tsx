@@ -1,11 +1,14 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { JsonLd, PageHero, PostCard } from '@/components/bits';
-import { container } from '@/components/ui';
+import Glyph from '@/components/concept/Glyph';
+import { PageHead, PostCard } from '@/components/concept/parts';
 import { isLocale } from '@/i18n/config';
+import { t } from '@/i18n/format';
 import { getDictionary } from '@/i18n/get-dictionary';
-import { breadcrumbLd, buildMetadata, pageUrl } from '@/lib/seo';
-import { getArticles } from '@/lib/strapi';
+import { trail } from '@/lib/breadcrumbs';
+import { formatDate } from '@/lib/format';
+import { buildMetadata } from '@/lib/seo';
+import { getArticles, mediaUrl } from '@/lib/strapi';
 
 export const revalidate = 3600;
 type Props = { params: Promise<{ locale: string }> };
@@ -23,15 +26,29 @@ export default async function BlogPage({ params }: Props) {
   const [dict, posts] = await Promise.all([getDictionary(locale), getArticles(locale)]);
   return (
     <>
-      <PageHero crumbLabel={dict.nav.breadcrumbs} crumbs={[{ name: dict.nav.home, href: `/${locale}` }, { name: dict.nav.blog }]} title={dict.pages.blogTitle} intro={dict.pages.blogIntro} />
-      <div className={`${container} pb-16 sm:pb-24`}>
-        {posts.length ? (
-          <div data-stagger className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{posts.map((p) => <PostCard key={p.documentId} locale={locale} post={p} minutes={dict.common.minutes} />)}</div>
-        ) : (
-          <p className="text-lg text-muted">{dict.pages.blogEmpty}</p>
-        )}
-      </div>
-      <JsonLd data={breadcrumbLd([{ name: dict.nav.home, url: pageUrl(locale) }, { name: dict.nav.blog, url: pageUrl(locale, '/blog') }])} />
+      <PageHead locale={locale} crumbs={trail(dict, 'blog')} crumbsLabel={dict.nav.breadcrumbs} title={dict.pages.blogTitle} intro={dict.pages.blogIntro} />
+      <section className="section section-tight">
+        <div className="wrap">
+          {posts.length ? (
+            <ul className="posts">
+              {posts.map((p, i) => (
+                <PostCard
+                  key={p.documentId}
+                  href={`/${locale}/blog/${p.slug}`}
+                  i={i}
+                  kicker={p.kind}
+                  meta={[formatDate(p.publishedAt, locale), p.readingMinutes && t(dict.common.minutes, { n: p.readingMinutes })].filter(Boolean).join(' · ')}
+                  title={p.title}
+                  excerpt={p.excerpt}
+                  cover={mediaUrl(p.cover ?? null)}
+                />
+              ))}
+            </ul>
+          ) : (
+            <div className="empty"><Glyph i={6} className="empty-glyph" /><p>{dict.pages.blogEmpty}</p></div>
+          )}
+        </div>
+      </section>
     </>
   );
 }

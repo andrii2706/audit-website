@@ -3,57 +3,40 @@
 import { headers } from 'next/headers';
 import { isLocale, type Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
-import { sendLeadEmails } from '@/lib/mail';
+import { CLIENT_TYPE_UK, sendLeadEmails } from '@/lib/mail';
+import { cleanLine, parseLead, type FieldErrors } from '@/lib/lead';
+import { clientIp, leadGlobalLimiter, leadLimiter } from '@/lib/rate-limit';
 import { createLead, getGlobal, type LeadInput } from '@/lib/strapi';
 
 export type LeadState = {
   ok: boolean;
   error?: boolean;
+  /** Too many requests from this address (rate limit); the form asks to try later or call. */
+  rateLimited?: boolean;
   /** Set only by the GitHub Pages demo build (demo/actions.ts): nothing was sent. */
   demo?: boolean;
   /** Values are dictionary keys in `form` so the client shows them in its language. `contact` = neither phone nor e-mail. */
-  fieldErrors?: Partial<Record<'name' | 'phone' | 'email' | 'contact', 'errName' | 'errPhone' | 'errEmail' | 'errContact'>>;
+  fieldErrors?: FieldErrors;
 };
 
-const CHANNELS = ['telegram', 'viber', 'whatsapp', 'call', 'email'] as const;
-const str = (v: FormDataEntryValue | null, max = 500) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
-
 /**
- * Receives a lead from any site form, validates it, stores it in Strapi (collection "Lead") and
+ * Receives a lead from any site form, validates it (lib/lead.ts), stores it in Strapi (collection "Lead") and
  * e-mails it to the company (+ a confirmation to the client). The client needs a phone OR an e-mail.
  * The request counts as delivered if it reached at least one destination (Strapi or e-mail).
+ * Abuse protection: honeypot + minimum fill time (bots get a silent "ok"), per-address and global rate limits.
+ * Next.js itself rejects server-action calls whose Origin doesn't match the site (CSRF).
  */
 export async function submitLead(_prev: LeadState, form: FormData): Promise<LeadState> {
-  // Bot trap: the field is hidden from people.
-  if (str(form.get('company_site'))) return { ok: true };
+  const parsed = parseLead(form);
+  if (parsed.kind === 'bot') return { ok: true };
+  if (parsed.kind === 'invalid') return { ok: false, fieldErrors: parsed.fieldErrors };
 
-  const name = str(form.get('name'), 100);
-  const phone = str(form.get('phone'), 40);
-  const email = str(form.get('email'), 150);
-  const fieldErrors: LeadState['fieldErrors'] = {};
-  if (name.length < 2) fieldErrors.name = 'errName';
-  const channel = str(form.get('channel'), 20);
-  if (!phone && !email) fieldErrors.contact = 'errContact';
-  if (phone && phone.replace(/\D/g, '').length < 9) fieldErrors.phone = 'errPhone';
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) fieldErrors.email = 'errEmail';
-  // "Answer by e-mail" needs an address.
-  if (channel === 'email' && !email && !fieldErrors.contact) fieldErrors.email = 'errEmail';
-  if (Object.keys(fieldErrors).length) return { ok: false, fieldErrors };
+  const h = await headers();
+  if (!leadLimiter.hit(clientIp(h)) || !leadGlobalLimiter.hit('all')) return { ok: false, rateLimited: true };
 
-  const locale = str(form.get('locale'), 5);
-  const lead: LeadInput = {
-    name,
-    phone: phone || undefined,
-    email: email || undefined,
-    service: str(form.get('service'), 200) || undefined,
-    revenue: str(form.get('revenue'), 50) || undefined,
-    channel: (CHANNELS as readonly string[]).includes(channel) ? (channel as LeadInput['channel']) : 'telegram',
-    comment: str(form.get('comment'), 2000) || undefined,
-    sourcePage: str(form.get('sourcePage'), 200) || (await headers()).get('referer') || undefined,
-    locale_code: isLocale(locale) ? locale : undefined,
-  };
-
-  const loc: Locale = isLocale(locale) ? locale : 'uk';
+  const lead = parsed.lead;
+  lead.sourcePage ??= cleanLine(h.get('referer'), 200) || undefined;
+  const loc: Locale = isLocale(lead.locale_code ?? '') ? (lead.locale_code as Locale) : 'uk';
   const [global, dict] = await Promise.all([getGlobal(loc), getDictionary(loc)]);
   const [saved, mailed] = await Promise.all([
     createLead(lead),
@@ -75,7 +58,7 @@ async function notifyTelegram(lead: LeadInput) {
     lead.phone && `Телефон: ${lead.phone}`,
     lead.email && `E-mail: ${lead.email}`,
     lead.service && `Послуга: ${lead.service}`,
-    lead.revenue && `Виручка: ${lead.revenue}`,
+    lead.clientType && `Хто звертається: ${CLIENT_TYPE_UK[lead.clientType]}`,
     lead.channel && `Відповісти в: ${lead.channel}`,
     lead.comment && `Коментар: ${lead.comment}`,
     lead.locale_code && `Мова: ${lead.locale_code}`,

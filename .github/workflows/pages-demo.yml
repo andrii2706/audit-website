@@ -64,7 +64,11 @@ jobs:
             sleep 1
           done
           curl -sf -o /dev/null http://127.0.0.1:1337/_health || { tail -80 ../strapi.log; echo "::error::Strapi did not start"; exit 1; }
-          count=$(curl -s 'http://127.0.0.1:1337/api/services?locale=uk&pagination%5BpageSize%5D=1' | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).meta?.pagination?.total??0))')
+          # The content API is closed to anonymous visitors: read with the website token the CMS just created.
+          token=$(tr -d '[:space:]' < .tmp/web-token.txt)
+          echo "::add-mask::$token"
+          echo "STRAPI_WEB_TOKEN=$token" >> "$GITHUB_ENV"
+          count=$(curl -s -H "Authorization: Bearer $token" 'http://127.0.0.1:1337/api/services?locale=uk&pagination%5BpageSize%5D=1' | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).meta?.pagination?.total??0))')
           echo "Seeded services: $count"
           [ "$count" -gt 0 ] || { tail -80 ../strapi.log; echo "::error::The CMS has no content — the preview would be empty"; exit 1; }
 
