@@ -51,7 +51,6 @@ export default function SiteHeader({
               <LanguageSwitcher
                 locale={locale}
                 label={dict.nav.language}
-                busyLabel={dict.common.switchingLanguage}
               />
             </div>
             <Link

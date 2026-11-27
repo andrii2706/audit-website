@@ -85,7 +85,7 @@ export default function Header({ locale, dict, global }: Props) {
         </nav>
         <div className="ml-auto flex items-center gap-2">
           <div className="hidden md:block">
-            <LanguageSwitcher locale={locale} label={dict.nav.language} busyLabel={dict.common.switchingLanguage} />
+            <LanguageSwitcher locale={locale} label={dict.nav.language} />
           </div>
           {global?.phone && (
             <a href={telHref(global.phone)} className={`${iconBtn} max-sm:hidden xl:max-2xl:hidden`} aria-label={`${dict.nav.call} ${formatPhone(global.phone)}`}>
