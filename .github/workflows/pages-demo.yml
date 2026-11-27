@@ -5,7 +5,8 @@
 # them to GitHub Pages. Differences from the real site:
 #   - the request form validates and shows the success screen, but sends nothing (a note says so);
 #   - content comes from the seed data, not from your admin panel (news templates are drafts → news list is empty);
-#   - search engines are blocked (robots.txt Disallow + noindex).
+#   - search engines are blocked (robots.txt Disallow + noindex);
+#   - uploaded files (pictures, the hero video) are copies in the preview's own /uploads/.
 #
 # One-time setup: Settings → Pages → Build and deployment → Source: "GitHub Actions".
 # (GitHub Pages on a private repository needs a paid GitHub plan; on GitHub Free make the repo public.)
@@ -87,6 +88,9 @@ jobs:
           PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
           SITE_URL: ${{ steps.pages.outputs.base_url }}
           STRAPI_URL: http://127.0.0.1:1337
+          # The runner's CMS is gone once the job ends: files from cms/public/uploads are copied into the preview
+          # (scripts/finish-pages-demo.mjs) and pictures/videos point there instead of 127.0.0.1:1337.
+          STRAPI_PUBLIC_URL: ${{ steps.pages.outputs.base_url }}
           NO_INDEX: 'true'
           NEXT_TELEMETRY_DISABLED: '1'
         run: |
