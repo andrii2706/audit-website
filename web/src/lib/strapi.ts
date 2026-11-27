@@ -42,6 +42,10 @@ export type Service = {
   homeOrder?: number;
   order?: number;
   tags?: Bullet[];
+  /** Heading on the service's own page when it differs from the title (the title stays in menus, cards and crumbs). */
+  pageTitle?: string | null;
+  /** Heading of the «what you get» list (the brief's own, e.g. «Професійно проводимо:»); empty = the dictionary's. */
+  deliverablesTitle?: string | null;
   deliverables?: Bullet[];
   steps?: Step[];
   category?: Category | null;
@@ -167,7 +171,11 @@ export type Homepage = {
   processTitle?: string | null;
   processSteps?: Step[];
   stats?: Stat[];
+  /** Paragraphs under the numbers (blank line between them). */
+  statsText?: string | null;
   whyTitle?: string | null;
+  /** Paragraphs under «why us» heading (blank line between them). */
+  whyText?: string | null;
   reasons?: TextItem[];
   industriesTitle?: string | null;
   industries?: Bullet[];

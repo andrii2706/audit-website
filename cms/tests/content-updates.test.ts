@@ -71,7 +71,7 @@ describe('2026-11-27-brief-complete', () => {
     expect(ukHome.data.reasons.map((x: any) => x.title)).toEqual(['15+ років досвіду', 'Бездоганна репутація', 'Оптимальна вартість', 'Можемо співпрацювати англійською мовою']);
     const enHome = updates.find((u) => u.uid.includes('homepage') && u.locale === 'en')!;
     expect(enHome.data.reasons.map((x: any) => x.title)).toEqual(['15+ years of experience', 'Impeccable reputation', 'Optimal cost']);
-    expect(updates.find((u) => u.uid.includes('category') && u.locale === 'uk')!.data.intro).toMatch(/^Ми допомагаємо власникам/);
+    expect(updates.find((u) => u.uid.includes('category') && u.locale === 'uk')!.data.intro).toMatch(/Ми допомагаємо власникам/);
     // An intro an editor changed stays.
     expect(updates.find((u) => u.uid.includes('category') && u.locale === 'en')).toBeUndefined();
   });
@@ -144,5 +144,55 @@ describe('2026-11-27-hero-video', () => {
   it('fails loudly (and is retried next start) when the file is missing', async () => {
     const f = fake(null, '/nowhere');
     await expect(run(f.strapi as any)).rejects.toThrow('not found');
+  });
+});
+
+describe('2026-11-27-brief-verbatim', () => {
+  const run = CONTENT_UPDATES.find((u) => u.id === '2026-11-27-brief-verbatim')!.run;
+  function fakeAll() {
+    const updates: { uid: string; locale: string; data: any }[] = [];
+    const strapi = {
+      contentType: () => ({ options: { draftAndPublish: false } }),
+      documents: (uid: string) => ({
+        findFirst: async ({ filters }: any) => ({ documentId: `${uid}:${filters?.slug ?? 'single'}` }),
+        update: async ({ locale, data }: any) => { updates.push({ uid, locale, data }); },
+      }),
+    };
+    return { strapi, updates };
+  }
+  const pick = (updates: any[], uid: string, locale: string) => updates.find((u) => u.uid.includes(uid) && u.locale === locale);
+
+  it('writes the brief texts word for word, typos included', async () => {
+    const { strapi, updates } = fakeAll();
+    const notes = await run(strapi as any);
+    expect(notes).toHaveLength(2);
+    const ukHome = pick(updates, 'homepage', 'uk')!.data;
+    expect(ukHome.whyTitle).toBe('Чому обирають нас?');
+    expect(ukHome.estimateText).toBe('Ми завжди на зв’язку з вами. Надішліть ваше звернення і ми надамо зворотній звязок.');
+    expect(ukHome.statsText).toMatch(/95% яких повертається\./);
+    expect(ukHome.stats.map((s: any) => s.value)).toEqual(['+1000', '+15', '+12', '95%']);
+    expect(ukHome.industries).toHaveLength(9);
+    expect(ukHome.reasons.map((r: any) => r.title)).not.toContain('Підтверджена якість');
+    const ukGlobal = pick(updates, 'global', 'uk')!.data;
+    expect(ukGlobal.workingHours).toBe('Понеділок-п’ятниця 9-00 -18.30, без обіду');
+    const svc = updates.filter((u) => u.uid.includes('service') && u.locale === 'uk').map((u) => u.data);
+    const obov = svc.find((d) => d.deliverablesTitle === 'Професійно проводимо:')!;
+    expect(obov.excerpt).toMatch(/^Ми маємо всі необхідні дозволи/);
+    expect(obov.deliverables).toHaveLength(4);
+    expect(svc.find((d) => d.title === 'Узгоджені процедури')!.pageTitle).toBe('Узгоджені аудиторські процедури');
+    const cats = updates.filter((u) => u.uid.includes('category') && u.locale === 'uk').map((u) => u.data.intro);
+    expect(cats).toEqual(expect.arrayContaining(['Наші аудиторські послуги включають:', 'Напрями правової підтримки:']));
+    const en = updates.filter((u) => u.uid.includes('category') && u.locale === 'en').map((u) => u.data.intro);
+    expect(en).toContain('Areas of legal support:');
+  });
+
+  it('skips documents the database does not have', async () => {
+    const updates: any[] = [];
+    const strapi = {
+      contentType: () => ({ options: { draftAndPublish: false } }),
+      documents: () => ({ findFirst: async () => null, update: async (a: any) => { updates.push(a); } }),
+    };
+    expect(await run(strapi as any)).toEqual([expect.stringMatching(/^uk: 0 services/), expect.stringMatching(/^en: 0 services/)]);
+    expect(updates).toEqual([]);
   });
 });

@@ -10,6 +10,7 @@
  *   per-page OG images       → deleted (social previews aren't needed for a preview link)
  *   server action (form)     → demo/actions.ts (validates, shows success, sends nothing)
  *   ISR / dynamicParams      → every page is prerendered once at build time
+ *   tests/, e2e/             → deleted (they import the removed proxy and API routes; `next build` type-checks them)
  */
 import { existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync, copyFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -28,6 +29,10 @@ const rm = (p) => {
     console.log(`  removed ${p}`);
   }
 };
+// Tests aren't part of the demo, and `next build` type-checks every .ts file: unit tests import the proxy and the API
+// routes removed below, so they would fail the build.
+rm('tests');
+rm('e2e');
 rm('src/proxy.ts');
 rm('src/app/api');
 rm('src/app/[locale]/[...rest]');

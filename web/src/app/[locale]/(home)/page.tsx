@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { JsonLd } from '@/components/bits';
 import CountUp from '@/components/CountUp';
 import ContactSection from '@/components/concept/ContactSection';
+import TextParas from '@/components/concept/TextParas';
 import Glyph, { HeroArt } from '@/components/concept/Glyph';
 import LogoMarquee from '@/components/concept/LogoMarquee';
 import HomeHero from '@/components/concept/HomeHero';
@@ -220,6 +221,7 @@ export default async function HomePage({ params }: Props) {
                 </div>
               ))}
             </dl>
+            <TextParas text={home.statsText} className="nums-text" />
           </div>
         </section>
       )}
@@ -276,6 +278,7 @@ export default async function HomePage({ params }: Props) {
           <div className="why-box">
             <div className="why-in">
               <Label dark>{c.why}</Label>
+              <TextParas text={home?.whyText} className="why-text" />
               <Story
                 dark
                 aside={<h2 id="why-title" className="display why-title">{home?.whyTitle}</h2>}

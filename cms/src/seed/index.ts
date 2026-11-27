@@ -322,7 +322,7 @@ export async function seedIfEmpty(strapi: Core.Strapi) {
   strapi.log.info(`[seed] Empty database — adding starter content in ${LOCALES.length} languages…`);
 
   const ids = { cat: {} as Record<string, string>, svc: {} as Record<string, string>, aud: [] as string[], team: [] as string[], faq: [] as string[], art: {} as Record<string, string>, client: [] as string[], docs: [] as string[], global: '', home: '', about: '', career: '' };
-  const items = (list: { title: string; text: string }[]) => list.map(({ title, text }) => ({ title, text }));
+  const items = (list: { title: string; text?: string }[]) => list.map(({ title, text }) => ({ title, text: text ?? null }));
   const bullets = (list: string[]) => list.map((text) => ({ text }));
 
   for (const { code: locale } of LOCALES) {
@@ -357,6 +357,8 @@ export async function seedIfEmpty(strapi: Core.Strapi) {
         category: ids.cat[s.cat],
         badge: tr.badge ?? null,
         tags: ('tags' in tr ? tr.tags ?? [] : []).map((text) => ({ text })),
+        pageTitle: ('pageTitle' in tr && tr.pageTitle) || null,
+        deliverablesTitle: ('deliverablesTitle' in tr && tr.deliverablesTitle) || null,
         deliverables: ('deliverables' in tr ? tr.deliverables ?? [] : []).map((text) => ({ text })),
         steps: 'steps' in s && s.steps ? items(t.steps) : [],
         homeFeatured: 'homeOrder' in s && !!s.homeOrder,

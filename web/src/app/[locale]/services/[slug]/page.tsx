@@ -62,7 +62,7 @@ export default async function ServicePage({ params }: Props) {
 
   return (
     <>
-      <PageHead locale={locale} crumbs={crumbs} crumbsLabel={dict.nav.breadcrumbs} title={s.title} intro={s.excerpt}>
+      <PageHead locale={locale} crumbs={crumbs} crumbsLabel={dict.nav.breadcrumbs} title={s.pageTitle || s.title} intro={s.excerpt}>
         {(s.badge || !!s.tags?.length) && (
           <div className="tagrow">
             {s.badge && <span className="badge badge-lime">{s.badge}</span>}
@@ -80,7 +80,7 @@ export default async function ServicePage({ params }: Props) {
           </dl>
           {!!s.deliverables?.length && (
             <section className="sblock">
-              <h2 className="display h3">{d.deliverables}</h2>
+              <h2 className="display h3">{s.deliverablesTitle || d.deliverables}</h2>
               {cards ? (
                 <DeliverableCards items={cards} locale={locale} />
               ) : (

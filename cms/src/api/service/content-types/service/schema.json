@@ -19,6 +19,14 @@
         }
       }
     },
+    "pageTitle": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
     "slug": {
       "type": "uid",
       "targetField": "title",
@@ -80,6 +88,14 @@
       }
     },
     "duration": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "deliverablesTitle": {
       "type": "string",
       "pluginOptions": {
         "i18n": {

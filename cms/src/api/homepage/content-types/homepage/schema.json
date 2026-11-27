@@ -173,8 +173,24 @@
         }
       }
     },
+    "statsText": {
+      "type": "text",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
     "whyTitle": {
       "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "whyText": {
+      "type": "text",
       "pluginOptions": {
         "i18n": {
           "localized": true

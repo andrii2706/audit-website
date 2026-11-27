@@ -1,12 +1,12 @@
 import type { Block, CategoryKey } from '../structure';
 
-type Item = { title: string; text: string };
+type Item = { title: string; text?: string };
 
 /** All translatable starter content for one locale. Keys match ../structure.ts. */
 export type SiteContent = {
   categories: Record<CategoryKey, { name: string; intro: string }>;
   steps: { title: string; text: string }[];
-  services: Record<string, { title: string; excerpt: string; badge?: string; tags?: string[]; deliverables?: string[]; body?: Block[] }>;
+  services: Record<string, { title: string; pageTitle?: string; excerpt: string; badge?: string; tags?: string[]; deliverablesTitle?: string; deliverables?: string[]; body?: Block[] }>;
   audiences: { label: string; title: string; description: string }[];
   team: { name: string; role: string; credential: string; experience: string; bio?: string }[];
   faqs: { q: string; a: string }[];
@@ -36,7 +36,11 @@ export type SiteContent = {
     processTitle: string;
     processSteps: Item[];
     stats: { value: string; label: string }[];
+    /** Paragraphs under the numbers, separated by a blank line. */
+    statsText?: string;
     whyTitle: string;
+    /** Paragraphs separated by a blank line. */
+    whyText?: string;
     reasons: Item[];
     industriesTitle: string;
     industries: string[];

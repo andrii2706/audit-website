@@ -64,6 +64,14 @@ The window on the home page's first screen shows the video set in Strapi, otherw
 
 On a service page, the «Що ви отримуєте» list turns into numbered cards when **every** item is written as `Title: text` (e.g. «Підтвердження для регуляторів (АМКУ, НКЦПФР та НБУ): офіційні висновки…»). With an odd number of items the last card is wide and dark; short names in brackets at the end of its title (АМКУ, НКЦПФР, НБУ) are shown as a list beside the text. If any item has no «: », the page shows an ordinary bulleted list.
 
+The heading above the list is the service's **«Заголовок списку «Що ви отримуєте»»** field (e.g. «Професійно проводимо:»); empty = «Що ви отримуєте». **«Заголовок на сторінці послуги»** replaces the big heading on the service page only (the name stays in menus, cards and breadcrumbs); empty = the name.
+
+## Home page texts under the numbers and «Чому обирають нас?»
+
+**«Цифри: текст під ними»** and **«Чому нас обирають: текст»** are plain text: leave an empty line between paragraphs. In the «why» text the last paragraph is shown brighter — it introduces the list of reasons.
+
+The client's texts come from the brief word for word, including its spelling; change them only on the client's instruction.
+
 ## Transparency reports
 
 The law requires the reports for the last 7 calendar years on the site, and a corrected report must not replace the original.
