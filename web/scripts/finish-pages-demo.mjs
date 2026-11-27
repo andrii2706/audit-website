@@ -3,8 +3,10 @@
  * After `next build` with PAGES_DEMO=1: adds the files GitHub Pages needs to out/.
  *   index.html — sends visitors to their browser language (what the proxy does on the real server)
  *   .nojekyll  — serve the _next/ folder as-is
+ *   uploads/   — copy of cms/public/uploads: the runner's CMS stops with the job, so pictures and the hero video are
+ *                served from the preview itself (the workflow sets STRAPI_PUBLIC_URL to the Pages address)
  */
-import { existsSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -36,4 +38,11 @@ const html = `<!doctype html>
 `;
 writeFileSync(join(out, 'index.html'), html);
 writeFileSync(join(out, '.nojekyll'), '');
+const uploads = join(out, '..', '..', 'cms', 'public', 'uploads');
+if (existsSync(uploads)) {
+  cpSync(uploads, join(out, 'uploads'), { recursive: true, filter: (p) => !p.endsWith('.gitkeep') });
+  console.log(`✔ out/uploads: ${readdirSync(join(out, 'uploads')).length} files from the CMS`);
+} else {
+  console.warn('⚠ cms/public/uploads not found — pictures and the video from the CMS will be missing in the preview');
+}
 console.log(`✔ out/index.html (redirect to ${base || ''}/<lang>/) and .nojekyll written`);

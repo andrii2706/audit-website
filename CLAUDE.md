@@ -182,6 +182,7 @@ Full list with file locations: `docs/SECURITY.md`. When changing related code ke
 
 - Anything you add that needs a server (route handlers reading the request, server actions, cookies, ISR, dynamic OG images) must either work under `output: 'export'` or be removed or replaced in `prepare-pages-demo.mjs`.
 - Raw `<a href>` to internal non-page URLs must prefix `process.env.NEXT_PUBLIC_BASE_PATH`. `<Link>` handles it automatically.
+- The runner's Strapi stops with the job, so `finish-pages-demo.mjs` copies `cms/public/uploads` into `out/uploads` and the workflow sets `STRAPI_PUBLIC_URL` to the Pages address: media URLs (`mediaUrl()`) point at the preview itself. Media must go through `mediaUrl()`, never `STRAPI_URL`.
 
 ## Never commit
 
