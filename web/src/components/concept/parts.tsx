@@ -8,6 +8,7 @@ import { mediaUrl, type Blocks as BlocksData, type Global, type Service, type Te
 import type { Crumb } from '@/lib/breadcrumbs';
 import Breadcrumbs from './Breadcrumbs';
 import Glyph from './Glyph';
+import './person.css';
 
 /** Building blocks of the editorial design (concept.css). Server-safe: no hooks. */
 
@@ -134,14 +135,21 @@ export function PostCard({ href, i, kicker, meta, title, excerpt, cover }: { hre
   );
 }
 
-/** Team member: photo from the CMS (initials over a glyph until there is one), name, role; full cards add credentials and a bio. */
-export function PersonCard({ m, i, full = false, labels }: { m: TeamMember; i: number; full?: boolean; labels: { bio: string; qualification: string } }) {
+/** Anchor of a team member on the team page. The Strapi documentId is the same in every language, so it survives a switch. */
+export const memberAnchor = (m: Pick<TeamMember, 'documentId'>) => `m-${m.documentId}`;
+
+/**
+ * Team member: photo from the CMS (initials over a glyph until there is one), name, role; full cards (team page) add
+ * credentials and a bio and carry the member's anchor. With `href` the whole card is a link (home page → that person
+ * on the team page).
+ */
+export function PersonCard({ m, i, full = false, href, labels }: { m: TeamMember; i: number; full?: boolean; href?: string; labels: { bio: string; qualification: string } }) {
   const photo = mediaUrl(m.photo ?? null);
-  return (
-    <li className={cx('person', full && 'person-full')}>
+  const inner = (
+    <>
       <div className={cx('avatar', photo && 'skeleton')}>
         {photo ? (
-          <FadeImage src={photo} alt={m.name} fill sizes="(max-width: 640px) 100vw, 320px" className="object-cover object-[50%_25%]" />
+          <FadeImage src={photo} alt={href ? '' : m.name} fill sizes="(max-width: 640px) 100vw, 320px" className="object-cover object-[50%_25%]" />
         ) : (
           <>
             <Glyph i={i + 2} className="avatar-glyph" />
@@ -169,6 +177,21 @@ export function PersonCard({ m, i, full = false, labels }: { m: TeamMember; i: n
           </details>
         )}
       </div>
+    </>
+  );
+  if (href) {
+    return (
+      <li className="person-item">
+        <Link className="person person-link" href={href}>
+          {inner}
+          <span className="person-go"><Arrow /></span>
+        </Link>
+      </li>
+    );
+  }
+  return (
+    <li id={full ? memberAnchor(m) : undefined} className={cx('person', full && 'person-full')}>
+      {inner}
     </li>
   );
 }

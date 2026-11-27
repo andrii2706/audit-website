@@ -7,7 +7,7 @@ import ContactSection from '@/components/concept/ContactSection';
 import Glyph, { HeroArt } from '@/components/concept/Glyph';
 import LogoMarquee from '@/components/concept/LogoMarquee';
 import HomeHero from '@/components/concept/HomeHero';
-import { Arrow, FaqList, Label, MapCard, PersonCard, PostCard, QuoteMark, ShieldMark, SvcCard, UpRight, num } from '@/components/concept/parts';
+import { Arrow, FaqList, Label, MapCard, memberAnchor, PersonCard, PostCard, QuoteMark, ShieldMark, SvcCard, UpRight, num } from '@/components/concept/parts';
 import ScrollWords from '@/components/concept/ScrollWords';
 import Story from '@/components/concept/Story';
 import { isLocale } from '@/i18n/config';
@@ -74,8 +74,8 @@ export default async function HomePage({ params }: Props) {
   return (
     <>
       <HomeHero
-        videoSrc={mediaUrl(home?.heroVideo ?? null)}
         labelledBy="hero-title"
+        videoSrc={mediaUrl(home?.heroVideo ?? null)}
         head={
           <>
             <HeroArt />
@@ -320,7 +320,7 @@ export default async function HomePage({ params }: Props) {
             {home?.teamSubtitle && <p className="lead c-center muted">{home.teamSubtitle}</p>}
             <ul className="team">
               {team.slice(0, 4).map((m, i) => (
-                <PersonCard key={m.documentId} m={m} i={i} labels={{ bio: dict.pages.teamMore, qualification: dict.pages.teamQualification }} />
+                <PersonCard key={m.documentId} m={m} i={i} href={`/${locale}/team#${memberAnchor(m)}`} labels={{ bio: dict.pages.teamMore, qualification: dict.pages.teamQualification }} />
               ))}
             </ul>
             <div className="c-right"><Link className="fxlink" href={`/${locale}/team`}>{t(c.wholeTeam, { n: team.length })} <Arrow /></Link></div>

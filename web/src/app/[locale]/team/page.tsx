@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { JsonLd } from '@/components/bits';
+import OpenTargetBio from '@/components/concept/OpenTargetBio';
 import { PageHead, PersonCard } from '@/components/concept/parts';
 import { isLocale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
@@ -30,6 +31,7 @@ export default async function TeamPage({ params }: Props) {
           <ul className="team team-page">
             {team.map((m, i) => <PersonCard key={m.documentId} m={m} i={i} full labels={{ bio: dict.pages.teamMore, qualification: dict.pages.teamQualification }} />)}
           </ul>
+          <OpenTargetBio />
         </div>
       </section>
       {team.map((m) => (

@@ -1,0 +1,21 @@
+/* Team cards (PersonCard in parts.tsx). One class more specific than concept.css, so file order doesn't matter. */
+@layer components {
+  /* Home page: the whole card is a link to that person on the team page. */
+  .team > .person-item { display: flex; }
+  .team .person-link { position: relative; flex: 1; color: inherit; text-decoration: none; cursor: pointer; transition: translate .5s var(--ease), box-shadow .5s var(--ease), border-color .5s var(--ease); }
+  .team .person-link:hover { translate: 0 -4px; border-color: var(--line-strong); box-shadow: 0 32px 64px -30px color-mix(in srgb, var(--ink) 45%, transparent); }
+  .team .person-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .team .person-link .person-body { flex: 1; padding-right: 56px; }
+  .team .person-go { position: absolute; right: 22px; bottom: 24px; display: inline-flex; color: var(--muted); transition: color .3s, translate .4s var(--ease); }
+  .team .person-link:hover .person-go { color: var(--ink); translate: 4px 0; }
+  /* Team page: an opened biography makes only its own card taller, not the whole row. */
+  .team.team-page { align-items: start; }
+  /* Team page: the member a link points at — clear of the sticky header and marked. */
+  .team-page .person { scroll-margin-top: 112px; transition: border-color .4s, box-shadow .4s; }
+  /* :target covers a typed or reloaded address, [data-hit] a Next.js navigation (OpenTargetBio). */
+  .team-page .person:is(:target, [data-hit]) { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  @media (prefers-reduced-motion: reduce) {
+    .team .person-link, .team .person-go { transition: none; }
+    .team .person-link:hover, .team .person-link:hover .person-go { translate: none; }
+  }
+}

@@ -13,8 +13,10 @@ test('the bare domain opens the visitor’s language', async ({ browser }) => {
 test('the language switcher keeps the page', async ({ page, isMobile }) => {
   test.skip(isMobile, 'on phones the switcher lives in the menu');
   await page.goto('/uk/contacts');
-  await page.getByRole('button', { name: /мова|language|UA|УКР/i }).first().click();
-  await page.locator('a[hreflang="en"]').first().click();
+  // A dropdown opens with a button; a switcher with the languages as plain links has none.
+  const toggle = page.getByRole('button', { name: /мова|language|UA|УКР/i });
+  if (await toggle.count()) await toggle.first().click();
+  await page.locator('header a[hreflang="en"]:visible').first().click();
   await expect(page).toHaveURL(/\/en\/contacts$/);
 });
 
